@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LiSeer · Learning Generalizability from Randomness</title>
+<meta name="description" content="LiSeer: zero-shot LiDAR semantic segmentation that generalizes to any sensor by disentangling scene-intrinsic geometry from sensor sampling." />
+
+<!-- ============================================================
+     EDIT ME: replace the links below with your real URLs.
+     Drop figures/videos into /assets and docs into /docs.
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  --ink:#0c1322; --ink-2:#101a2e; --ink-3:#16223a;
+  --paper:#ffffff; --mist:#f5f7fa;
+  --blue:#2f6fb0; --blue-2:#4fa3e3; --orange:#e07b39;
+  --text:#111723; --muted:#5c6776; --line:#e6eaf0;
+  --sans:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --disp:'Space Grotesk',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --maxw:1080px; --r:14px;
+  --shadow:0 1px 2px rgba(16,23,35,.04),0 12px 30px -12px rgba(16,23,35,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--text);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{max-width:100%;display:block}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-height:1.12;color:var(--text)}
+.container{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);font-weight:700}
+:focus-visible{outline:2.5px solid var(--blue-2);outline-offset:3px;border-radius:4px}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:60;background:rgba(12,19,34,.82);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08);transition:box-shadow .3s}
+.nav.scrolled{box-shadow:0 8px 30px -10px rgba(0,0,0,.5)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:58px}
+.brand{font-family:var(--disp);font-weight:700;color:#fff;font-size:18px;letter-spacing:.01em}
+.brand b{color:var(--blue-2);font-weight:700}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{font-family:var(--mono);font-size:13px;color:#aeb9c8;letter-spacing:.02em}
+.nav-links a:hover{color:#fff;text-decoration:none}
+.nav-cta{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink);background:#fff;padding:7px 14px;border-radius:8px}
+.nav-cta:hover{background:var(--blue-2);color:#fff;text-decoration:none}
+
+/* ---------- hero ---------- */
+.hero{position:relative;background:radial-gradient(120% 120% at 78% 0%,var(--ink-3),var(--ink) 60%);color:#fff;overflow:hidden;border-bottom:1px solid rgba(255,255,255,.06)}
+.hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(120,170,225,.16) 1px,transparent 1.4px);background-size:26px 26px;opacity:.5;mask-image:linear-gradient(180deg,#000,transparent 85%)}
+.hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1.08fr;gap:40px;align-items:center;padding:64px 0 78px}
+.hero h1{font-size:clamp(2.2rem,5.2vw,3.5rem);color:#fff;margin:.45em 0 .28em}
+.hero .lede{font-size:clamp(1.02rem,1.7vw,1.2rem);color:#b7c2d2;max-width:40ch;margin:0 0 18px}
+.hero .lede b{color:#fff;font-weight:600}
+.authors{font-size:14.5px;color:#cdd6e2;margin:18px 0 4px}
+.authors .me{color:#fff;font-weight:600;border-bottom:2px solid var(--orange)}
+.affil{font-family:var(--mono);font-size:12.5px;color:#8d99ab;letter-spacing:.02em}
+.btns{display:flex;flex-wrap:wrap;gap:11px;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13.5px;font-weight:700;padding:10px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.16);color:#e7edf5;background:rgba(255,255,255,.04);transition:.18s}
+.btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);text-decoration:none;transform:translateY(-1px)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--blue-2);border-color:var(--blue-2)}
+.btn svg{width:15px;height:15px;flex:none}
+
+/* beam-splitter signature */
+.splitter{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:18px}
+.splitter figcaption{font-family:var(--mono);font-size:11.5px;color:#8d99ab;letter-spacing:.04em;margin-top:10px;text-align:center}
+.flow{stroke-dasharray:6 12;animation:flow 1.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-36}}
+#optics{display:block;width:100%;height:auto}
+#optics text{font-family:var(--mono)}
+.beam{stroke-linecap:round}
+.olbl{fill:#8d99ab;font-size:13px}
+.clbl{fill:#dbe7f5;font-size:14px;font-weight:700;letter-spacing:.04em}
+.draggable{cursor:grab;touch-action:none}
+.draggable.drag{cursor:grabbing}
+.knob{fill:#0c1322;stroke:#9fd0ff;stroke-width:1.8;cursor:grab}
+.knob:hover{fill:#16314f}
+.stem{stroke:#6f86a8;stroke-width:1.4;stroke-dasharray:3 3}
+#slats line{stroke:#7cc0ff;stroke-width:1.6;opacity:.7}
+.blbl{fill:#9cc8f3;font-weight:700;font-size:15px;letter-spacing:.03em}
+.rlbl{fill:#eab089;font-weight:700;font-size:15px;letter-spacing:.03em}
+
+/* ---------- sections ---------- */
+.section{padding:74px 0;border-bottom:1px solid var(--line)}
+.section.tint{background:var(--mist)}
+.section-head{max-width:62ch;margin-bottom:30px}
+.section h2{font-size:clamp(1.5rem,3vw,2rem);margin:.35em 0 .35em}
+.section p.lead{font-size:1.08rem;color:#2c3543}
+.prose p{color:#28313f;margin:0 0 16px}
+.prose p:last-child{margin-bottom:0}
+
+/* abstract */
+.tldr{display:grid;grid-template-columns:1fr;gap:0}
+.tldr .chip{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--orange);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+
+/* stat readouts */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:8px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px 22px 20px;box-shadow:var(--shadow)}
+.stat .num{font-family:var(--mono);font-weight:700;font-size:clamp(2rem,4.4vw,2.7rem);color:var(--blue);line-height:1;letter-spacing:-.02em}
+.stat .num small{font-size:.5em;color:var(--muted);font-weight:500;margin-left:2px}
+.stat .lbl{margin-top:10px;font-size:14px;color:var(--muted)}
+.stat.accent .num{color:var(--orange)}
+
+/* figures */
+.fig{margin:0}
+.fig .fig-media{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--mist);box-shadow:var(--shadow)}
+.fig img{width:100%}
+.fig figcaption{font-size:13.5px;color:var(--muted);margin-top:12px;line-height:1.5}
+.fig figcaption b{color:var(--text);font-family:var(--mono);font-weight:700;font-size:12.5px}
+.fig-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:230px;border:1.5px dashed #c5cedb;border-radius:var(--r);background:repeating-linear-gradient(45deg,#f6f8fb,#f6f8fb 14px,#f1f4f8 14px,#f1f4f8 28px);color:#8794a6;font-family:var(--mono);font-size:13px;text-align:center;padding:20px}
+.fig-ph small{font-size:11px;opacity:.8}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.grid-modules{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:8px}
+
+/* module mini-cards */
+.mod{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+.mod .tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:6px;margin-bottom:12px}
+.mod.blue .tag{background:rgba(47,111,176,.12);color:var(--blue)}
+.mod.orange .tag{background:rgba(224,123,57,.14);color:#c4641f}
+.mod h3{font-size:1.12rem;margin:0 0 8px}
+.mod p{margin:0;color:#3a4452;font-size:14.5px}
+
+/* video */
+.video-frame{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000;box-shadow:var(--shadow);aspect-ratio:16/9}
+.video-frame video,.video-frame iframe{width:100%;height:100%;display:block;border:0}
+
+/* platform cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:.2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 18px 40px -18px rgba(16,23,35,.28)}
+.card .media{aspect-ratio:16/10;background:var(--mist);border-bottom:1px solid var(--line)}
+.card .media img{width:100%;height:100%;object-fit:cover}
+#deploy .card .media{cursor:zoom-in;position:relative;display:block;border:0;padding:0;width:100%;font:inherit;text-align:inherit;appearance:none;-webkit-appearance:none}
+#deploy .card .media::after{content:"";position:absolute;inset:0;background:rgba(12,19,34,.28);opacity:0;transition:opacity .2s;pointer-events:none}
+#deploy .card .media::before{content:"⊕";position:absolute;right:12px;bottom:12px;z-index:1;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--ink);font-size:20px;line-height:34px;text-align:center;opacity:0;transform:scale(.85);transition:opacity .2s,transform .2s;pointer-events:none;box-shadow:0 4px 14px rgba(12,19,34,.18)}
+#deploy .card .media:hover::after,#deploy .card .media:hover::before{opacity:1}
+#deploy .card .media:hover::before{transform:scale(1)}
+
+/* image lightbox (on-vehicle) */
+.lightbox{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(12,19,34,.88);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.lightbox.open{opacity:1;visibility:visible}
+.lightbox-inner{position:relative;max-width:min(96vw,1200px);max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:14px;transform:scale(.96);transition:transform .25s}
+.lightbox.open .lightbox-inner{transform:scale(1)}
+.lightbox img{max-width:100%;max-height:calc(92vh - 48px);width:auto;height:auto;border-radius:var(--r);box-shadow:0 24px 60px -20px rgba(0,0,0,.55);background:var(--paper)}
+.lightbox-cap{margin:0;font-family:var(--mono);font-size:13px;color:#cdd6e2;letter-spacing:.02em;text-align:center}
+.lightbox-close{position:absolute;top:-44px;right:0;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:22px;line-height:1;cursor:pointer;transition:background .18s}
+.lightbox-close:hover{background:rgba(255,255,255,.22)}
+.lightbox-backdrop{position:absolute;inset:0;cursor:zoom-out}
+.card .body{padding:16px 18px 18px}
+.card .beam{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink-2);border-radius:6px;padding:3px 8px;letter-spacing:.04em}
+.card h3{font-size:1.05rem;margin:12px 0 6px}
+.card p{margin:0;font-size:13.5px;color:var(--muted)}
+
+/* downloads / docs */
+.dlist{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dl{display:flex;align-items:center;gap:16px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:.18s}
+.dl:hover{border-color:var(--blue-2);text-decoration:none;transform:translateY(-2px)}
+.dl .ic{flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:rgba(47,111,176,.1);color:var(--blue)}
+.dl .ic svg{width:20px;height:20px}
+.dl .txt{flex:1;min-width:0}
+.dl .txt strong{display:block;color:var(--text);font-size:15px}
+.dl .txt span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.dl .arr{color:var(--muted);transition:.18s}
+.dl:hover .arr{color:var(--blue);transform:translateX(3px)}
+.docs{display:flex;flex-wrap:wrap;gap:12px}
+.doc{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13.5px;color:var(--text);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 15px;box-shadow:var(--shadow);transition:.18s}
+.doc:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+.doc svg{width:15px;height:15px;color:var(--muted)}
+.doc:hover svg{color:var(--blue)}
+
+/* bibtex */
+.bib{position:relative;background:var(--ink);color:#dbe4f0;border-radius:var(--r);padding:22px 22px;overflow:auto;box-shadow:var(--shadow)}
+.bib pre{margin:0;font-family:var(--mono);font-size:13px;line-height:1.7;white-space:pre;color:#c9d6e6}
+.bib .copy{position:absolute;top:14px;right:14px;font-family:var(--mono);font-size:12px;font-weight:700;color:#0c1322;background:#fff;border:0;border-radius:7px;padding:6px 12px;cursor:pointer}
+.bib .copy:hover{background:var(--blue-2);color:#fff}
+
+/* footer */
+.footer{background:var(--ink);color:#aeb9c8;padding:42px 0;font-size:14px}
+.footer-inner{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.footer a{color:#cdd6e2}
+.footer .brand{font-size:16px}
+.footer .small{font-family:var(--mono);font-size:12px;color:#7f8b9d}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* responsive */
+@media (max-width:860px){
+  .hero-inner{grid-template-columns:1fr;gap:30px;padding:46px 0 56px}
+  .splitter{order:-1}
+  .stats{grid-template-columns:1fr}
+  .two,.grid-modules,.dlist{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  .nav-links{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+  .flow{animation:none}
+  .reveal{opacity:1;transform:none;transition:none}
+  .btn:hover,.card:hover,.dl:hover{transform:none}
+  .lightbox,.lightbox-inner{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#top" class="brand">Li<b>Seer</b></a>
+    <div class="nav-links">
+      <a href="#idea">Idea</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#video">Video</a>
+      <a href="#deploy">On-vehicle</a>
+      <a href="#downloads">Downloads</a>
+    </div>
+    <a class="nav-cta" href="https://github.com/Easonxu-01/LiSeer-Simple" target="_blank" rel="noopener">Code ↗</a>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero" id="top">
+  <div class="container hero-inner">
+    <div>
+      <div class="eyebrow">Sensor-agnostic LiDAR perception · 2026</div>
+      <h1>Learning Generalizability from Randomness</h1>
+      <p class="lede">Zero-shot LiDAR semantic segmentation that transfers to <b>any unseen sensor</b> by disentangling scene&ndash;sensor geometry.</p>
+
+      <!-- EDIT ME: author list -->
+      <div class="authors"><span class="me">Zikun Xu</span>, Shuocheng Yang, Jiaohao Wang, Keqiang Li, Jianqiang Wang, Shaobing Xu;</div>
+      <div class="affil">School of Vehicle and Mobility, Tsinghua University</div>
+
+      <!-- EDIT ME: replace # with real links -->
+      <div class="btns">
+        <a class="btn primary" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5M7 3h7l5 5v13H7z"/><path d="M9 13h6M9 17h6"/></svg>Paper (PDF)</a>
+        <a class="btn" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>arXiv</a>
+        <a class="btn" href="https://github.com/Easonxu-01/LiSeer-Simple" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-4 1.4-4-2-6-2.5M16 22v-3.6a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.5 4.6 4.6 0 0 0-.1-3.5s-1.1-.3-3.6 1.3a12 12 0 0 0-6.4 0C5.6 1.6 4.5 1.9 4.5 1.9a4.6 4.6 0 0 0-.1 3.5A5 5 0 0 0 3 8.9c0 5 3 6.3 6 6.6a3 3 0 0 0-.9 2.3V22"/></svg>Code</a>
+        <a class="btn" href="#downloads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>Data</a>
+        <a class="btn" href="#video">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg>Video</a>
+      </div>
+    </div>
+
+    <!-- SIGNATURE: interactive optics bench — prism (S-Film) refracts face-to-face, polarizer (CBA-CL) blocks SG, passes SIG from its center -->
+    <figure class="splitter">
+      <svg id="optics" viewBox="0 0 470 280" width="100%" role="img" aria-label="Interactive optics diagram: a LiDAR scan enters one face of an equilateral prism (S-Film) and exits the opposite face dispersed into a scene-intrinsic beam (SIG) and a sensor-sampling beam (SG); a polarizer (CBA-CL) blocks SG while SIG passes through its center to every LiDAR.">
+        <defs>
+          <linearGradient id="gGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfeaff" stop-opacity=".58"/><stop offset=".5" stop-color="#9fd0ff" stop-opacity=".3"/><stop offset="1" stop-color="#16223a" stop-opacity=".92"/></linearGradient>
+          <linearGradient id="gSlab" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#dcefff" stop-opacity=".62"/><stop offset=".5" stop-color="#8fc4f2" stop-opacity=".22"/><stop offset="1" stop-color="#16223a" stop-opacity=".82"/></linearGradient>
+          <linearGradient id="gBand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4a63"/><stop offset=".5" stop-color="#2f7fa6"/><stop offset="1" stop-color="#15384f"/></linearGradient>
+          <filter id="glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <clipPath id="slabClip"><rect x="-11" y="-62" width="22" height="124" rx="6"/></clipPath>
+        </defs>
+
+        <!-- beams (geometry set by JS) -->
+        <line id="beamIn"   class="beam" stroke="#9fb2cc" stroke-width="7"/>
+        <line id="beamInF"  class="beam flow" stroke="#dce8f8" stroke-width="7"/>
+        <line id="beamSG"   class="beam" stroke="#e58236" stroke-width="12" opacity=".62"/>
+        <line id="beamSGF"  class="beam flow" stroke="#f6bd8c" stroke-width="5" opacity=".75"/>
+        <line id="beamSIG"  class="beam" stroke="#56adf0" stroke-width="12"/>
+        <line id="beamSIGF" class="beam flow" stroke="#bfe0ff" stroke-width="5"/>
+        <line id="beamOut"  class="beam" stroke="#7cc0ff" stroke-width="12"/>
+        <line id="beamOutF" class="beam flow" stroke="#e7f3ff" stroke-width="5"/>
+
+        <!-- dispersion point, SG block marker, output target -->
+        <g id="spark"><circle r="12" fill="#ffffff" opacity=".22"/><circle r="5" fill="#ffffff"/></g>
+        <g id="block">
+          <circle r="14" fill="#e07b39" opacity=".16"/>
+          <line x1="-7" y1="-7" x2="7" y2="7" stroke="#f08a3a" stroke-width="3.6" stroke-linecap="round"/>
+          <line x1="-7" y1="7" x2="7" y2="-7" stroke="#f08a3a" stroke-width="3.6" stroke-linecap="round"/>
+        </g>
+        <g id="target"><circle r="10" fill="none" stroke="#7cc0ff" stroke-width="2.2"/><circle r="3.6" fill="#7cc0ff"/></g>
+
+        <!-- SIG / SG labels (positioned by JS) -->
+        <text id="sigLbl" class="blbl" text-anchor="middle">SIG</text>
+        <text id="sgLbl"  class="rlbl" text-anchor="middle">SG</text>
+
+        <!-- source = LiDAR sensor icon (fixed) -->
+        <g id="src">
+          <rect x="-29" y="-25" width="58" height="50" rx="9" fill="#e9eef6" stroke="#9fb2cc" stroke-width="2.2"/>
+          <rect x="-29" y="-12" width="58" height="24" fill="url(#gBand)"/>
+          <line x1="-20" y1="-18" x2="20" y2="-18" stroke="#c2cedd" stroke-width="2"/>
+          <line x1="-20" y1="18" x2="20" y2="18" stroke="#c2cedd" stroke-width="2"/>
+          <text class="olbl" y="42" text-anchor="middle">raw scan</text>
+        </g>
+
+        <!-- PRISM = S-Film : equilateral, drag body to move, drag knob to rotate -->
+        <g id="prism" class="draggable">
+          <line class="stem" x1="0" y1="0" x2="0" y2="-90"/>
+          <g filter="url(#glow)">
+            <polygon class="prismBody" points="0,-68 -59,34 59,34" fill="url(#gGlass)" stroke="#cfe9ff" stroke-width="2"/>
+            <polygon points="0,-68 -59,34 59,34" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="1"/>
+          </g>
+          <text class="clbl" y="56" text-anchor="middle">S-Film</text>
+          <circle class="knob" cx="0" cy="-90" r="7"/>
+        </g>
+
+        <!-- POLARIZER = CBA-CL : tall slab, drag body to move, drag knob to tilt -->
+        <g id="pol" class="draggable">
+          <line class="stem" x1="0" y1="0" x2="0" y2="-84"/>
+          <g filter="url(#glow)">
+            <rect class="polSlab" x="-11" y="-62" width="22" height="124" rx="6" fill="url(#gSlab)" stroke="#cfe9ff" stroke-width="2"/>
+            <g id="slats" clip-path="url(#slabClip)">
+              <line x1="-6" y1="-60" x2="-6" y2="60"/><line x1="0" y1="-60" x2="0" y2="60"/><line x1="6" y1="-60" x2="6" y2="60"/>
+            </g>
+          </g>
+          <text class="clbl" y="82" text-anchor="middle">CBA-CL</text>
+          <circle class="knob" id="polKnob" cx="0" cy="-84" r="7"/>
+        </g>
+      </svg>
+      <figcaption><b style="color:#9cc8f3">SIG</b> passes through · <b style="color:#eab089">SG</b> blocked &nbsp;—&nbsp; drag the <b>prism</b> &amp; <b>polarizer</b>, or grab a knob to rotate.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<!-- ===================== ABSTRACT ===================== -->
+<section class="section" id="abstract">
+  <div class="container">
+    <div class="tldr reveal">
+      <div class="chip">TL;DR</div>
+      <p class="lead">A single network trained on one LiDAR collapses on a different one. LiSeer treats every LiDAR as a sparse sampler of the same 3D world, generates diverse cross-sensor data from one dataset, and learns what is invariant across sensors — so it segments scans from sensors it has never seen, with no target data.</p>
+    </div>
+    <div class="prose reveal" style="margin-top:26px;max-width:72ch">
+      <p>LiDAR perception is locked into a single-dataset training paradigm: each new or upgraded sensor demands fresh data collection, annotation, and retraining. We reframe the problem geometrically — any LiDAR is simply a sparse sampler of one shared 3D world, so each scan decomposes into <b>scene-intrinsic geometry (SIG)</b>, which is sensor-invariant, and <b>sampling geometry (SG)</b>, which is sensor-specific. Cross-sensor generalization then reduces to learning SIG while not overfitting SG. LiSeer realizes this with a controllable data engine and two lightweight modules, and is validated on three benchmarks and three real vehicles carrying previously unseen LiDARs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== THE IDEA ===================== -->
+<section class="section tint" id="idea">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">The idea</div>
+      <h2>Scene&ndash;sensor disentanglement</h2>
+      <p class="lead">What a scene <em>is</em> should not depend on how a sensor <em>samples</em> it. LiSeer separates the two.</p>
+    </div>
+    <figure class="fig reveal">
+      <div class="fig-media"><img src="assets/insight.png" alt="Scene-intrinsic geometry versus sampling geometry" data-name="assets/insight.png" onerror="imgFail(this)" /></div>
+      <figcaption><b>Fig 1.</b> LiSeer separates &ldquo;SIG&rdquo; from &ldquo;SG&rdquo; and learns to prioritize the former over the latter. S-Film acts as a beam splitter that gives &ldquo;SG&rdquo; an explicit modeling pathway in feature space, relieving the shared decoder from implicitly absorbing it, while CBA-CL acts as a polarization filter that further suppresses the influence of &ldquo;SG&rdquo; during optimization, guiding the model toward stable scene-consistent semantics across diverse LiDAR configurations.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================== METHOD ===================== -->
+<section class="section" id="method">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Method</div>
+      <h2>The LiSeer pipeline</h2>
+      <p class="lead">A unified pipeline that learns generalizability from randomness: broad exposure to sampling variation, plus guidance toward scene-intrinsic structure.</p>
+    </div>
+
+    <figure class="fig reveal">
+      <div class="fig-media"><img src="assets/framework.png" alt="LiSeer framework overview" data-name="assets/framework.png" onerror="imgFail(this)" /></div>
+      <figcaption><b>Fig 2.</b> LiSeer first reconstructs a dense scene representation from a sparse LiDAR scan and propagates semantic labels to the densified points. During training, a physics-based controllable sampler then re-observes this scene under randomized sensor configurations to generate diverse LiDAR views for cross-sensor learning. Densification is performed offline, while randomized sampling is executed online.</figcaption>
+    </figure>
+
+    <div class="grid-modules reveal" style="margin-top:30px">
+      <div class="mod blue">
+        <span class="tag">Exposure</span>
+        <h3>Controllable data engine</h3>
+        <p>Densify each sparse scan, then resample it under randomized, physically grounded sensor configurations — beams, resolution, field of view, and mounting height — turning one dataset into a broad family of cross-sensor observations.</p>
+      </div>
+      <div class="mod orange">
+        <span class="tag">Guidance</span>
+        <h3>S-Film &amp; CBA-CL</h3>
+        <p>S-Film gives sensor variation (SG) an explicit pathway so the shared decoder can focus on SIG; CBA-CL pulls features toward consistent, class-boundary-aware semantics across different samplings of the same scene.</p>
+      </div>
+    </div>
+
+    <div class="two reveal" style="margin-top:22px">
+      <figure class="fig">
+        <div class="fig-media"><img src="assets/sensor_FiLM.png" alt="S-Film module" data-name="assets/sensor_FiLM.png" onerror="imgFail(this)" /></div>
+        <figcaption><b>S-Film</b> decouples &ldquo;SIG&rdquo; and &ldquo;SG&rdquo; by introducing a sensor head to predict sensor parameters from intermediate features. These parameters are then used to linearly modulate decoder features. During training, the modulation gradually shifts from ground-truth sensor parameters to predicted ones, enabling fully self-conditioned inference at test time.</figcaption>
+      </figure>
+      <figure class="fig">
+        <div class="fig-media"><img src="assets/CBA_CL.png" alt="CBA-CL module" data-name="assets/CBA_CL.png" onerror="imgFail(this)" /></div>
+        <figcaption><b>CBA-CL</b> module takes different point clouds sampled from the same scene as input, enhances boundaries and minority classes, and performs collaborative optimization on the two frames based on the prediction confidence. It steers the learning direction of the model toward &ldquo;SIG&rdquo; instead of &ldquo;SG&rdquo;.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RESULTS ===================== -->
+<section class="section tint" id="results">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Results</div>
+      <h2>Zero-shot across sensors</h2>
+      <p class="lead">Evaluated on SemanticKITTI, Waymo, and nuScenes under a shared label space and identical backbones.</p>
+    </div>
+
+    <div class="stats reveal">
+      <div class="stat">
+        <div class="num">+43.6<small>mIoU</small></div>
+        <div class="lbl">zero-shot cross-LiDAR gain over baselines (up to)</div>
+      </div>
+      <div class="stat accent">
+        <div class="num">10&ndash;20<small>%</small></div>
+        <div class="lbl">target labels needed to approach sensor-specific models</div>
+      </div>
+      <div class="stat">
+        <div class="num">32·80·128</div>
+        <div class="lbl">beam real-vehicle deployment, no target adaptation</div>
+      </div>
+    </div>
+
+    <figure class="fig reveal" style="margin-top:34px">
+      <div class="fig-media"><img src="assets/results_main.png" alt="Main source-to-unseen results" data-name="assets/results_main.png" onerror="imgFail(this)" /></div>
+      <figcaption><b>Fig 3.</b> Cell shading encodes mIoU magnitude (blue monochrome: light = low, saturated = high). <span style="color:#1f9d55;font-weight:600">Green</span> values show the performance drop on the target domain relative to the source domain for baseline methods. <span style="color:#c0392b;font-weight:600">Red</span> values show the improvement of LiSeer over the corresponding baseline on the target domain. All results use our re-implemented models.</figcaption>
+    </figure>
+
+    <figure class="fig reveal" style="margin-top:34px">
+      <div class="fig-media"><img src="assets/results_finetune.png" alt="Fine-tuning with partial target labels" data-name="assets/results_finetune.png" onerror="imgFail(this)" /></div>
+      <figcaption><b>Fig 4.</b> Cell shading encodes mIoU magnitude (blue monochrome: light = low, saturated = high). The left side of the &rarr; is the zero-shot performance of LiSeer-P on the target unseen LiDAR. <span style="color:#c0392b;font-weight:600">Red</span> values show the improvement of fine-tuned LiSeer, using partial target-domain data, over the same model without any access to target-domain data.</figcaption>
+    </figure>
+
+    <figure class="fig reveal" style="margin-top:34px">
+      <div class="fig-media"><img src="assets/results_previous.png" alt="Comparison with previous methods" data-name="assets/results_previous.png" onerror="imgFail(this)" /></div>
+      <figcaption><b>Fig 5.</b> <sup>&dagger;</sup> refer to the results given in Ryu et al. Each entry reports <em>mIoU</em> followed by relative drop rate in the first parentheses. The second parentheses show absolute mIoU difference against the corresponding <em>No operation</em> baseline under the same backbone and transfer direction; <span style="color:var(--orange);font-weight:600">orange</span> indicates positive and <span style="color:#c0392b;font-weight:600">red</span> indicates negative.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================== ON-VEHICLE ===================== -->
+<section class="section tint" id="deploy">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">On-vehicle</div>
+      <h2>Real platforms, unseen LiDARs</h2>
+      <p class="lead">The trained model runs directly on three in-house vehicles with sensors it never saw in training, across campus, urban, and rural scenes.</p>
+    </div>
+    <div class="cards reveal">
+      <article class="card">
+        <button type="button" class="media" data-lightbox="assets/courier.png" aria-label="View full image: TH-Courier"><img src="assets/courier.png" alt="TH-Courier platform" data-name="assets/courier.png" onerror="imgFail(this)" /></button>
+        <div class="body"><span class="beam">32-beam</span><h3>TH-Courier</h3><p>Compact courier robot, low mounting height, sparse scans.</p></div>
+      </article>
+      <article class="card">
+        <button type="button" class="media" data-lightbox="assets/AVT.png" aria-label="View full image: TH-AVT"><img src="assets/AVT.png" alt="TH-AVT platform" data-name="assets/AVT.png" onerror="imgFail(this)" /></button>
+        <div class="body"><span class="beam">80-beam</span><h3>TH-AVT</h3><p>Autonomous vehicle, dense roof-mounted sensor.</p></div>
+      </article>
+      <article class="card">
+        <button type="button" class="media" data-lightbox="assets/CS55.png" aria-label="View full image: TH-CS55"><img src="assets/CS55.png" alt="TH-CS55 platform" data-name="assets/CS55.png" onerror="imgFail(this)" /></button>
+        <div class="body"><span class="beam">128-beam</span><h3>TH-CS55</h3><p>Passenger vehicle, high-density unseen LiDAR.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== VIDEO ===================== -->
+<section class="section" id="video">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Video</div>
+      <h2>Overview &amp; live segmentation</h2>
+    </div>
+    <!-- EDIT ME: drop assets/demo.mp4 + assets/poster.jpg, or swap for a YouTube <iframe>. -->
+    <div class="video-frame reveal">
+      <video controls preload="none" poster="assets/poster.jpg">
+        <source src="assets/demo.mp4" type="video/mp4" />
+        Your browser does not support the video tag — <a href="assets/demo.mp4">download the video</a>.
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DOWNLOADS ===================== -->
+<section class="section" id="downloads">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Downloads</div>
+      <h2>Data &amp; checkpoints</h2>
+      <p class="lead">Everything you need to reproduce LiSeer.</p>
+    </div>
+    <!-- EDIT ME: point href to GitHub Releases, Google Drive, Zenodo, etc. -->
+    <div class="dlist reveal">
+      <a class="dl" href="#" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span>
+        <span class="txt"><strong>Pretrained checkpoints</strong><span>LiSeer-V / LiSeer-P · ~XX MB</span></span>
+        <span class="arr">&rarr;</span>
+      </a>
+      <a class="dl" href="#" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v13H3z"/><path d="M3 7l3-3h6l2 3"/></svg></span>
+        <span class="txt"><strong>Densified data &amp; labels</strong><span>SemanticKITTI / nuScenes / Waymo · ~XX GB</span></span>
+        <span class="arr">&rarr;</span>
+      </a>
+      <a class="dl" href="#" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg></span>
+        <span class="txt"><strong>Real-vehicle clips</strong><span>32 / 80 / 128-beam sequences · ~XX GB</span></span>
+        <span class="arr">&rarr;</span>
+      </a>
+      <a class="dl" href="#" target="_blank" rel="noopener">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-4 1.4-4-2-6-2.5M16 22v-3.6a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.5 4.6 4.6 0 0 0-.1-3.5s-1.1-.3-3.6 1.3a12 12 0 0 0-6.4 0C5.6 1.6 4.5 1.9 4.5 1.9a4.6 4.6 0 0 0-.1 3.5A5 5 0 0 0 3 8.9c0 5 3 6.3 6 6.6a3 3 0 0 0-.9 2.3V22"/></svg></span>
+        <span class="txt"><strong>Source code</strong><span>training &amp; evaluation · GitHub</span></span>
+        <span class="arr">&rarr;</span>
+      </a>
+    </div>
+
+    <!-- DOCS: link to sub-README files in your repo -->
+    <div style="margin-top:34px">
+      <div class="eyebrow reveal" style="margin-bottom:14px">Documentation</div>
+      <div class="docs reveal">
+        <!-- EDIT ME: these point to /docs/*.md rendered on GitHub -->
+        <a class="doc" href="https://github.com/Easonxu-01/LiSeer-Simple/blob/main/docs/getting-started.md" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/></svg>Getting started</a>
+        <a class="doc" href="https://github.com/Easonxu-01/LiSeer-Simple/blob/main/docs/dataset.md" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/></svg>Dataset preparation</a>
+        <a class="doc" href="https://github.com/Easonxu-01/LiSeer-Simple/blob/main/docs/evaluation.md" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/></svg>Training &amp; evaluation</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== BIBTEX ===================== -->
+<section class="section tint" id="cite">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Citation</div>
+      <h2>BibTeX</h2>
+    </div>
+    <div class="bib reveal">
+      <button class="copy" onclick="copyBib(this)">Copy</button>
+<pre id="bibtex">@article{xu2026liseer,
+  title   = {Learning Generalizability from Randomness: Zero-Shot
+             LiDAR Semantic Segmentation via Scene--Sensor Disentanglement},
+  author  = {Xu, Zikun and others},
+  journal = {Preprint},
+  year    = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- lightbox for on-vehicle platform images -->
+<div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="lightbox-cap">
+  <div class="lightbox-backdrop" data-lightbox-close></div>
+  <div class="lightbox-inner">
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&times;</button>
+    <img id="lightbox-img" src="" alt="" />
+    <p class="lightbox-cap" id="lightbox-cap"></p>
+  </div>
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="brand">Li<b style="color:var(--blue-2)">Seer</b></div>
+      <div class="small" style="margin-top:6px">Sensor-agnostic LiDAR perception</div>
+    </div>
+    <div class="small">
+      <a href="https://github.com/Easonxu-01/LiSeer-Simple" target="_blank" rel="noopener">github.com/Easonxu-01/LiSeer-Simple</a>
+      &nbsp;·&nbsp; Page generated for the LiSeer project.
+    </div>
+  </div>
+</footer>
+
+<script>
+/* graceful fallback for figures not yet added to /assets */
+function imgFail(img){
+  var ph=document.createElement('div');
+  ph.className='fig-ph';
+  ph.innerHTML='<span>'+(img.getAttribute('data-name')||img.alt||'figure')+'</span><small>add this file to your repo</small>';
+  img.parentNode.replaceChild(ph,img);
+}
+/* copy bibtex */
+function copyBib(btn){
+  var t=document.getElementById('bibtex').innerText;
+  navigator.clipboard.writeText(t).then(function(){
+    var o=btn.textContent; btn.textContent='Copied'; setTimeout(function(){btn.textContent=o;},1500);
+  });
+}
+/* nav shadow on scroll */
+var nav=document.getElementById('nav');
+addEventListener('scroll',function(){ nav.classList.toggle('scrolled', scrollY>8); },{passive:true});
+/* scroll reveal */
+var io=new IntersectionObserver(function(es){
+  es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+/* ---------- interactive optics bench (hero) ---------- */
+(function(){
+  var svg=document.getElementById('optics'); if(!svg) return;
+  var $=function(id){return document.getElementById(id);};
+  var D=Math.PI/180, SRC={x:52,y:138};
+  var home={ prism:{x:186,y:160,rot:0}, pol:{x:370,y:138,rot:0} };
+  var st={ prism:{x:186,y:160,rot:0}, pol:{x:370,y:138,rot:0} };
+  var springRaf=null;
+  var SPRING_MS=1400;                            // total return duration (ms)
+  var SPRING_OVERSHOOT=1.28;                   // easeOutBack strength; lower = subtler bounce
+  var VB={x0:8,x1:462,y0:8,y1:272};          // viewBox bounds for beam ends / labels
+  var CR={x0:80,x1:400,y0:105,y1:194};       // allowed region for draggable centres
+  function clampVB(p){return {x:Math.max(VB.x0,Math.min(VB.x1,p.x)),y:Math.max(VB.y0,Math.min(VB.y1,p.y))};}
+  function clampCR(p){return {x:Math.max(CR.x0,Math.min(CR.x1,p.x)),y:Math.max(CR.y0,Math.min(CR.y1,p.y))};}
+  function setLine(el,a,b){el.setAttribute('x1',a.x);el.setAttribute('y1',a.y);el.setAttribute('x2',b.x);el.setAttribute('y2',b.y);}
+  function rotv(v,deg){var c=Math.cos(deg*D),s=Math.sin(deg*D);return {x:v.x*c-v.y*s,y:v.x*s+v.y*c};}
+  function addv(a,b){return {x:a.x+b.x,y:a.y+b.y};}
+  function mid(a,b){return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+  function rotDelta(from,to){var d=to-from; while(d>180)d-=360; while(d<-180)d+=360; return d;}
+  function easeOutBack(t,c1){ var c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2); }
+  function cancelSpring(){ if(springRaf){ cancelAnimationFrame(springRaf); springRaf=null; } }
+  function springBack(key){
+    cancelSpring();
+    var h=home[key], o=st[key];
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      o.x=h.x; o.y=h.y; o.rot=h.rot; render(); return;
+    }
+    var from={x:o.x,y:o.y,rot:o.rot}, drot=rotDelta(from.rot,h.rot), t0=performance.now();
+    function tick(now){
+      var t=Math.min(1,(now-t0)/SPRING_MS), e=easeOutBack(t,SPRING_OVERSHOOT);
+      o.x=from.x+(h.x-from.x)*e;
+      o.y=from.y+(h.y-from.y)*e;
+      o.rot=from.rot+drot*e;
+      render();
+      if(t<1) springRaf=requestAnimationFrame(tick);
+      else{ o.x=h.x; o.y=h.y; o.rot=h.rot; render(); springRaf=null; }
+    }
+    springRaf=requestAnimationFrame(tick);
+  }
+
+  function render(){
+    var P=st.prism, Q=st.pol;
+    var entry=addv(P, rotv({x:-26.6,y:-22},P.rot));  // scan enters this (upper) face
+    var exit =addv(P, rotv({x: 26.6,y:-22},P.rot));  // dispersed beams leave the opposite face
+    var up=rotv({x:0,y:-1},Q.rot);                   // polarizer slab axis (up)
+    var bluePt=addv(Q,{x:up.x*34,y:up.y*34});        // SIG enters CBA-CL (upper part)
+    var orangePt=addv(Q,{x:-up.x*34,y:-up.y*34});    // SG hits the lower part and stops
+    var s0={x:SRC.x+30,y:SRC.y};
+    // input scan -> prism entry face
+    setLine($('beamIn'),s0,entry); setLine($('beamInF'),s0,entry);
+    // SIG segment 1: exit face -> into CBA-CL (need not align with the output)
+    setLine($('beamSIG'),exit,bluePt); setLine($('beamSIGF'),exit,bluePt);
+    // SIG segment 2: leaves CBA-CL from its centre, straight to the LiDARs
+    var O=clampVB({x:VB.x1, y:Q.y});
+    setLine($('beamOut'),Q,O); setLine($('beamOutF'),Q,O);
+    // SG: exit face -> CBA-CL, blocked
+    setLine($('beamSG'),exit,orangePt); setLine($('beamSGF'),exit,orangePt);
+    // markers
+    $('spark').setAttribute('transform','translate('+exit.x+','+exit.y+')');
+    $('block').setAttribute('transform','translate('+orangePt.x+','+orangePt.y+')');
+    $('target').setAttribute('transform','translate('+O.x+','+O.y+')');
+    // SIG / SG labels at beam midpoints
+    var sm=clampVB({x:mid(exit,bluePt).x, y:mid(exit,bluePt).y-12});
+    var gm=clampVB({x:mid(exit,orangePt).x, y:mid(exit,orangePt).y+18});
+    $('sigLbl').setAttribute('x',sm.x.toFixed(1)); $('sigLbl').setAttribute('y',sm.y.toFixed(1));
+    $('sgLbl').setAttribute('x',gm.x.toFixed(1));  $('sgLbl').setAttribute('y',gm.y.toFixed(1));
+    // groups
+    $('src').setAttribute('transform','translate('+SRC.x+','+SRC.y+')');
+    $('prism').setAttribute('transform','translate('+P.x+','+P.y+') rotate('+P.rot+')');
+    $('pol').setAttribute('transform','translate('+Q.x+','+Q.y+') rotate('+Q.rot+')');
+  }
+
+  function toSvg(e){var m=svg.getScreenCTM(); if(!m) return {x:0,y:0}; var p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; p=p.matrixTransform(m.inverse()); return p;}
+  var drag=null;
+  function start(key,mode){return function(e){e.preventDefault();e.stopPropagation();cancelSpring();var p=toSvg(e),o=st[key];drag={key:key,mode:mode}; if(mode==='move'){drag.dx=o.x-p.x;drag.dy=o.y-p.y;} $(key).classList.add('drag'); window.addEventListener('pointermove',move); window.addEventListener('pointerup',end);};}
+  function move(e){ if(!drag) return; var p=toSvg(e), o=st[drag.key]; if(drag.mode==='move'){var c=clampCR({x:p.x+drag.dx,y:p.y+drag.dy}); o.x=c.x; o.y=c.y;} else {o.rot=Math.atan2(p.y-o.y,p.x-o.x)/D+90;} render(); }
+  function end(){ if(drag){ $(drag.key).classList.remove('drag'); springBack(drag.key); } drag=null; window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',end); }
+
+  $('prism').addEventListener('pointerdown',start('prism','move'));
+  $('prism').querySelector('.knob').addEventListener('pointerdown',start('prism','rot'));
+  $('pol').addEventListener('pointerdown',start('pol','move'));
+  $('polKnob').addEventListener('pointerdown',start('pol','rot'));
+  render();
+})();
+
+/* on-vehicle image lightbox */
+(function(){
+  var lb=document.getElementById('lightbox');
+  var lbImg=document.getElementById('lightbox-img');
+  var lbCap=document.getElementById('lightbox-cap');
+  if(!lb||!lbImg) return;
+
+  function openLightbox(src, alt, cap){
+    lbImg.src=src;
+    lbImg.alt=alt||'';
+    lbCap.textContent=cap||alt||'';
+    lb.classList.add('open');
+    lb.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    lb.querySelector('.lightbox-close').focus();
+  }
+  function closeLightbox(){
+    lb.classList.remove('open');
+    lb.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    lbImg.src='';
+  }
+
+  document.querySelectorAll('#deploy [data-lightbox]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var img=btn.querySelector('img');
+      if(!img||!img.src||btn.querySelector('.fig-ph')) return;
+      var cap=btn.closest('.card').querySelector('h3');
+      openLightbox(btn.getAttribute('data-lightbox')||img.src, img.alt, cap?cap.textContent:'');
+    });
+  });
+  lb.querySelectorAll('[data-lightbox-close]').forEach(function(el){
+    el.addEventListener('click',closeLightbox);
+  });
+  addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&lb.classList.contains('open')) closeLightbox();
+  });
+})();
+</script>
+</body>
+</html>
