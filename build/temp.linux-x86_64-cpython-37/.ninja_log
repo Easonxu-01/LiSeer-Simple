@@ -1,0 +1,5 @@
+# ninja log v5
+1	504	1691971390880315247	/home/eason/workspace_percepertion/OpenOccupancy/build/temp.linux-x86_64-cpython-37/projects/occ_plugin/ops/occ_pooling/src/occ_pool_cuda.o	4ab44d5c5007b73b
+0	15798	1691971406168451214	/home/eason/workspace_percepertion/OpenOccupancy/build/temp.linux-x86_64-cpython-37/projects/occ_plugin/ops/occ_pooling/src/occ_pool.o	13a3b144c2fd9e9a
+2	508	1696833550979493836	/home/eason/workspace_percepertion/UniLiDAR/build/temp.linux-x86_64-cpython-37/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool_cuda.o	ab30900cb6d3f274
+2	15599	1696833566067630079	/home/eason/workspace_percepertion/UniLiDAR/build/temp.linux-x86_64-cpython-37/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool.o	fe305118bcd56da0

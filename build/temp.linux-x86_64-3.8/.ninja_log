@@ -1,0 +1,6 @@
+# ninja log v5
+1	493	1701936570416605606	/home/eason/workspace_percepertion/UniLiDAR/build/temp.linux-x86_64-3.8/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool_cuda.o	b1f70c13abf90774
+0	15413	1701936585328751434	/home/eason/workspace_percepertion/UniLiDAR/build/temp.linux-x86_64-3.8/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool.o	915f781affca588b
+1	1065	1705392448261276268	/home/eason/workspace_perception/UniLiDAR/build/temp.linux-x86_64-3.8/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool_cuda.o	1e5738dc1d795c09
+1	16965	1705392464161430586	/home/eason/workspace_perception/UniLiDAR/build/temp.linux-x86_64-3.8/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool.o	db5d448820afe43d
+5	16393	1731294836897978875	/home/eason/workspace_perception/UniLiDAR/build/temp.linux-x86_64-3.8/projects/unilidar_plugin/ops/occ_pooling/src/occ_pool.o	db5d448820afe43d
