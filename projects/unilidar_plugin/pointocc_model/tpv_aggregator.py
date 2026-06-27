@@ -5,7 +5,7 @@ from copy import deepcopy
 # from utils.lovasz_losses import lovasz_softmax
 # from utils.sem_geo_loss import geo_scal_loss, sem_scal_loss
 from projects.unilidar_plugin.utils.semkitti import geo_scal_loss, sem_scal_loss, CE_ssc_loss
-from projects.unilidar_plugin.occupancy.dense_heads.lovasz_softmax import lovasz_softmax
+from projects.unilidar_plugin.utils.lovasz_softmax import lovasz_softmax
 import numpy as np
 from projects.unilidar_plugin.utils.nusc_param import nusc_class_frequencies, nusc_class_names
 from projects.unilidar_plugin.utils.semkitti import semantic_kitti_class_frequencies, kitti_class_names
@@ -1338,20 +1338,20 @@ class TPVAggregator_Seg(BaseModule):
                         point_logits.append(pts_out_i)
                         sensor_outs.append(sensor_out_i)
                 else:
-                    # 辅助样本：仅推理，不计算监督损失，也不参与反向传播
-                    with torch.no_grad():
-                        out_i = self._forward_single(
-                            [tpv_xy_i, tpv_yz_i, tpv_zx_i],
-                            points=pts_i,
-                            voxel_label=None,          # 不计算监督 voxel loss
-                            point_labels=None,         # 不计算监督 point loss
-                            dataset_flag=dataset_flag_i,
-                            return_loss=False,         # 只拿 logits
-                            sensor_vec=sensor_vec_i,
-                            return_logits=True,
-                            logits_vox_t=None,
-                            logits_pts_t=None,
-                        )
+                    # 辅助样本：不计算监督损失，但参与一致性损失的反向传播
+                    # （CBA-CL 默认两个 view 都回梯度，因此这里不再使用 torch.no_grad）
+                    out_i = self._forward_single(
+                        [tpv_xy_i, tpv_yz_i, tpv_zx_i],
+                        points=pts_i,
+                        voxel_label=None,          # 不计算监督 voxel loss
+                        point_labels=None,         # 不计算监督 point loss
+                        dataset_flag=dataset_flag_i,
+                        return_loss=False,         # 只拿 logits
+                        sensor_vec=sensor_vec_i,
+                        return_logits=True,
+                        logits_vox_t=None,
+                        logits_pts_t=None,
+                    )
                     vox_i, pts_out_i, sensor_out_i = out_i
                     voxel_logits.append(vox_i)
                     point_logits.append(pts_out_i)
@@ -1432,50 +1432,34 @@ class TPVAggregator_Seg(BaseModule):
                 voxel_labels_for_consistency.append(voxel_labels_for_consistency[0])
                 num_samples = 2 # 更新本地计数
             if len(voxel_logits) > 1:
-                kl_total = voxel_logits[0].new_tensor(0.0)
+                # 与外部 _cb_adc_consistency_loss 保持一致的实现；两个 view 都参与反向传播。
+                cl_weight = float(self.consistency_loss_weight)
+                cl_total = loss_consistency_val.new_zeros(())
                 pairs = 0
-                # 只在每对内部计算 JS：(0,1)、(2,3)、(4,5)…，不跨组比较
+                # 只在每对内部计算：(0,1)、(2,3)、(4,5)…，不跨组比较
                 for i in range(0, len(voxel_logits) - 1, 2):
                     j = i + 1
-                    # 1. 获取 Logits 并进行温度缩放
-                    logits_p = voxel_logits[i] / T
-                    logits_q = voxel_logits[j] / T
-                    log_p = F.log_softmax(logits_p, dim=1)
-                    log_q = F.log_softmax(logits_q, dim=1)
-                    p = torch.exp(log_p)
-                    q = torch.exp(log_q)
-                    # 2. Jensen-Shannon 散度
-                    m = 0.5 * (p + q)
-                    log_m = torch.log(m + 1e-8)
-                    kl_pm = F.kl_div(log_m, p, reduction='none').sum(dim=1)
-                    kl_qm = F.kl_div(log_m, q, reduction='none').sum(dim=1)
-                    js_div = 0.5 * (kl_pm + kl_qm)
-                    # 3. 熵加权
-                    entropy_p = -(p * log_p).sum(dim=1)
-                    entropy_q = -(q * log_q).sum(dim=1)
-                    mean_entropy = 0.5 * (entropy_p + entropy_q)
-                    weight = torch.exp(-mean_entropy)
-                    # 4. valid mask（主样本有 voxel_label，辅助样本无；同组共用主样本的 mask）
+                    # 主样本有 voxel_label，辅助样本无；同组共用主样本的 label
                     group_idx = i // 2
                     vi = voxel_labels_for_consistency[group_idx] if group_idx < len(voxel_labels_for_consistency) else None
-                    vj = vi  # 同组同一场景，共用
-                    if vi is None or vj is None:
-                        valid_mask = torch.ones_like(js_div, dtype=torch.float32)
-                    else:
-                        if vi.dim() == 3:
-                            vi = vi.unsqueeze(0)
-                        if vj.dim() == 3:
-                            vj = vj.unsqueeze(0)
-                        valid_mask = ((vi != 0) & (vj != 0)).unsqueeze(1).float()
-                    denom = valid_mask.sum()
-                    kl_total = kl_total + (js_div * weight * valid_mask).sum() / (denom + 1e-6)
+                    if vi is None:
+                        continue
+                    cl_total = cl_total + cl_weight * _cb_adc_consistency_loss(
+                        voxel_logits[i],
+                        voxel_logits[j],
+                        vi,
+                        num_classes=self.classes,
+                        T=T,
+                        ignore_index=0,
+                        outer_scale=40.0,
+                    )
                     pairs += 1
 
                 if pairs > 0:
-                    loss_consistency_val = loss_consistency_val + (kl_total / pairs) * (T ** 2) * self.consistency_loss_weight
+                    loss_consistency_val = loss_consistency_val + cl_total / pairs
 
             # 最终赋值
-            agg_loss['loss_consistency'] = 2 * loss_consistency_val
+            agg_loss['loss_consistency'] = loss_consistency_val
             return agg_loss
 
         # 防御性检查：确保 points 是 tensor 而不是 list

@@ -121,7 +121,7 @@ backend_args = None
 
 Random = True
 dense7sparse = False
-ResetRandomProb = 0.0
+ResetRandomProb = 0.2
 consistency = False
 d2skd = True
 dense_train = False

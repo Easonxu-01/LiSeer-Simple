@@ -8,6 +8,5 @@ Description: 头部注释
 FilePath: /UniLiDAR/projects/unilidar_plugin/core/evaluation/__init__.py
 '''
 from .eval_hooks import OccDistEvalHook, OccEvalHook
-from .efficiency_hooks import OccEfficiencyHook
 from .swanlab import SwanlabLoggerHook
 from .curriculumhook import LiDARCurriculumHook

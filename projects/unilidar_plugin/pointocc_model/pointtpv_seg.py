@@ -359,74 +359,54 @@ class PointTPV_Seg(CenterPoint):
         if enable_model_random:
             train_grid, grid_ind, grid_ind_vox, train_pts_label, sensor_params = self._sampling(train_grid, grid_ind, grid_ind_vox, train_pts_label)
 
-        # consistency 模式：按组串行跑 backbone，避免 2x batch 同时进 backbone 导致 OOM
-        # 仅当 random 采样产生 2x 样本时进入
+        # CBA-CL：默认走 tpv_aggregator 的内部 consistency 分支（两个 view 都回梯度）。
+        # 这里只负责把整批（含成对的两个 view）特征一次性抽出来，配对与一致性
+        # 损失计算都交给 aggregator 内部分支处理（skip_consistency=False）。
+        # 仅当 random 采样产生 2x 样本时进入。
         if self.consistency and enable_model_random and isinstance(grid_ind, list) and len(grid_ind) >= 2:
             repeat = max(1, getattr(self, "sample_repeat_count", 2))
             total_samples = len(grid_ind)
             if total_samples % repeat != 0:
                 repeat = total_samples
             base_bs = total_samples // repeat
-            agg_loss = None
+
+            # 整批抽特征（含成对的两个 view），backbone 只跑一次
+            x_lidar_tpv = self.extract_feat(train_grid, grid_ind)
+
+            # aggregator 内部按 view 索引；points / point_labels / sensor 都是 per-view
+            points_for_agg = grid_ind_vox if grid_ind_vox else grid_ind
+
+            # voxel_label 是 per-scene（采样不复制），需要扩展为 per-view；
+            # dataset_flag 同理。两个 view 共用所属场景的 label / flag。
+            per_view_voxel = []
+            per_view_flag = []
             for b in range(base_bs):
-                idx_main, idx_aux = b * repeat, b * repeat + 1
-                if idx_aux >= total_samples:
-                    break
-                train_grid_main = [train_grid[idx_main]]
-                grid_for_tokenizer = [grid_ind[idx_main]]
-                grid_for_agg = [grid_ind_vox[idx_main]] if grid_ind_vox else [grid_ind[idx_main]]
-                voxel_main = train_voxel_label[b] if isinstance(train_voxel_label, list) else (train_voxel_label[b:b+1] if train_voxel_label is not None else None)
-                if voxel_main is not None and isinstance(voxel_main, torch.Tensor) and voxel_main.dim() == 3:
-                    voxel_main = voxel_main.unsqueeze(0)
-                pts_main = train_pts_label[idx_main] if isinstance(train_pts_label, list) else train_pts_label[idx_main:idx_main+1]
-                if isinstance(pts_main, torch.Tensor) and pts_main.dim() == 1:
-                    pts_main = pts_main.unsqueeze(0)
-                sensor_main = sensor_params[idx_main:idx_main+1] if sensor_params is not None and isinstance(sensor_params, torch.Tensor) and sensor_params.dim() > 1 else sensor_params
-
-                x_main = self.extract_feat(train_grid_main, grid_for_tokenizer)
-                out_main = self.tpv_aggregator(
-                    x_main, points=grid_for_agg, voxel_label=voxel_main, point_labels=pts_main,
-                    dataset_flag=dataset_flag[b] if isinstance(dataset_flag, list) else dataset_flag,
-                    return_loss=True, sensor_vec=sensor_main, skip_consistency=True, return_logits_for_consistency=True
-                )
-                loss_main_dict, logits_vox_main = out_main[0], out_main[1]
-
-                with torch.no_grad():
-                    train_grid_aux = [train_grid[idx_aux]]
-                    grid_aux_tokenizer = [grid_ind[idx_aux]]
-                    grid_aux_agg = [grid_ind_vox[idx_aux]] if grid_ind_vox else [grid_ind[idx_aux]]
-                    x_aux = self.extract_feat(train_grid_aux, grid_aux_tokenizer)
-                    out_aux = self.tpv_aggregator(
-                        x_aux, points=grid_aux_agg, voxel_label=None, point_labels=None,
-                        dataset_flag=dataset_flag[b] if isinstance(dataset_flag, list) else dataset_flag,
-                        return_loss=False, sensor_vec=sensor_main, skip_consistency=True, return_logits_for_consistency=True
-                    )
-                    logits_vox_aux = out_aux[0]
-                # base = 250
-                weight = float(getattr(self.tpv_aggregator, 'consistency_loss_weight', 0.0))
-                loss_main_dict['loss_consistency'] = weight * _cb_adc_consistency_loss(
-                    logits_vox_main,
-                    logits_vox_aux,
-                    voxel_main,
-                    num_classes=self.tpv_aggregator.classes,
-                    T=1.5,
-                    ignore_index=0,
-                    outer_scale=40.0,
-                )
-                # _cb_adc_consistency_loss(
-                #     logits_vox_main, logits_vox_aux, voxel_main,
-                #     num_classes=self.tpv_aggregator.classes
-                # )
-                
-
-                # consistency 模式下暂不加入 spectral distill（需 teacher 按组预测，可后续扩展）
-                if agg_loss is None:
-                    agg_loss = {k: v for k, v in loss_main_dict.items()}
+                if isinstance(train_voxel_label, list):
+                    vl = train_voxel_label[b]
                 else:
-                    for k in loss_main_dict:
-                        agg_loss[k] = agg_loss.get(k, 0) + loss_main_dict[k]
-            for k in agg_loss:
-                agg_loss[k] = agg_loss[k] / base_bs
+                    vl = train_voxel_label[b:b+1] if train_voxel_label is not None else None
+                if isinstance(vl, torch.Tensor) and vl.dim() == 3:
+                    vl = vl.unsqueeze(0)
+                if isinstance(dataset_flag, list):
+                    df = dataset_flag[b]
+                elif isinstance(dataset_flag, torch.Tensor):
+                    df = dataset_flag[b:b+1] if b < dataset_flag.shape[0] else dataset_flag
+                else:
+                    df = dataset_flag
+                for _ in range(repeat):
+                    per_view_voxel.append(vl)
+                    per_view_flag.append(df)
+
+            agg_loss = self.tpv_aggregator(
+                x_lidar_tpv,
+                points=points_for_agg,
+                voxel_label=per_view_voxel,
+                point_labels=train_pts_label,
+                dataset_flag=per_view_flag,
+                return_loss=True,
+                sensor_vec=sensor_params,
+                skip_consistency=False,
+            )
             agg_loss = self._apply_dynamic_loss_balance(agg_loss)
             return agg_loss
 
