@@ -129,8 +129,10 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 
 /* video */
 .video-frame{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000;box-shadow:var(--shadow);aspect-ratio:16/9;position:relative}
-.video-frame video,.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;display:block;border:0}
-.video-fallback{margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.video-frame video,.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;display:block;border:0;background:#000}
+.video-frame .video-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:opacity .35s ease}
+.video-frame.is-ready .video-poster{opacity:0}
+.video-fallback{margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted);text-align:center}
 .video-fallback a{font-weight:600}
 
 /* platform cards */
@@ -470,11 +472,12 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
       <div class="eyebrow">Video</div>
       <h2>Overview &amp; live segmentation</h2>
     </div>
-    <!-- Large demo video is hosted externally (see VIDEO config in <script> below). -->
-    <div class="video-frame reveal" id="video-mount" aria-label="LiSeer overview video"></div>
+    <!-- Video: Tsinghua Cloud share page embedded via iframe (stable /f/ link). -->
+    <div class="video-frame reveal" id="video-mount" aria-label="LiSeer overview video">
+      <img class="video-poster" id="video-poster" src="assets/LiSeer.jpg" alt="" aria-hidden="true" />
+    </div>
     <p class="video-fallback reveal" id="video-fallback" hidden>
-      If playback fails in your browser,
-      <a id="video-fallback-link" href="#" target="_blank" rel="noopener">open or download the video</a>.
+      <a id="video-fallback-link" href="#" target="_blank" rel="noopener">Open video in a new tab</a>
     </p>
   </div>
 </section>
@@ -573,38 +576,52 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 
 <script>
 /* ========== EXTERNAL VIDEO (EDIT ME) ==========
- * Videos are too large for GitHub — host on CDN / cloud / Bilibili / YouTube.
+ *
+ * Tsinghua Cloud seafhttp direct URLs expire after a few hours — do NOT hard-code them.
  *
  * mode:
- *   'mp4'      — direct HTTPS link to an .mp4 file (CDN, OSS, Tsinghua *direct* URL)
- *   'youtube'  — YouTube video id or youtu.be / watch URL
- *   'bilibili' — Bilibili BV id (e.g. BV1xx411c7mD) or full video URL
- *
- * mp4: Tsinghua seafhttp direct URL — expires periodically; re-copy from share page
- *   (view source → search "seafhttp" + ".mp4"). On failure, page auto-falls back to iframe.
- * poster: small jpg/png kept in docs/assets (optional).
- * fallbackUrl: share page shown if inline playback fails (optional).
+ *   'tsinghua' — RECOMMENDED for 清华云盘: embed the stable /f/ share page in an iframe.
+ *                Seafile's built-in player fetches a fresh stream URL on each load.
+ *   'youtube'  — YouTube video id or URL
+ *   'bilibili' — Bilibili BV id or URL
+ *   'mp4'      — permanent CDN/OSS direct .mp4 only (not Tsinghua seafhttp links)
  */
 var VIDEO = {
-  mode: 'mp4',
-  // Tsinghua Cloud *direct* stream URL (extract from share page HTML; tokens expire → update when 403).
-  mp4: 'https://cloud.tsinghua.edu.cn/seafhttp/files/cc76d7ee-e580-4845-bed3-a87e62a5db71/LiSeer.mp4',
+  mode: 'tsinghua',
+  shareUrl: 'https://cloud.tsinghua.edu.cn/f/b9d9ffe49fff4e11a295/',
   poster: 'assets/LiSeer.jpg',
-  fallbackUrl: 'https://cloud.tsinghua.edu.cn/f/b9d9ffe49fff4e11a295/',
+  mp4: '',
   youtube: '',
   bilibili: ''
 };
 
 (function mountExternalVideo(){
   var mount = document.getElementById('video-mount');
+  var poster = document.getElementById('video-poster');
   var fallback = document.getElementById('video-fallback');
   var fallbackLink = document.getElementById('video-fallback-link');
   if (!mount) return;
 
-  function showFallback(url){
+  function showExternalLink(url){
     if (!fallback || !fallbackLink || !url) return;
     fallbackLink.href = url;
     fallback.hidden = false;
+  }
+
+  function markReady(){
+    mount.classList.add('is-ready');
+  }
+
+  function embedIframe(url){
+    var frame = document.createElement('iframe');
+    frame.src = url;
+    frame.title = 'LiSeer overview video';
+    frame.allow = 'autoplay; fullscreen';
+    frame.allowFullscreen = true;
+    frame.loading = 'lazy';
+    frame.addEventListener('load', markReady);
+    mount.appendChild(frame);
+    showExternalLink(url);
   }
 
   function parseYoutubeId(v){
@@ -622,61 +639,63 @@ var VIDEO = {
     return m ? m[1] : v;
   }
 
-  var mode = (VIDEO.mode || 'mp4').toLowerCase();
-  var node;
+  var mode = (VIDEO.mode || 'tsinghua').toLowerCase();
+
+  if (mode === 'tsinghua' || mode === 'share') {
+    var shareUrl = (VIDEO.shareUrl || VIDEO.fallbackUrl || '').trim();
+    if (!shareUrl) {
+      mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.shareUrl to your Tsinghua Cloud /f/ link.</p>';
+      return;
+    }
+    embedIframe(shareUrl);
+    return;
+  }
 
   if (mode === 'youtube') {
     var yid = parseYoutubeId(VIDEO.youtube);
-    if (!yid) { mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.youtube to a valid id or URL.</p>'; return; }
-    node = document.createElement('iframe');
-    node.src = 'https://www.youtube.com/embed/' + yid + '?rel=0';
-    node.title = 'LiSeer overview video';
-    node.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    node.allowFullscreen = true;
-    if (VIDEO.fallbackUrl) showFallback(VIDEO.fallbackUrl);
-  } else if (mode === 'bilibili') {
-    var bvid = parseBilibiliBvid(VIDEO.bilibili);
-    if (!bvid) { mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.bilibili to a BV id or URL.</p>'; return; }
-    node = document.createElement('iframe');
-    node.src = 'https://player.bilibili.com/player.html?isOutside=true&bvid=' + encodeURIComponent(bvid) + '&page=1&high_quality=1&danmaku=0';
-    node.title = 'LiSeer overview video';
-    node.allowFullscreen = true;
-    if (VIDEO.fallbackUrl) showFallback(VIDEO.fallbackUrl);
-  } else {
-    var src = (VIDEO.mp4 || '').trim();
-    if (!src || src.indexOf('YOUR-CDN') !== -1) {
-      mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.mp4 to your direct HTTPS .mp4 URL.</p>';
-      if (VIDEO.fallbackUrl) showFallback(VIDEO.fallbackUrl);
+    if (!yid) {
+      mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.youtube to a valid id or URL.</p>';
       return;
     }
-
-    function embedShareIframe(url){
-      mount.innerHTML = '';
-      var frame = document.createElement('iframe');
-      frame.src = url;
-      frame.title = 'LiSeer overview video';
-      frame.allowFullscreen = true;
-      mount.appendChild(frame);
-      showFallback(url);
-    }
-
-    node = document.createElement('video');
-    node.controls = true;
-    node.preload = 'metadata';
-    node.playsInline = true;
-    if (VIDEO.poster) node.poster = VIDEO.poster;
-    var source = document.createElement('source');
-    source.src = src;
-    source.type = 'video/mp4';
-    node.appendChild(source);
-    node.addEventListener('error', function(){
-      // seafhttp tokens expire; fall back to the share-page player iframe
-      if (VIDEO.fallbackUrl) embedShareIframe(VIDEO.fallbackUrl);
-      else showFallback(src);
-    });
+    embedIframe('https://www.youtube.com/embed/' + yid + '?rel=0');
+    return;
   }
 
-  mount.appendChild(node);
+  if (mode === 'bilibili') {
+    var bvid = parseBilibiliBvid(VIDEO.bilibili);
+    if (!bvid) {
+      mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.bilibili to a BV id or URL.</p>';
+      return;
+    }
+    embedIframe('https://player.bilibili.com/player.html?isOutside=true&bvid=' + encodeURIComponent(bvid) + '&page=1&high_quality=1&danmaku=0');
+    return;
+  }
+
+  // mp4 — only for permanent CDN URLs; Tsinghua seafhttp links expire and must not be used here
+  var src = (VIDEO.mp4 || '').trim();
+  if (!src) {
+    mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.mp4 to a permanent direct URL, or use mode &quot;tsinghua&quot;.</p>';
+    if (VIDEO.shareUrl) showExternalLink(VIDEO.shareUrl);
+    return;
+  }
+
+  var video = document.createElement('video');
+  video.controls = true;
+  video.preload = 'metadata';
+  video.playsInline = true;
+  if (VIDEO.poster) video.poster = VIDEO.poster;
+  if (poster) poster.remove();
+  var source = document.createElement('source');
+  source.src = src;
+  source.type = 'video/mp4';
+  video.appendChild(source);
+  video.addEventListener('loadeddata', markReady);
+  video.addEventListener('error', function(){
+    if (VIDEO.shareUrl) embedIframe(VIDEO.shareUrl);
+    else showExternalLink(src);
+  });
+  mount.appendChild(video);
+  showExternalLink(VIDEO.shareUrl || src);
 })();
 
 /* graceful fallback for figures not yet added to /assets */
