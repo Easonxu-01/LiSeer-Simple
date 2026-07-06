@@ -132,6 +132,14 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 .video-frame video,.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;display:block;border:0;background:#000}
 .video-frame .video-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:opacity .35s ease}
 .video-frame.is-ready .video-poster{opacity:0}
+/* click-to-play facade: clean inline look, defers the heavy Seafile page until clicked */
+.video-frame.is-facade{cursor:pointer}
+.video-play{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0;cursor:pointer;transition:opacity .3s ease}
+.video-play::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,19,34,.15),rgba(12,19,34,.42))}
+.video-play .disc{position:relative;width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 10px 30px -8px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s}
+.video-play .disc svg{width:30px;height:30px;margin-left:5px;fill:var(--ink)}
+.video-frame:hover .video-play .disc{transform:scale(1.07);background:#fff}
+.video-play .hint{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:12px;letter-spacing:.03em;color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .video-fallback{margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted);text-align:center}
 .video-fallback a{font-weight:600}
 
@@ -624,6 +632,26 @@ var VIDEO = {
     showExternalLink(url);
   }
 
+  // Click-to-play facade for Tsinghua Cloud. The /f/ share page mints a FRESH
+  // stream token every time it loads, so injecting the iframe on click always
+  // yields a valid link — no expiring URL to hard-code, no manual updates.
+  function facadeIframe(url){
+    mount.classList.add('is-facade');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'video-play';
+    btn.setAttribute('aria-label', 'Play LiSeer overview video');
+    btn.innerHTML = '<span class="disc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>'
+      + '<span class="hint">Click to play · streamed from Tsinghua Cloud</span>';
+    btn.addEventListener('click', function(){
+      mount.classList.remove('is-facade');
+      btn.remove();
+      embedIframe(url);
+    });
+    mount.appendChild(btn);
+    showExternalLink(url);
+  }
+
   function parseYoutubeId(v){
     if (!v) return '';
     v = String(v).trim();
@@ -647,7 +675,7 @@ var VIDEO = {
       mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.shareUrl to your Tsinghua Cloud /f/ link.</p>';
       return;
     }
-    embedIframe(shareUrl);
+    facadeIframe(shareUrl);
     return;
   }
 
