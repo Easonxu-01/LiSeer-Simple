@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editor / local history
+.history/
+
+# Large media (host externally, not in git)
+*.mp4
+*.mov
+*.mkv
