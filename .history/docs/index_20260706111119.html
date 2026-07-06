@@ -8,8 +8,7 @@
 
 <!-- ============================================================
      EDIT ME: replace the links below with your real URLs.
-     Figures/posters stay in /docs/assets; large videos are hosted
-     externally — set VIDEO in the script block at the bottom.
+     Drop figures/videos into /assets and docs into /docs.
      ============================================================ -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -128,10 +127,8 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 .mod p{margin:0;color:#3a4452;font-size:14.5px}
 
 /* video */
-.video-frame{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000;box-shadow:var(--shadow);aspect-ratio:16/9;position:relative}
-.video-frame video,.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;display:block;border:0}
-.video-fallback{margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted)}
-.video-fallback a{font-weight:600}
+.video-frame{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#000;box-shadow:var(--shadow);aspect-ratio:16/9}
+.video-frame video,.video-frame iframe{width:100%;height:100%;display:block;border:0}
 
 /* platform cards */
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -470,12 +467,13 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
       <div class="eyebrow">Video</div>
       <h2>Overview &amp; live segmentation</h2>
     </div>
-    <!-- Large demo video is hosted externally (see VIDEO config in <script> below). -->
-    <div class="video-frame reveal" id="video-mount" aria-label="LiSeer overview video"></div>
-    <p class="video-fallback reveal" id="video-fallback" hidden>
-      If playback fails in your browser,
-      <a id="video-fallback-link" href="#" target="_blank" rel="noopener">open or download the video</a>.
-    </p>
+    <!-- EDIT ME: drop assets/demo.mp4 + assets/poster.jpg, or swap for a YouTube <iframe>. -->
+    <div class="video-frame reveal">
+      <video controls preload="none" poster="assets/LiSeer.jpg">
+        <source src="assets/LiSeer.mp4" type="video/mp4" />
+        Your browser does not support the video tag — <a href="assets/demo.mp4">download the video</a>.
+      </video>
+    </div>
   </div>
 </section>
 
@@ -572,99 +570,6 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 </footer>
 
 <script>
-/* ========== EXTERNAL VIDEO (EDIT ME) ==========
- * Videos are too large for GitHub — host on CDN / cloud / Bilibili / YouTube.
- *
- * mode:
- *   'mp4'      — direct HTTPS link to an .mp4 file (CDN, OSS, Tsinghua *direct* URL)
- *   'youtube'  — YouTube video id or youtu.be / watch URL
- *   'bilibili' — Bilibili BV id (e.g. BV1xx411c7mD) or full video URL
- *
- * mp4 URL must be a *direct* stream/download link, NOT a share page like
- * cloud.tsinghua.edu.cn/f/xxx (HTML preview — use its seafhttp .mp4 URL instead).
- * poster: small jpg/png kept in docs/assets (optional).
- * fallbackUrl: share page shown if inline playback fails (optional).
- */
-var VIDEO = {
-  mode: 'mp4',
-  // Direct stream URL from Tsinghua Cloud share page (not the /f/ HTML page itself).
-  mp4: 'https://cloud.tsinghua.edu.cn/seafhttp/files/5eaecbb2-39a1-432f-b954-57bb2ea1d954/LiSeer.mp4',
-  poster: 'assets/LiSeer.jpg',
-  fallbackUrl: 'https://cloud.tsinghua.edu.cn/f/b9d9ffe49fff4e11a295/',
-  youtube: '',
-  bilibili: ''
-};
-
-(function mountExternalVideo(){
-  var mount = document.getElementById('video-mount');
-  var fallback = document.getElementById('video-fallback');
-  var fallbackLink = document.getElementById('video-fallback-link');
-  if (!mount) return;
-
-  function showFallback(url){
-    if (!fallback || !fallbackLink || !url) return;
-    fallbackLink.href = url;
-    fallback.hidden = false;
-  }
-
-  function parseYoutubeId(v){
-    if (!v) return '';
-    v = String(v).trim();
-    if (/^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
-    var m = v.match(/(?:youtu\.be\/|v=|embed\/)([a-zA-Z0-9_-]{11})/);
-    return m ? m[1] : '';
-  }
-
-  function parseBilibiliBvid(v){
-    if (!v) return '';
-    v = String(v).trim();
-    var m = v.match(/(BV[a-zA-Z0-9]+)/i);
-    return m ? m[1] : v;
-  }
-
-  var mode = (VIDEO.mode || 'mp4').toLowerCase();
-  var node;
-
-  if (mode === 'youtube') {
-    var yid = parseYoutubeId(VIDEO.youtube);
-    if (!yid) { mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.youtube to a valid id or URL.</p>'; return; }
-    node = document.createElement('iframe');
-    node.src = 'https://www.youtube.com/embed/' + yid + '?rel=0';
-    node.title = 'LiSeer overview video';
-    node.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    node.allowFullscreen = true;
-    if (VIDEO.fallbackUrl) showFallback(VIDEO.fallbackUrl);
-  } else if (mode === 'bilibili') {
-    var bvid = parseBilibiliBvid(VIDEO.bilibili);
-    if (!bvid) { mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.bilibili to a BV id or URL.</p>'; return; }
-    node = document.createElement('iframe');
-    node.src = 'https://player.bilibili.com/player.html?isOutside=true&bvid=' + encodeURIComponent(bvid) + '&page=1&high_quality=1&danmaku=0';
-    node.title = 'LiSeer overview video';
-    node.allowFullscreen = true;
-    if (VIDEO.fallbackUrl) showFallback(VIDEO.fallbackUrl);
-  } else {
-    var src = (VIDEO.mp4 || '').trim();
-    if (!src || src.indexOf('YOUR-CDN') !== -1) {
-      mount.innerHTML = '<p style="color:#fff;padding:24px;font-family:var(--mono)">Set VIDEO.mp4 to your direct HTTPS .mp4 URL.</p>';
-      if (VIDEO.fallbackUrl) showFallback(VIDEO.fallbackUrl);
-      return;
-    }
-    node = document.createElement('video');
-    node.controls = true;
-    node.preload = 'metadata';
-    node.playsInline = true;
-    if (VIDEO.poster) node.poster = VIDEO.poster;
-    var source = document.createElement('source');
-    source.src = src;
-    source.type = 'video/mp4';
-    node.appendChild(source);
-    node.addEventListener('error', function(){ showFallback(VIDEO.fallbackUrl || src); });
-    showFallback(VIDEO.fallbackUrl || src);
-  }
-
-  mount.appendChild(node);
-})();
-
 /* graceful fallback for figures not yet added to /assets */
 function imgFail(img){
   var ph=document.createElement('div');
