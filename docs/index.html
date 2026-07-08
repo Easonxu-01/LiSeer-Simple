@@ -249,7 +249,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
     <div>
       <div class="eyebrow">Sensor-agnostic LiDAR perception · 2026</div>
       <h1>Learning Generalizability from Randomness</h1>
-      <p class="lede">Zero-shot LiDAR semantic segmentation that transfers to <b>any unseen sensor</b> by disentangling scene&ndash;sensor geometry.</p>
+      <p class="lede">Zero-shot LiDAR semantic segmentation that transfers to <b> multiple unseen sensor</b> by disentangling scene&ndash;sensor geometry.</p>
 
       <!-- EDIT ME: author list -->
       <div class="authors"><span class="me">Zikun Xu</span>, Shuocheng Yang, Jiaohao Wang, Keqiang Li, Jianqiang Wang, Shaobing Xu;</div>
@@ -259,8 +259,6 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
       <div class="btns">
         <a class="btn primary" href="https://github.com/Easonxu-01/LiSeer-Simple/tree/main/docs/assets/LiSeer.pdf" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5M7 3h7l5 5v13H7z"/><path d="M9 13h6M9 17h6"/></svg>Paper (PDF)</a>
-        <a class="btn" href="#" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>arXiv</a>
         <a class="btn" href="https://github.com/Easonxu-01/LiSeer-Simple" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-4 1.4-4-2-6-2.5M16 22v-3.6a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.5 4.6 4.6 0 0 0-.1-3.5s-1.1-.3-3.6 1.3a12 12 0 0 0-6.4 0C5.6 1.6 4.5 1.9 4.5 1.9a4.6 4.6 0 0 0-.1 3.5A5 5 0 0 0 3 8.9c0 5 3 6.3 6 6.6a3 3 0 0 0-.9 2.3V22"/></svg>Code</a>
         <a class="btn" href="#downloads">
@@ -347,10 +345,12 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
   <div class="container">
     <div class="tldr reveal">
       <div class="chip">TL;DR</div>
-      <p class="lead">A single network trained on one LiDAR collapses on a different one. LiSeer treats every LiDAR as a sparse sampler of the same 3D world, generates diverse cross-sensor data from one dataset, and learns what is invariant across sensors — so it segments scans from sensors it has never seen, with no target data.</p>
+      <p class="lead">LiSeer is trained on a single existing LiDAR yet generalizes to multiple unseen LiDARs with no additional effort — removing the long-standing dependence on per-sensor data collection and retraining, and greatly lowering the cost of migrating a perception system across different LiDARs.</p>
     </div>
     <div class="prose reveal" style="margin-top:26px;max-width:72ch">
-      <p>LiDAR perception is locked into a single-dataset training paradigm: each new or upgraded sensor demands fresh data collection, annotation, and retraining. We reframe the problem geometrically — any LiDAR is simply a sparse sampler of one shared 3D world, so each scan decomposes into <b>scene-intrinsic geometry (SIG)</b>, which is sensor-invariant, and <b>sampling geometry (SG)</b>, which is sensor-specific. Cross-sensor generalization then reduces to learning SIG while not overfitting SG. LiSeer realizes this with a controllable data engine and two lightweight modules, and is validated on three benchmarks and three real vehicles carrying previously unseen LiDARs.</p>
+      <p>LiDAR is a key sensor for autonomous vehicles and mobile robots, yet today&rsquo;s perception models suffer from a striking fragility: a model trained on one LiDAR fails almost completely on a different one, because it latches onto the idiosyncratic scanning pattern of the specific device rather than the underlying scene structure. Every new LiDAR then demands fresh data re-collection, re-annotation, and re-training — a costly cycle that has become a fundamental barrier to scalable, sensor-agnostic perception.</p>
+      <p>We reframe what a LiDAR is: any LiDAR is simply a <b>sparse sampler of the same underlying 3D world</b>, so each scan decomposes into <b>scene-intrinsic geometry (SIG)</b> &mdash; what the scene is &mdash; and <b>sensor-specific sampling geometry (SG)</b> &mdash; how the sensor samples it. Cross-sensor generalization then reduces to learning SIG while not overfitting SG, a principle we summarize as <b>&ldquo;learning generalizability from randomness&rdquo;</b>.</p>
+      <p>LiSeer realizes this as a unified pipeline with two complementary parts: <i>(i)</i> a controllable <b>data engine</b> that couples high-fidelity point-cloud densification with physics-based random sampling, turning one labeled dataset into a broad family of virtual cross-sensor observations without collecting any new data; and <i>(ii)</i> two lightweight, plug-and-play <b>modules</b> that explicitly separate what is intrinsic to the scene from what is specific to the sensor, steering learning toward the former. Without any target-sensor data, LiSeer improves zero-shot cross-LiDAR segmentation mIoU by <b>25.1 to 43.6 points</b> over strong baselines; with only <b>10&ndash;20%</b> of target data it matches models trained on that sensor with 100% data. Deployed without any adaptation on <b>three real vehicles</b> carrying previously unseen 32-, 80-, and 128-beam LiDARs across campus, urban, and rural environments, it produces accurate and stable segmentation on every platform.</p>
     </div>
   </div>
 </section>
