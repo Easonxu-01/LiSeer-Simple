@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>LiSeer · Learning Generalizability from Randomness</title>
-<meta name="description" content="LiSeer: zero-shot LiDAR semantic segmentation that generalizes to any sensor by disentangling scene-intrinsic geometry from sensor sampling." />
+<meta name="description" content="LiSeer: zero-shot LiDAR semantic segmentation that generalizes to multiple unseen sensors by disentangling scene-intrinsic geometry from sensor sampling." />
 
 <!-- ============================================================
      EDIT ME: replace the links below with your real URLs.
@@ -249,7 +249,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
     <div>
       <div class="eyebrow">Sensor-agnostic LiDAR perception · 2026</div>
       <h1>Learning Generalizability from Randomness</h1>
-      <p class="lede">Zero-shot LiDAR semantic segmentation that transfers to <b> multiple unseen sensor</b> by disentangling scene&ndash;sensor geometry.</p>
+      <p class="lede">Zero-shot LiDAR semantic segmentation that transfers to <b> multiple unseen LiDARs</b> by disentangling scene&ndash;sensor geometry.</p>
 
       <!-- EDIT ME: author list -->
       <div class="authors"><span class="me">Zikun Xu</span>, Shuocheng Yang, Jiaohao Wang, Keqiang Li, Jianqiang Wang, Shaobing Xu;</div>
@@ -379,22 +379,21 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
       <p class="lead">A unified pipeline that learns generalizability from randomness: broad exposure to sampling variation, plus guidance toward scene-intrinsic structure.</p>
     </div>
 
+    <div class="mod blue reveal" style="margin-bottom:22px">
+      <span class="tag">Exposure</span>
+      <h3>Controllable data engine</h3>
+      <p>Densify each sparse scan, then resample it under randomized, physically grounded sensor configurations — beams, resolution, field of view, and mounting height — turning one dataset into a broad family of cross-sensor observations.</p>
+    </div>
+
     <figure class="fig reveal">
       <div class="fig-media"><img src="assets/framework.png" alt="LiSeer framework overview" data-name="assets/framework.png" onerror="imgFail(this)" /></div>
       <figcaption><b>Fig 2.</b> LiSeer first reconstructs a dense scene representation from a sparse LiDAR scan and propagates semantic labels to the densified points. During training, a physics-based controllable sampler then re-observes this scene under randomized sensor configurations to generate diverse LiDAR views for cross-sensor learning. Densification is performed offline, while randomized sampling is executed online.</figcaption>
     </figure>
 
-    <div class="grid-modules reveal" style="margin-top:30px">
-      <div class="mod blue">
-        <span class="tag">Exposure</span>
-        <h3>Controllable data engine</h3>
-        <p>Densify each sparse scan, then resample it under randomized, physically grounded sensor configurations — beams, resolution, field of view, and mounting height — turning one dataset into a broad family of cross-sensor observations.</p>
-      </div>
-      <div class="mod orange">
-        <span class="tag">Guidance</span>
-        <h3>S-Film &amp; CBA-CL</h3>
-        <p>S-Film gives sensor variation (SG) an explicit pathway so the shared decoder can focus on SIG; CBA-CL pulls features toward consistent, class-boundary-aware semantics across different samplings of the same scene.</p>
-      </div>
+    <div class="mod orange reveal" style="margin-top:30px">
+      <span class="tag">Guidance</span>
+      <h3>S-Film &amp; CBA-CL</h3>
+      <p>S-Film gives sensor variation (SG) an explicit pathway so the shared decoder can focus on SIG; CBA-CL pulls features toward consistent, class-boundary-aware semantics across different samplings of the same scene.</p>
     </div>
 
     <div class="two reveal" style="margin-top:22px">
@@ -486,21 +485,21 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
     <div class="video-list">
       <article class="video-block reveal">
         <h3 class="video-part-title"><span>Part I</span>Motivation and Core Insight</h3>
-        <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/8282f132aa7e4f55a6f5/" data-title="Part I: Motivation and Core Insight" aria-label="Part I: Motivation and Core Insight">
+        <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/8282f132aa7e4f55a6f5/" data-title="Part I: Motivation and Core Insight: Scene-Sensor Disentanglement, Learning Generalizability from Randomness" aria-label="Part I: Motivation and Core Insight: Scene-Sensor Disentanglement, Learning Generalizability from Randomness">
           <img class="video-poster" src="assets/LiSeer1.jpg" alt="" aria-hidden="true" />
         </div>
         <p class="video-fallback" hidden><a href="#" target="_blank" rel="noopener">Open Part I in a new tab</a></p>
       </article>
       <article class="video-block reveal">
         <h3 class="video-part-title"><span>Part II</span>Benchmark Zero-shot Generalization</h3>
-        <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/cdf34945ce854747a262/" data-title="Part II: Benchmark Zero-shot Generalization" aria-label="Part II: Benchmark Zero-shot Generalization">
+        <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/cdf34945ce854747a262/" data-title="Part II: Experiments of Zero-shot Generalization on Three Predominant Benchmarks: SemanticKITTI, Waymo, and nuScenes" aria-label="Part II: Experiments of Zero-shot Generalization on Three Predominant Benchmarks: SemanticKITTI, Waymo, and nuScenes">
           <img class="video-poster" src="assets/LiSeer2.jpg" alt="" aria-hidden="true" />
         </div>
         <p class="video-fallback" hidden><a href="#" target="_blank" rel="noopener">Open Part II in a new tab</a></p>
       </article>
       <article class="video-block reveal">
         <h3 class="video-part-title"><span>Part III</span>Real-world Deployment on Unseen LiDARs</h3>
-        <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/2cf32e2a0fcc40469d62/" data-title="Part III: Real-world Deployment on Unseen LiDARs" aria-label="Part III: Real-world Deployment on Unseen LiDARs">
+        <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/2cf32e2a0fcc40469d62/" data-title="Part III: Real-world Deployment on Three Vehicle Carrying previously Unseen 128-, 80-, and 32-beam LiDARs" aria-label="Part III: Real-world Deployment on Three Vehicle Carrying pretrained LiSeer models on Unseen LiDARs">
           <img class="video-poster" src="assets/LiSeer3.jpg" alt="" aria-hidden="true" />
         </div>
         <p class="video-fallback" hidden><a href="#" target="_blank" rel="noopener">Open Part III in a new tab</a></p>
