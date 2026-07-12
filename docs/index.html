@@ -224,8 +224,640 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
   .lightbox,.lightbox-inner{transition:none}
 }
 </style>
+
+<style id="refined-redesign">
+/* Refined light editorial redesign.
+   The original content, image paths, figure order, and interactions are unchanged. */
+:root{
+  --ink:#101722;
+  --ink-2:#172131;
+  --ink-3:#223149;
+  --paper:#f8fafc;
+  --mist:#eef3f8;
+  --blue:#2f78bf;
+  --blue-2:#58b9eb;
+  --orange:#e57d38;
+  --text:#17202c;
+  --muted:#647184;
+  --line:rgba(52,72,96,.12);
+  --maxw:1180px;
+  --r:18px;
+  --shadow:0 18px 48px -30px rgba(38,61,91,.35);
+}
+html{scroll-padding-top:72px}
+body{
+  background:var(--paper);
+  color:var(--text);
+  font-size:15.5px;
+  letter-spacing:-.003em;
+}
+img{height:auto}
+.container{padding-inline:clamp(20px,3.4vw,40px)}
+
+/* top reading progress */
+#page-progress{
+  position:fixed;
+  z-index:300;
+  top:0;
+  left:0;
+  width:100%;
+  height:3px;
+  pointer-events:none;
+  transform:scaleX(0);
+  transform-origin:left center;
+  background:linear-gradient(90deg,#4fb5e8 0%,#456fd7 58%,#e78647 100%);
+  box-shadow:0 1px 8px rgba(65,122,199,.25);
+}
+
+/* light glass navigation */
+.nav{
+  position:sticky;
+  top:0;
+  background:rgba(8,15,25,.88);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(10px) saturate(118%);
+  -webkit-backdrop-filter:blur(10px) saturate(118%);
+  transition:background .35s,border-color .35s,box-shadow .35s;
+}
+.nav.scrolled{
+  background:rgba(248,250,252,.86);
+  border-bottom-color:rgba(64,84,108,.1);
+  box-shadow:0 12px 30px -24px rgba(28,49,76,.45);
+}
+.nav-inner{height:64px}
+.brand{color:#f7fbff;font-size:18px;letter-spacing:-.025em}
+.brand b{color:#327fbe}
+.nav-links{gap:clamp(15px,2.2vw,28px)}
+.nav-links a{color:#9ba9bb;font-size:11px}
+.nav-links a:hover{color:#fff}
+.nav-cta{
+  padding:8px 15px;
+  border:1px solid rgba(44,75,108,.13);
+  border-radius:999px;
+  color:#172334;
+  background:#f7fbff;
+  font-size:11px;
+  box-shadow:0 8px 22px -14px rgba(23,35,52,.75);
+}
+.nav-cta:hover{color:#fff;background:#2f78bf}
+.nav.scrolled .brand{color:#17202c}
+.nav.scrolled .nav-links a{color:#657185}
+.nav.scrolled .nav-links a:hover{color:#1b5d97}
+.nav.scrolled .nav-cta{color:#fff;background:#172334}
+
+/* hero: original type scale, larger interactive instrument */
+.hero{
+  color:#fff;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:
+    radial-gradient(circle at 77% 20%,rgba(42,121,190,.24),transparent 34%),
+    radial-gradient(circle at 20% 92%,rgba(207,101,48,.12),transparent 27%),
+    linear-gradient(145deg,#0d1725 0%,#09111c 58%,#070d15 100%);
+}
+.hero::before{
+  opacity:.58;
+  background-image:
+    linear-gradient(rgba(122,163,202,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(122,163,202,.035) 1px,transparent 1px),
+    radial-gradient(rgba(92,164,221,.15) 1px,transparent 1.3px);
+  background-size:64px 64px,64px 64px,25px 25px;
+  mask-image:linear-gradient(180deg,#000,transparent 92%);
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 92%);
+}
+.hero-inner{
+  grid-template-columns:minmax(0,.78fr) minmax(560px,1.22fr);
+  gap:clamp(28px,4vw,52px);
+  padding-top:58px;
+  padding-bottom:70px;
+}
+.hero .eyebrow{color:#67bce9}
+.hero h1{
+  max-width:650px;
+  margin:.4em 0 .32em;
+  color:#f7f9fc;
+  font-size:clamp(2.2rem,3.8vw,3rem);
+  line-height:1.02;
+  letter-spacing:-.045em;
+}
+.hero .lede{
+  max-width:42ch;
+  margin-bottom:18px;
+  color:#aab7c7;
+  font-size:clamp(.98rem,1.45vw,1.12rem);
+}
+.hero .lede b{color:#fff}
+.authors{margin-top:17px;color:#c1cad7;font-size:13px}
+.authors .me{color:#fff;border-bottom-color:#e57d38}
+.affil{color:#7f8da0;font-size:10.5px}
+.btns{gap:9px;margin-top:24px}
+.btn{
+  min-height:42px;
+  padding:0 15px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:999px;
+  color:#d9e1eb;
+  background:rgba(255,255,255,.055);
+  font-size:11px;
+  box-shadow:0 9px 24px -18px rgba(31,55,84,.5);
+  backdrop-filter:blur(12px);
+}
+.btn.primary{
+  border-color:#f4f8fc;
+  color:#101925;
+  background:#f4f8fc;
+}
+.btn:hover{
+  transform:translateY(-2px);
+  border-color:rgba(47,120,191,.35);
+  color:#fff;
+  background:rgba(255,255,255,.12);
+}
+.btn.primary:hover{border-color:#2f78bf;color:#fff;background:#2f78bf}
+.splitter{
+  position:relative;
+  width:100%;
+  margin:0;
+  overflow:hidden;
+  padding:clamp(18px,2vw,25px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:25px;
+  background:
+    radial-gradient(circle at 48% 42%,rgba(58,126,188,.16),transparent 42%),
+    linear-gradient(155deg,#111b29 0%,#0d1622 58%,#0a111b 100%);
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.08),
+    0 26px 60px -38px rgba(20,42,70,.72),
+    0 0 0 1px rgba(48,88,126,.08);
+}
+.splitter::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(121,169,211,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(121,169,211,.03) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(180deg,#000,transparent);
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent);
+}
+.splitter::after{
+  content:"";
+  position:absolute;
+  z-index:3;
+  top:0;
+  right:0;
+  left:0;
+  height:1px;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(90deg,transparent 7%,#60c4f5 50%,transparent 93%);
+  box-shadow:0 0 16px rgba(96,196,245,.7);
+  animation:panel-scan 5.4s ease-in-out infinite;
+}
+@keyframes panel-scan{
+  0%,8%{transform:translateY(24px);opacity:0}
+  16%{opacity:.72}
+  78%{opacity:.26}
+  90%,100%{transform:translateY(500px);opacity:0}
+}
+#optics{position:relative;z-index:2;filter:drop-shadow(0 14px 24px rgba(0,0,0,.2))}
+.splitter figcaption{
+  position:relative;
+  z-index:4;
+  margin-top:13px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.08);
+  color:#8492a5;
+  font-size:10px;
+}
+
+/* restrained editorial section scale */
+.section{
+  padding:76px 0;
+  border-bottom:1px solid rgba(52,72,96,.1);
+}
+.section.tint{background:var(--mist)}
+.section-head{max-width:70ch;margin-bottom:32px}
+.section h2{
+  margin:.28em 0 .35em;
+  color:#17202c;
+  font-size:clamp(1.65rem,3vw,2.3rem);
+  line-height:1.08;
+  letter-spacing:-.035em;
+}
+.section p.lead{color:#465568;font-size:1.02rem}
+.eyebrow{font-size:10px;color:#377fba}
+
+/* five equal-priority, full-width abstract cards */
+#abstract{background:#f8fafc}
+#abstract>.container{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+#abstract .tldr,
+#abstract .prose p{
+  width:100%;
+  min-height:0;
+  margin:0!important;
+  padding:26px 28px;
+  border:1px solid rgba(74,101,132,.12);
+  border-radius:17px;
+  color:#435166;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 14px 36px -29px rgba(42,66,96,.42);
+  backdrop-filter:blur(12px);
+}
+#abstract .prose{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  max-width:none!important;
+  margin-top:0!important;
+  gap:18px;
+}
+#abstract .tldr .chip{margin-bottom:11px;color:#d77736;font-size:10px}
+#abstract .tldr .lead,
+#abstract .prose p{
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:400;
+  line-height:1.72;
+  letter-spacing:0;
+}
+#abstract .tldr .lead{color:#435166}
+#abstract .tldr .lead b,
+#abstract .prose p b{color:#17202c;font-weight:600}
+
+/* one consistent glass treatment for all research figures */
+.fig .fig-media{
+  padding:12px;
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:20px;
+  background:rgba(255,255,255,.66);
+  box-shadow:
+    0 18px 50px -35px rgba(35,61,92,.38),
+    inset 0 0 0 1px rgba(65,95,126,.08);
+  backdrop-filter:blur(15px) saturate(120%);
+  -webkit-backdrop-filter:blur(15px) saturate(120%);
+}
+.fig .fig-media img{
+  width:100%;
+  height:auto;
+  border-radius:12px;
+}
+.fig figcaption{
+  max-width:none;
+  margin-top:13px;
+  padding-inline:4px;
+  color:#59677a;
+  font-size:12.5px;
+  line-height:1.58;
+}
+.fig figcaption b{color:#17202c}
+
+/* idea */
+#idea{
+  background:
+    radial-gradient(circle at 85% 15%,rgba(105,177,224,.09),transparent 28%),
+    var(--mist);
+}
+#idea .fig-media{padding:15px}
+
+/* method: keep original hierarchy, remove heavy borders */
+#method{background:#f8fafc}
+#method .mod{
+  padding:22px 24px;
+  border:1px solid rgba(72,100,132,.12);
+  border-radius:17px;
+  background:rgba(255,255,255,.76);
+  box-shadow:0 14px 36px -30px rgba(42,66,96,.42);
+}
+#method .mod .tag{font-size:10px}
+#method .mod h3{font-size:1.12rem}
+#method .mod p{color:#536175;font-size:14px}
+#method .two{gap:20px}
+
+/* results: equal widths, complete numbers, no decorative crop */
+#results{background:var(--mist)}
+#results .stats{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+}
+#results .stat{
+  min-width:0;
+  min-height:166px;
+  padding:24px;
+  border:1px solid rgba(72,100,132,.12);
+  border-radius:17px;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 14px 36px -30px rgba(42,66,96,.4);
+}
+#results .stat .num{
+  display:flex;
+  align-items:baseline;
+  min-width:0;
+  color:#2b7fc6;
+  font-size:clamp(2.2rem,4vw,3.2rem);
+  line-height:1;
+  letter-spacing:-.045em;
+  white-space:nowrap;
+}
+#results .stat.accent .num{color:#df762f}
+#results .stat .num small{
+  flex:none;
+  margin-left:4px;
+  color:#687588;
+  font-size:.4em;
+}
+#results .stat .lbl{
+  max-width:28ch;
+  margin-top:25px;
+  color:#5d6a7c;
+  font-size:12.5px;
+}
+#results>.container>.fig{margin-top:30px!important}
+#results .fig-media{padding:14px}
+#results .fig-media img{object-fit:contain}
+
+/* deployment */
+#deploy{background:#f8fafc}
+#deploy .cards{gap:18px}
+#deploy .card{
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:18px;
+  background:rgba(255,255,255,.72);
+  box-shadow:
+    0 16px 42px -31px rgba(35,61,92,.42),
+    inset 0 0 0 1px rgba(65,95,126,.08);
+  backdrop-filter:blur(12px);
+}
+#deploy .card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(95,164,211,.45);
+  box-shadow:0 20px 46px -30px rgba(35,61,92,.48);
+}
+#deploy .card .media{background:#eef3f7}
+#deploy .card .body{padding:18px 19px 20px}
+#deploy .card .beam{background:#1b293a;font-size:10px}
+#deploy .card h3{font-size:1.03rem}
+#deploy .card p{color:#647184}
+
+/* video */
+#video{background:var(--mist)}
+.video-list{gap:38px}
+.video-block .video-part-title{
+  color:#202b39;
+  font-size:1.04rem;
+  line-height:1.48;
+}
+.video-frame{
+  border:1px solid rgba(255,255,255,.92);
+  border-radius:20px;
+  box-shadow:
+    0 18px 50px -34px rgba(35,61,92,.42),
+    0 0 0 1px rgba(65,95,126,.08);
+}
+.video-fallback{color:#647184}
+
+/* downloads */
+#downloads{background:#f8fafc}
+.dlist{gap:14px}
+.dl{
+  min-height:102px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.92);
+  border-radius:17px;
+  background:rgba(255,255,255,.76);
+  box-shadow:
+    0 15px 40px -31px rgba(35,61,92,.4),
+    inset 0 0 0 1px rgba(65,95,126,.08);
+}
+.dl:hover{transform:translateY(-2px);border-color:rgba(95,164,211,.45)}
+.dl .ic{border-radius:50%;background:rgba(65,142,202,.1)}
+.dl .txt strong{color:#17202c}
+.dl .txt span{color:#6b788a}
+.doc{
+  border:1px solid rgba(72,100,132,.13);
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  box-shadow:none;
+  font-size:12px;
+}
+
+/* citation and footer stay compact dark accents */
+#cite{background:var(--mist)}
+.bib{
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:18px;
+  background:#172231;
+  box-shadow:0 18px 46px -32px rgba(28,48,73,.6);
+}
+.bib pre{color:#c9d6e5}
+.bib .copy{border-radius:999px}
+.footer{padding:38px 0;background:#15202e}
+.footer .small{color:#8190a3}
+
+/* restrained motion */
+.reveal{
+  transform:translateY(14px);
+  transition:opacity .58s ease,transform .58s ease;
+}
+.lightbox{background:rgba(19,29,42,.82)}
+.lightbox img{
+  border:10px solid rgba(255,255,255,.72);
+  border-radius:18px;
+  box-shadow:0 28px 70px -24px rgba(20,35,54,.62);
+}
+
+/* cinematic glass polish: atmosphere without changing the content hierarchy */
+body{
+  background:
+    radial-gradient(circle at 8% 24%,rgba(78,164,222,.09),transparent 22%),
+    radial-gradient(circle at 91% 58%,rgba(226,129,70,.065),transparent 20%),
+    linear-gradient(180deg,#f7f9fc,#eef3f8);
+  background-attachment:scroll;
+}
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(112deg,transparent 34%,rgba(118,192,235,.035) 52%,transparent 67%),
+    radial-gradient(ellipse at 72% 46%,rgba(90,169,224,.1),transparent 35%);
+  mix-blend-mode:normal;
+  opacity:.76;
+}
+.hero-cursor-glow{
+  position:absolute;
+  z-index:1;
+  top:0;
+  left:0;
+  width:560px;
+  height:560px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.88;
+  will-change:transform,opacity;
+  transform:translate3d(calc(72vw - 280px),20px,0);
+  background:radial-gradient(circle,rgba(106,199,250,.2),rgba(57,135,201,.065) 31%,transparent 68%);
+  mix-blend-mode:normal;
+  transition:opacity .28s ease;
+}
+.hero.glow-idle .hero-cursor-glow{opacity:.34}
+.splitter{
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.1),
+    inset 0 0 52px rgba(71,135,190,.045),
+    0 30px 72px -42px rgba(21,90,145,.9),
+    0 0 0 1px rgba(86,151,203,.1);
+}
+.section{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.section>.container{position:relative;z-index:1}
+.section::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  width:330px;
+  height:330px;
+  top:8%;
+  right:-150px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.42;
+  filter:none;
+  background:radial-gradient(circle,rgba(84,164,216,.18),transparent 69%);
+}
+.section:nth-of-type(even)::before{
+  right:auto;
+  left:-170px;
+  top:42%;
+  background:radial-gradient(circle,rgba(226,132,76,.12),transparent 69%);
+}
+#abstract{background:rgba(248,250,252,.78)}
+#idea,#results,#video,#cite{background:rgba(237,243,249,.78)}
+#method,#deploy,#downloads{background:rgba(248,250,252,.76)}
+
+.fig .fig-media,
+#abstract .tldr,
+#abstract .prose p,
+#method .mod,
+#results .stat,
+#deploy .card,
+.dl,
+.doc{
+  border-color:rgba(255,255,255,.76);
+  background:rgba(255,255,255,.62);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:
+    0 28px 72px -42px rgba(33,61,94,.5),
+    inset 0 1px rgba(255,255,255,.94),
+    inset 0 0 0 1px rgba(71,99,130,.075),
+    inset 0 -18px 36px rgba(101,159,204,.035);
+}
+.fig .fig-media{
+  position:relative;
+  overflow:hidden;
+  padding:16px;
+  border-radius:23px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.82),rgba(242,247,252,.52)),
+    rgba(255,255,255,.56);
+}
+.fig .fig-media::before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  top:0;
+  right:9%;
+  left:9%;
+  height:1px;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.98),transparent);
+}
+.fig .fig-media img{
+  position:relative;
+  z-index:1;
+  border-radius:calc(var(--r) - 7px);
+  filter:none;
+  box-shadow:
+    0 18px 40px -27px rgba(22,43,69,.44),
+    0 0 0 1px rgba(57,83,111,.075);
+  transition:transform .5s cubic-bezier(.2,.7,.2,1),filter .5s ease;
+}
+.fig .fig-media:hover img{transform:scale(1.004)}
+#deploy .card .media{
+  padding:8px;
+  border-bottom:1px solid rgba(83,111,139,.1);
+  background:rgba(255,255,255,.48);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:inset 0 1px rgba(255,255,255,.95),inset 0 0 0 1px rgba(73,101,130,.06);
+}
+#deploy .card .media img{
+  border-radius:12px;
+  box-shadow:0 12px 30px -24px rgba(22,43,69,.38);
+}
+#abstract .tldr:hover,
+#abstract .prose p:hover,
+#method .mod:hover,
+#results .stat:hover,
+.dl:hover{
+  border-color:rgba(116,181,224,.52);
+  box-shadow:
+    0 26px 64px -39px rgba(30,79,122,.48),
+    inset 0 1px rgba(255,255,255,.98),
+    inset 0 0 0 1px rgba(75,130,176,.09);
+}
+.video-frame{
+  border:8px solid rgba(255,255,255,.58);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:
+    0 26px 68px -40px rgba(27,62,96,.5),
+    inset 0 1px rgba(255,255,255,.18),
+    0 0 0 1px rgba(87,127,164,.09);
+}
+.flow{animation-duration:2.4s;animation-timing-function:steps(18,end)}
+.splitter #optics{filter:none}
+
+@media(max-width:1050px){
+  .hero-inner{grid-template-columns:minmax(0,.82fr) minmax(480px,1.18fr)}
+}
+@media(max-width:860px){
+  .hero-inner{grid-template-columns:1fr;gap:30px;padding-top:42px}
+  .splitter{order:initial}
+  #results .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:680px){
+  .nav-inner{height:58px}
+  .hero-inner{padding-top:34px;padding-bottom:50px}
+  .hero h1{font-size:clamp(2rem,9.4vw,2.55rem)}
+  .splitter{padding:14px;border-radius:20px}
+  .section{padding:62px 0}
+  #abstract>.container,#abstract .prose{gap:14px}
+  #abstract .tldr,#abstract .prose p{padding:22px 20px}
+  #results .stats{grid-template-columns:1fr}
+  #results .stat{min-height:142px}
+  #results .stat .num{font-size:2.65rem}
+  .section::before{width:220px;height:220px;filter:none;opacity:.32}
+}
+@media(prefers-reduced-motion:reduce){
+  .splitter::after{animation:none}
+}
+</style>
 </head>
 <body>
+<div id="page-progress" aria-hidden="true"></div>
 
 <!-- ===================== NAV ===================== -->
 <nav class="nav" id="nav">
@@ -245,6 +877,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 
 <!-- ===================== HERO ===================== -->
 <header class="hero" id="top">
+  <div class="hero-cursor-glow" aria-hidden="true"></div>
   <div class="container hero-inner">
     <div>
       <div class="eyebrow">Sensor-agnostic LiDAR perception · 2026</div>
@@ -365,7 +998,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
       <p class="lead">What a scene <em>is</em> should not depend on how a sensor <em>samples</em> it. LiSeer separates the two.</p>
     </div>
     <figure class="fig reveal">
-      <div class="fig-media"><img src="assets/insight.png" alt="Scene-intrinsic geometry versus sampling geometry" data-name="assets/insight.png" onerror="imgFail(this)" /></div>
+      <div class="fig-media"><img src="assets/insight.png" alt="Scene-intrinsic geometry versus sampling geometry" data-name="assets/insight.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
       <figcaption><b>Fig 1.</b> LiSeer separates &ldquo;SIG&rdquo; from &ldquo;SG&rdquo; and learns to prioritize the former over the latter. S-Film acts as a beam splitter that gives &ldquo;SG&rdquo; an explicit modeling pathway in feature space, relieving the shared decoder from implicitly absorbing it, while CBA-CL acts as a polarization filter that further suppresses the influence of &ldquo;SG&rdquo; during optimization, guiding the model toward stable scene-consistent semantics across diverse LiDAR configurations.</figcaption>
     </figure>
   </div>
@@ -387,7 +1020,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
     </div>
 
     <figure class="fig reveal">
-      <div class="fig-media"><img src="assets/framework.png" alt="LiSeer framework overview" data-name="assets/framework.png" onerror="imgFail(this)" /></div>
+      <div class="fig-media"><img src="assets/framework.png" alt="LiSeer framework overview" data-name="assets/framework.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
       <figcaption><b>Fig 2.</b> LiSeer first reconstructs a dense scene representation from a sparse LiDAR scan and propagates semantic labels to the densified points. During training, a physics-based controllable sampler then re-observes this scene under randomized sensor configurations to generate diverse LiDAR views for cross-sensor learning. Densification is performed offline, while randomized sampling is executed online.</figcaption>
     </figure>
 
@@ -399,11 +1032,11 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 
     <div class="two reveal" style="margin-top:22px">
       <figure class="fig">
-        <div class="fig-media"><img src="assets/sensor_FiLM.png" alt="S-Film module" data-name="assets/sensor_FiLM.png" onerror="imgFail(this)" /></div>
+        <div class="fig-media"><img src="assets/sensor_FiLM.png" alt="S-Film module" data-name="assets/sensor_FiLM.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
         <figcaption><b>S-Film</b> decouples &ldquo;SIG&rdquo; and &ldquo;SG&rdquo; by introducing a sensor head to predict sensor parameters from intermediate features. These parameters are then used to linearly modulate decoder features. During training, the modulation gradually shifts from ground-truth sensor parameters to predicted ones, enabling fully self-conditioned inference at test time.</figcaption>
       </figure>
       <figure class="fig">
-        <div class="fig-media"><img src="assets/CBA_CL.png" alt="CBA-CL module" data-name="assets/CBA_CL.png" onerror="imgFail(this)" /></div>
+        <div class="fig-media"><img src="assets/CBA_CL.png" alt="CBA-CL module" data-name="assets/CBA_CL.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
         <figcaption><b>CBA-CL</b> module takes different point clouds sampled from the same scene as input, enhances boundaries and minority classes, and performs collaborative optimization on the two frames based on the prediction confidence. It steers the learning direction of the model toward &ldquo;SIG&rdquo; instead of &ldquo;SG&rdquo;.</figcaption>
       </figure>
     </div>
@@ -435,17 +1068,17 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
     </div>
 
     <figure class="fig reveal" style="margin-top:34px">
-      <div class="fig-media"><img src="assets/results_main.png" alt="Main source-to-unseen results" data-name="assets/results_main.png" onerror="imgFail(this)" /></div>
+      <div class="fig-media"><img src="assets/results_main.png" alt="Main source-to-unseen results" data-name="assets/results_main.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
       <figcaption><b>Fig 3.</b> Cell shading encodes mIoU magnitude (blue monochrome: light = low, saturated = high). <span style="color:#1f9d55;font-weight:600">Green</span> values show the performance drop on the target domain relative to the source domain for baseline methods. <span style="color:#c0392b;font-weight:600">Red</span> values show the improvement of LiSeer over the corresponding baseline on the target domain. All results use our re-implemented models.</figcaption>
     </figure>
 
     <figure class="fig reveal" style="margin-top:34px">
-      <div class="fig-media"><img src="assets/results_finetune.png" alt="Fine-tuning with partial target labels" data-name="assets/results_finetune.png" onerror="imgFail(this)" /></div>
+      <div class="fig-media"><img src="assets/results_finetune.png" alt="Fine-tuning with partial target labels" data-name="assets/results_finetune.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
       <figcaption><b>Fig 4.</b> Cell shading encodes mIoU magnitude (blue monochrome: light = low, saturated = high). The left side of the &rarr; is the zero-shot performance of LiSeer-P on the target unseen LiDAR. <span style="color:#c0392b;font-weight:600">Red</span> values show the improvement of fine-tuned LiSeer, using partial target-domain data, over the same model without any access to target-domain data.</figcaption>
     </figure>
 
     <figure class="fig reveal" style="margin-top:34px">
-      <div class="fig-media"><img src="assets/results_previous.png" alt="Comparison with previous methods" data-name="assets/results_previous.png" onerror="imgFail(this)" /></div>
+      <div class="fig-media"><img src="assets/results_previous.png" alt="Comparison with previous methods" data-name="assets/results_previous.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></div>
       <figcaption><b>Fig 5.</b> <sup>&dagger;</sup> refer to the results given in Ryu et al. Each entry reports <em>mIoU</em> followed by relative drop rate in the first parentheses. The second parentheses show absolute mIoU difference against the corresponding <em>No operation</em> baseline under the same backbone and transfer direction; <span style="color:var(--orange);font-weight:600">orange</span> indicates positive and <span style="color:#c0392b;font-weight:600">red</span> indicates negative.</figcaption>
     </figure>
   </div>
@@ -461,15 +1094,15 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
     </div>
     <div class="cards reveal">
       <article class="card">
-        <button type="button" class="media" data-lightbox="assets/Courier.png" aria-label="View full image: TH-Courier"><img src="assets/Courier.png" alt="TH-Courier platform" data-name="assets/courier.png" onerror="imgFail(this)" /></button>
+        <button type="button" class="media" data-lightbox="assets/Courier.png" aria-label="View full image: TH-Courier"><img src="assets/Courier.png" alt="TH-Courier platform" data-name="assets/courier.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></button>
         <div class="body"><span class="beam">32-beam</span><h3>TH-Courier</h3><p>Compact courier robot, low mounting height, sparse scans.</p></div>
       </article>
       <article class="card">
-        <button type="button" class="media" data-lightbox="assets/AVT.png" aria-label="View full image: TH-AVT"><img src="assets/AVT.png" alt="TH-AVT platform" data-name="assets/AVT.png" onerror="imgFail(this)" /></button>
+        <button type="button" class="media" data-lightbox="assets/AVT.png" aria-label="View full image: TH-AVT"><img src="assets/AVT.png" alt="TH-AVT platform" data-name="assets/AVT.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></button>
         <div class="body"><span class="beam">80-beam</span><h3>TH-AVT</h3><p>Autonomous vehicle, dense roof-mounted sensor.</p></div>
       </article>
       <article class="card">
-        <button type="button" class="media" data-lightbox="assets/CS55.png" aria-label="View full image: TH-CS55"><img src="assets/CS55.png" alt="TH-CS55 platform" data-name="assets/CS55.png" onerror="imgFail(this)" /></button>
+        <button type="button" class="media" data-lightbox="assets/CS55.png" aria-label="View full image: TH-CS55"><img src="assets/CS55.png" alt="TH-CS55 platform" data-name="assets/CS55.png" loading="lazy" decoding="async" onerror="imgFail(this)" /></button>
         <div class="body"><span class="beam">128-beam</span><h3>TH-CS55</h3><p>Passenger vehicle, high-density unseen LiDAR.</p></div>
       </article>
     </div>
@@ -487,21 +1120,21 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
       <article class="video-block reveal">
         <h3 class="video-part-title"><span>Part I</span>Motivation and Core Insight: Scene-Sensor Disentanglement, Learning Generalizability from Randomness</h3>
         <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/8282f132aa7e4f55a6f5/" data-title="Part I: Motivation and Core Insight: Scene-Sensor Disentanglement, Learning Generalizability from Randomness" aria-label="Part I: Motivation and Core Insight: Scene-Sensor Disentanglement, Learning Generalizability from Randomness">
-          <img class="video-poster" src="assets/LiSeer1.jpg" alt="" aria-hidden="true" />
+          <img class="video-poster" src="assets/LiSeer1.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" />
         </div>
         <p class="video-fallback" hidden><a href="#" target="_blank" rel="noopener">Open Part I in a new tab</a></p>
       </article>
       <article class="video-block reveal">
         <h3 class="video-part-title"><span>Part II</span>Experiments of Zero-shot Generalization on Three Predominant Benchmarks: SemanticKITTI, Waymo, and nuScenes</h3>
         <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/cdf34945ce854747a262/" data-title="Part II: Experiments of Zero-shot Generalization on Three Predominant Benchmarks: SemanticKITTI, Waymo, and nuScenes" aria-label="Part II: Experiments of Zero-shot Generalization on Three Predominant Benchmarks: SemanticKITTI, Waymo, and nuScenes">
-          <img class="video-poster" src="assets/LiSeer2.jpg" alt="" aria-hidden="true" />
+          <img class="video-poster" src="assets/LiSeer2.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" />
         </div>
         <p class="video-fallback" hidden><a href="#" target="_blank" rel="noopener">Open Part II in a new tab</a></p>
       </article>
       <article class="video-block reveal">
         <h3 class="video-part-title"><span>Part III</span>Real-world Deployment on Three Vehicle Carrying previously Unseen 128-, 80-, and 32-beam LiDARs</h3>
         <div class="video-frame" data-share-url="https://cloud.tsinghua.edu.cn/f/2cf32e2a0fcc40469d62/" data-title="Part III: Real-world Deployment on Three Vehicle Carrying previously Unseen 128-, 80-, and 32-beam LiDARs" aria-label="Part III: Real-world Deployment on Three Vehicle Carrying pretrained LiSeer models on Unseen LiDARs">
-          <img class="video-poster" src="assets/LiSeer3.jpg" alt="" aria-hidden="true" />
+          <img class="video-poster" src="assets/LiSeer3.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" />
         </div>
         <p class="video-fallback" hidden><a href="#" target="_blank" rel="noopener">Open Part III in a new tab</a></p>
       </article>
@@ -602,6 +1235,45 @@ h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;line-heig
 </footer>
 
 <script>
+  const pageProgress = document.getElementById('page-progress');
+  const updatePageProgress = () => {
+    const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+    pageProgress.style.transform = `scaleX(${scrollRange > 0 ? window.scrollY / scrollRange : 0})`;
+  };
+  window.addEventListener('scroll', updatePageProgress, { passive: true });
+  window.addEventListener('resize', updatePageProgress, { passive: true });
+  updatePageProgress();
+
+  const heroGlow = document.getElementById('top');
+  const heroGlowLayer = heroGlow && heroGlow.querySelector('.hero-cursor-glow');
+  if (heroGlow && heroGlowLayer) {
+    let glowFrame = 0;
+    let glowPoint = null;
+    let glowBounds = heroGlow.getBoundingClientRect();
+    heroGlow.classList.add('glow-idle');
+    heroGlow.addEventListener('pointerenter', function(){
+      glowBounds = heroGlow.getBoundingClientRect();
+    }, { passive: true });
+    heroGlow.addEventListener('pointermove', function(event){
+      if (event.pointerType === 'touch') return;
+      glowPoint = { x: event.clientX, y: event.clientY };
+      if (glowFrame) return;
+      glowFrame = requestAnimationFrame(function(){
+        const x = glowPoint.x - glowBounds.left - 280;
+        const y = glowPoint.y - glowBounds.top - 280;
+        heroGlowLayer.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+        heroGlow.classList.remove('glow-idle');
+        glowFrame = 0;
+      });
+    }, { passive: true });
+    heroGlow.addEventListener('pointerleave', function(){
+      heroGlow.classList.add('glow-idle');
+    }, { passive: true });
+    window.addEventListener('resize', function(){
+      glowBounds = heroGlow.getBoundingClientRect();
+    }, { passive: true });
+  }
+
 /* ========== EXTERNAL VIDEO (EDIT ME) ==========
  *
  * Tsinghua Cloud seafhttp direct URLs expire after a few hours — do NOT hard-code them.
