@@ -1,26 +1,9 @@
-'''
-Author: EASON XU
-Date: 2026-05-14 16:12:27
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-05-14 16:12:29
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/pointocc/pointtpv_realdata_infer.py
-'''
-'''
-Author: EASON XU
-Date: 2026-05-11 15:17:57
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-05-11 16:02:07
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/pointocc/pointtpv_realdata_infer.py
-'''
 # RealData: bin point clouds listed by txt, inference-only pipeline (dummy point labels).
 #
-# mmcv 加载本文件时会在独立命名空间中执行：`_base_` 只做字典合并，不会把 base 里的
-# Python 变量（如 Random、RPR）注入本文件。因此下面从 pointtpv_semantickitti_seg_random.py
-# 拷贝了 infer_pipeline / train_config 所依赖的变量与 train_pipeline，与 base 保持一致。
+# mmcv executes this file in its own namespace: `_base_` only merges dicts, so Python
+# variables from the base config (Random, RPR, ...) are not injected here. The
+# variables and train_pipeline that infer_pipeline / train_config depend on are
+# therefore copied verbatim from pointtpv_semantickitti_seg_random.py.
 #
 # Usage:
 #   python tools/test.py projects/configs/pointocc/pointtpv_realdata_infer.py

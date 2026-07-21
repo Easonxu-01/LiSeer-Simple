@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-12-07 01:49:10
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-06-09 06:48:03
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/pipelines/__init__.py
-'''
 from .loading_voxels_sk import LoadVoxels, LoadPointsFromFile_RPR, LoadPointsFromFile_Sampling
 from .VoxelClassMapping import VoxelClassMapping
 from .PointoccMapping import PointoccMapping, PointsegMapping

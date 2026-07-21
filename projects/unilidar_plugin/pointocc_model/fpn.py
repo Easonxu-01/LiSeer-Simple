@@ -76,7 +76,6 @@ class GeneralizedLSSFPN(BaseModule):
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
 
-    # @auto_fp16()
     def forward(self, inputs):
         """Forward function."""
         # upsample -> cat -> conv1x1 -> conv3x3

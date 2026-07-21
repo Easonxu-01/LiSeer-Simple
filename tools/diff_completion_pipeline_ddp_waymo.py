@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-10-21 14:59:33
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-07-14 02:09:53
-Description: 头部注释
-FilePath: /lidiff/tools/diff_completion_pipeline_ddp_waymo.py
-'''
 import numpy as np
 import MinkowskiEngine as ME
 import torch
@@ -62,7 +53,7 @@ class DiffCompletion(LightningModule):
         self.hparams['train']['uncond_w'] = cond_weight
         self.hparams['data']['max_range'] = 50.
         self.w_uncond = self.hparams['train']['uncond_w']
-        
+
         exp_dir = diff_path.split('/')[-1].split('.')[0].replace('=','')  + f'_T{denoising_steps}_s{cond_weight}'
         os.makedirs(f'./results/{exp_dir}', exist_ok=True)
         with open(f'./results/{exp_dir}/exp_config.yaml', 'w+') as exp_config:
@@ -94,7 +85,7 @@ class DiffCompletion(LightningModule):
 
         torch.cuda.empty_cache()
 
-        return x_t                                                                                        
+        return x_t
 
     def reset_partial_pcd(self, x_part, x_uncond):
         x_part = self.points_to_tensor(x_part.F.reshape(1,-1,3).detach())
@@ -109,7 +100,7 @@ class DiffCompletion(LightningModule):
         # use farthest point sampling with fallback for small point clouds
         pcd_scan = o3d.geometry.PointCloud()
         pcd_scan.points = o3d.utility.Vector3dVector(scan)
-        
+
         # Try 1/10 sampling first, if it fails, use 1/30
         try:
             target_points = int(self.hparams['data']['num_points'] / 10)
@@ -120,11 +111,11 @@ class DiffCompletion(LightningModule):
             target_points = int(self.hparams['data']['num_points'] / 40)
             pcd_scan = pcd_scan.farthest_point_down_sample(target_points)
             repeat_factor = 40
-            
+
         scan = torch.tensor(np.array(pcd_scan.points)).cuda()
         scan = scan.repeat(repeat_factor, 1)
         scan = scan[None,:,:]
-        
+
         # Clear intermediate variables
         del pcd_scan, dist
 
@@ -154,7 +145,7 @@ class DiffCompletion(LightningModule):
         offset = self.refine_forward(refine_in).reshape(-1,6,3)
 
         refine_complete_scan = post_scan[:,None,:] + offset.cpu().numpy()
-        
+
         # Clear GPU memory
         del x_feats, x_full, x_cond, x_uncond, completed_scan, refine_in, offset
         torch.cuda.empty_cache()
@@ -177,7 +168,7 @@ class DiffCompletion(LightningModule):
 
     def classfree_forward(self, x_t, x_cond, x_uncond, t):
         x_t_sparse = x_t.sparse()
-        x_cond = self.forward(x_t, x_t_sparse, x_cond, t)            
+        x_cond = self.forward(x_t, x_t_sparse, x_cond, t)
         x_uncond = self.forward(x_t, x_t_sparse, x_uncond, t)
 
         return x_uncond + self.w_uncond * (x_cond - x_uncond)
@@ -194,7 +185,7 @@ class DiffCompletion(LightningModule):
             x_t = self.points_to_tensor(x_t)
 
             x_cond, x_uncond = self.reset_partial_pcd(x_cond, x_uncond)
-            
+
             # Clear intermediate tensors
             del noise_t, input_noise
             torch.cuda.empty_cache()
@@ -203,7 +194,6 @@ class DiffCompletion(LightningModule):
 
 def load_pcd(pcd_file):
     if pcd_file.endswith('.bin'):
-        # return np.fromfile(pcd_file, dtype=np.float32).reshape((-1,4))[:,:3]
         return np.fromfile(pcd_file, dtype=np.float32).reshape((-1,6))[:,:3]
     elif pcd_file.endswith('.ply'):
         return np.array(o3d.io.read_point_cloud(pcd_file).points)
@@ -244,23 +234,23 @@ def inference(rank, diff, refine, denoising_steps, cond_weight, world_size):
     annotated_indices_path = './obj_annotated.txt'
     with open(annotated_indices_path, 'r') as f:
         annotated_files = set(line.strip() for line in f.readlines())
-    
+
     print(f"GPU {rank}: Loaded {len(annotated_files)} annotated files from seg_annotated_indices.txt")
 
     # Get all bin files and filter by annotated indices
     all_bin_files = natsorted([f for f in os.listdir(velodyne_path) if f.endswith('.bin')])
     annotated_bin_files = [f for f in all_bin_files if f in annotated_files]
-    
+
     print(f"GPU {rank}: Found {len(annotated_bin_files)} annotated files out of {len(all_bin_files)} total files")
-    
+
     # Calculate files per GPU
     files_per_gpu = len(annotated_bin_files) // world_size
     start_idx = rank * files_per_gpu
     end_idx = start_idx + files_per_gpu if rank != world_size - 1 else len(annotated_bin_files)
-    
+
     # Assign files to this GPU
     my_bin_files = annotated_bin_files[start_idx:end_idx]
-    
+
     print(f"GPU {rank}: Processing {len(my_bin_files)} annotated files out of {len(annotated_bin_files)} total annotated files")
     print(f"GPU {rank}: Files range from {start_idx} to {end_idx-1}")
 
@@ -270,13 +260,13 @@ def inference(rank, diff, refine, denoising_steps, cond_weight, world_size):
         if bin_file not in annotated_files:
             print(f'GPU {rank}: {bin_file} not in annotated list, skipping...')
             continue
-            
+
         # Check if target file already exists
         refine_file = os.path.join(output_refine_path, bin_file.replace('.bin', '.ply'))
         if os.path.exists(refine_file):
             print(f'GPU {rank}: {bin_file} already processed, skipping...')
             continue
-            
+
         bin_path = os.path.join(velodyne_path, bin_file)
         points = load_pcd(bin_path)  # Load point cloud as numpy array
 
@@ -291,7 +281,7 @@ def inference(rank, diff, refine, denoising_steps, cond_weight, world_size):
         pcd_refine.points = o3d.utility.Vector3dVector(refine_scan)
         pcd_refine.estimate_normals()
         o3d.io.write_point_cloud(refine_file, pcd_refine)
-        
+
         # Clear memory
         del pcd_refine, refine_scan, points
         torch.cuda.empty_cache()

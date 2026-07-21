@@ -22,7 +22,6 @@ import mmcv
 import numpy as np
 import pycocotools.mask as mask_util
 import mcubes
-#import open3d as o3d
 import pdb
 from fvcore.nn import FlopCountAnalysis, parameter_count_table
 from projects.unilidar_plugin.utils.formating import cm_to_ious, format_SC_results, format_SSC_results
@@ -50,7 +49,7 @@ def custom_encode_mask_results(mask_results):
 
 def custom_single_gpu_test(model, data_loader, show=False, out_dir=None, show_score_thr=0.3):
     model.eval()
-    
+
     # init predictions
     SC_metric = []
     SC_metric_1 = []
@@ -70,9 +69,9 @@ def custom_single_gpu_test(model, data_loader, show=False, out_dir=None, show_sc
     rank, world_size = get_dist_info()
     if rank == 0:
         prog_bar = mmcv.ProgressBar(len(dataset))
-    
+
     time.sleep(2)  # This line can prevent deadlock problem in some cases.
-    
+
     logger = get_root_logger()
     logger.info(parameter_count_table(model))
 
@@ -86,7 +85,7 @@ def custom_single_gpu_test(model, data_loader, show=False, out_dir=None, show_sc
                 if show:
                     pred_f = result.get('pred_f')
                     save_occ(result['pred_c'], pred_f, data['img_metas'], out_dir, data['visible_mask'], data['gt_occ'])
-                
+
                 if 'SC_metric' in result.keys():
                     SC_metric.append(result['SC_metric'])
                 if 'SSC_metric' in result.keys():
@@ -99,7 +98,7 @@ def custom_single_gpu_test(model, data_loader, show=False, out_dir=None, show_sc
                     pred_f_2 = result.get('pred_f_2')
                     save_occ(result['pred_c_1'], pred_f_1, data['img_metas'], out_dir, data['visible_mask'].data[0][::2], data['gt_occ'].data[0][::2],dataset_flag[0])
                     save_occ(result['pred_c_2'], pred_f_2, data['img_metas'], out_dir, data['visible_mask'].data[0][1::2], data['gt_occ'].data[0][1::2],dataset_flag[1])
-                    
+
                 if 'SC_metric' in result.keys():
                     SC_metric.append(result['SC_metric'])
                 if 'SC_metric_1' in result.keys():
@@ -122,33 +121,33 @@ def custom_single_gpu_test(model, data_loader, show=False, out_dir=None, show_sc
     if 'SC_metric' in result.keys():
         SC_metric = [sum(SC_metric)]
         res['SC_metric'] = SC_metric
-        
+
     if 'SC_metric_1' in result.keys():
         SC_metric_1 = [sum(SC_metric_1)]
         res['SC_metric_1'] = SC_metric_1
-        
+
     if 'SC_metric_2' in result.keys():
         SC_metric_2 = [sum(SC_metric_2)]
         res['SC_metric_2'] = SC_metric_2
-        
+
     if 'SSC_metric' in result.keys():
         if all(tensor.shape == SSC_metric[0].shape for tensor in SSC_metric):
             SSC_metric = [sum(SSC_metric)]
             res['SSC_metric'] = SSC_metric
-    
+
     if 'SSC_metric_1' in result.keys():
         SSC_metric_1 = [sum(SSC_metric_1)]
         res['SSC_metric_1'] = SSC_metric_1
-        
+
     if 'SSC_metric_2' in result.keys():
         SSC_metric_2 = [sum(SSC_metric_2)]
         res['SSC_metric_2'] = SSC_metric_2
-    
+
     if 'SSC_metric_fine' in result.keys():
         if all(tensor.shape == SSC_metric_fine[0].shape for tensor in SSC_metric_fine):
             SSC_metric_fine = [sum(SSC_metric_fine)]
             res['SSC_metric_fine'] = SSC_metric_fine
-        
+
     if 'SSC_metric_fine_1' in result.keys():
         SSC_metric_fine_1 = [sum(SSC_metric_fine_1)]
         res['SSC_metric_fine_1'] = SSC_metric_fine_1
@@ -177,7 +176,7 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
     """
 
     model.eval()
-    
+
     # init predictions
     SC_metric = []
     SC_metric_1 = []
@@ -197,9 +196,9 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
     rank, world_size = get_dist_info()
     if rank == 0:
         prog_bar = mmcv.ProgressBar(len(dataset))
-    
+
     time.sleep(2)  # This line can prevent deadlock problem in some cases.
-    
+
     logger = get_root_logger()
     logger.info(parameter_count_table(model))
 
@@ -216,7 +215,7 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                         if show:
                             pred_f = result.get('pred_f')
                             save_occ(result['pred_c'], pred_f, data['img_metas'], out_dir, data['visible_mask'].data[0], data['gt_occ'].data[0],dataset_flag[0])
-                    
+
                         if 'SC_metric' in result.keys():
                             SC_metric.append(result['SC_metric'])
                         if 'SSC_metric' in result.keys():
@@ -230,7 +229,7 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                         if show:
                             pred_f = result.get('pred_f')
                             save_occ(result['pred_c'], pred_f, data['img_metas'], out_dir, data['visible_mask'].data[0], data['gt_occ'].data[0],dataset_flag[0])
-                            
+
                         if 'SC_metric' in result.keys():
                             SC_metric.append(result['SC_metric'])
                         if 'SSC_metric' in result.keys():
@@ -256,10 +255,10 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                             if 'SC_metric_fine' in result.keys():
                                 SC_metric_fine.append(result['SC_metric_fine'])
                             if 'SC_metric_fine_1' in result.keys():
-                                SC_metric_fine_1.append(result['SC_metric_fine_1'])  
+                                SC_metric_fine_1.append(result['SC_metric_fine_1'])
                             if 'SSC_metric_fine_1' in result.keys():
                                 SSC_metric_fine_1.append(result['SSC_metric_fine_1'])
-                                
+
                         elif flag.item() == 2:
                             if show:
                                 pred_f_2 = result.get('pred_f_2')
@@ -274,7 +273,7 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                             if 'SC_metric_fine' in result.keys():
                                 SC_metric_fine.append(result['SC_metric_fine'])
                             if 'SC_metric_fine_2' in result.keys():
-                                SC_metric_fine_2.append(result['SC_metric_fine_2']) 
+                                SC_metric_fine_2.append(result['SC_metric_fine_2'])
                             if 'SSC_metric_fine_2' in result.keys():
                                 SSC_metric_fine_2.append(result['SSC_metric_fine_2'])
                 else:
@@ -283,7 +282,7 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                         pred_f_2 = result.get('pred_f_2')
                         save_occ(result['pred_c_1'], pred_f_1, data['img_metas'], out_dir, data['visible_mask'].data[0][::2], data['gt_occ'].data[0][::2],dataset_flag[0])
                         save_occ(result['pred_c_2'], pred_f_2, data['img_metas'], out_dir, data['visible_mask'].data[0][1::2], data['gt_occ'].data[0][1::2],dataset_flag[1])
-                        
+
                     if 'SC_metric' in result.keys():
                         SC_metric.append(result['SC_metric'])
                     if 'SC_metric_1' in result.keys():
@@ -297,9 +296,9 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                     if 'SC_metric_fine' in result.keys():
                         SC_metric_fine.append(result['SC_metric_fine'])
                     if 'SC_metric_fine_1' in result.keys():
-                        SC_metric_fine_1.append(result['SC_metric_fine_1'])  
+                        SC_metric_fine_1.append(result['SC_metric_fine_1'])
                     if 'SC_metric_fine_2' in result.keys():
-                        SC_metric_fine_2.append(result['SC_metric_fine_2']) 
+                        SC_metric_fine_2.append(result['SC_metric_fine_2'])
                     if 'SSC_metric_fine_1' in result.keys():
                         SSC_metric_fine_1.append(result['SSC_metric_fine_1'])
                     if 'SSC_metric_fine_2' in result.keys():
@@ -308,7 +307,7 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                 if show:
                     pred_f = result.get('pred_f')
                     save_occ(result['pred_c'], pred_f, data['img_metas'], out_dir, data['visible_mask'].data[0], data['gt_occ'].data[0],dataset_flag[0])
-                
+
                 if 'SC_metric' in result.keys():
                     SC_metric.append(result['SC_metric'])
                 if 'SSC_metric' in result.keys():
@@ -335,10 +334,10 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                             if 'SC_metric_fine' in result.keys():
                                 SC_metric_fine.append(result['SC_metric_fine'])
                             if 'SC_metric_fine_1' in result.keys():
-                                    SC_metric_fine_1.append(result['SC_metric_fine_1'])  
+                                    SC_metric_fine_1.append(result['SC_metric_fine_1'])
                             if 'SSC_metric_fine_1' in result.keys():
                                 SSC_metric_fine_1.append(result['SSC_metric_fine_1'])
-                                
+
                         elif flag.item() == 2:
                             if show:
                                 pred_f_2 = result.get('pred_f_2')
@@ -353,17 +352,17 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                             if 'SC_metric_fine' in result.keys():
                                 SC_metric_fine.append(result['SC_metric_fine'])
                             if 'SC_metric_fine_2' in result.keys():
-                                SC_metric_fine_2.append(result['SC_metric_fine_2']) 
+                                SC_metric_fine_2.append(result['SC_metric_fine_2'])
                             if 'SSC_metric_fine_2' in result.keys():
                                 SSC_metric_fine_2.append(result['SSC_metric_fine_2'])
-                            
+
                 else:
                     if show:
                         pred_f_1 = result.get('pred_f_1')
                         pred_f_2 = result.get('pred_f_2')
                         save_occ(result['pred_c_1'], pred_f_1, data['img_metas'], out_dir, data['visible_mask'].data[0][::2], data['gt_occ'].data[0][::2],dataset_flag[0])
                         save_occ(result['pred_c_2'], pred_f_2, data['img_metas'], out_dir, data['visible_mask'].data[0][1::2], data['gt_occ'].data[0][1::2],dataset_flag[1])
-                        
+
                     if 'SC_metric' in result.keys():
                         SC_metric.append(result['SC_metric'])
                     if 'SC_metric_1' in result.keys():
@@ -377,19 +376,15 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
                     if 'SC_metric_fine' in result.keys():
                         SC_metric_fine.append(result['SC_metric_fine'])
                     if 'SC_metric_fine_1' in result.keys():
-                            SC_metric_fine_1.append(result['SC_metric_fine_1'])  
+                            SC_metric_fine_1.append(result['SC_metric_fine_1'])
                     if 'SC_metric_fine_2' in result.keys():
-                        SC_metric_fine_2.append(result['SC_metric_fine_2']) 
+                        SC_metric_fine_2.append(result['SC_metric_fine_2'])
                     if 'SSC_metric_fine_1' in result.keys():
                         SSC_metric_fine_1.append(result['SSC_metric_fine_1'])
                     if 'SSC_metric_fine_2' in result.keys():
                         SSC_metric_fine_2.append(result['SSC_metric_fine_2'])
             batch_size = 1
-            
-        # if i >= 2:
-        #     break
 
-                
         if rank == 0:
             for _ in range(batch_size * world_size):
                 prog_bar.update()
@@ -400,17 +395,17 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
         SC_metric = [sum(SC_metric)]
         SC_metric = collect_results_cpu(SC_metric, len(dataset), tmpdir)
         res['SC_metric'] = SC_metric
-        
+
     if 'SC_metric_1' in result.keys():
         SC_metric_1 = [sum(SC_metric_1)]
         SC_metric_1 = collect_results_cpu(SC_metric_1, len(dataset), tmpdir)
         res['SC_metric_1'] = SC_metric_1
-        
+
     if 'SC_metric_2' in result.keys():
         SC_metric_2 = [sum(SC_metric_2)]
         SC_metric_2 = collect_results_cpu(SC_metric_2, len(dataset), tmpdir)
         res['SC_metric_2'] = SC_metric_2
-    
+
     if 'SSC_metric' in result.keys():
         if SSC_metric is not None and len(SSC_metric) > 0 and all(tensor.shape == SSC_metric[0].shape for tensor in SSC_metric):
             SSC_metric = [sum(SSC_metric)]
@@ -420,38 +415,38 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
     if rank == 0:
         res['SSC_metric'] = SSC_metric_all
 
-    
+
     if 'SSC_metric_1' in result.keys():
         SSC_metric_1 = [sum(SSC_metric_1)]
         SSC_metric_1 = collect_results_cpu(SSC_metric_1, len(dataset), tmpdir)
         res['SSC_metric_1'] = SSC_metric_1
-        
+
     if 'SSC_metric_2' in result.keys():
         SSC_metric_2 = [sum(SSC_metric_2)]
         SSC_metric_2 = collect_results_cpu(SSC_metric_2, len(dataset), tmpdir)
         res['SSC_metric_2'] = SSC_metric_2
-        
+
     if 'SC_metric_fine' in result.keys():
             SC_metric_fine = [sum(SC_metric_fine)]
             SC_metric_fine = collect_results_cpu(SC_metric_fine, len(dataset), tmpdir)
             res['SC_metric_fine'] = SC_metric_fine
-        
+
     if 'SC_metric_fine_1' in result.keys():
         SC_metric_fine_1 = [sum(SC_metric_fine_1)]
         SC_metric_fine_1 = collect_results_cpu(SC_metric_fine_1, len(dataset), tmpdir)
         res['SC_metric_fine_1'] = SC_metric_fine_1
-        
+
     if 'SC_metric_fine_2' in result.keys():
         SC_metric_fine_2 = [sum(SC_metric_fine_2)]
         SC_metric_fine_2 = collect_results_cpu(SC_metric_fine_2, len(dataset), tmpdir)
         res['SC_metric_fine_2'] = SC_metric_fine_2
-    
+
     if 'SSC_metric_fine' in result.keys():
         if all(tensor.shape == SSC_metric_fine[0].shape for tensor in SSC_metric_fine):
             SSC_metric_fine = [sum(SSC_metric_fine)]
             SSC_metric_fine = collect_results_cpu(SSC_metric_fine, len(dataset), tmpdir)
             res['SSC_metric_fine'] = SSC_metric_fine
-        
+
     if 'SSC_metric_fine_1' in result.keys():
         SSC_metric_fine_1 = [sum(SSC_metric_fine_1)]
         SSC_metric_fine_1 = collect_results_cpu(SSC_metric_fine_1, len(dataset), tmpdir)
@@ -468,10 +463,10 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False, sh
 def collect_results_cpu(result_part, size, tmpdir=None, type='list'):
     rank, world_size = get_dist_info()
     # create a tmp dir if it is not specified
-    
+
     if result_part is None:
         result_part = []
-    
+
     if tmpdir is None:
         MAX_LEN = 512
         # 32 is whitespace
@@ -486,10 +481,10 @@ def collect_results_cpu(result_part, size, tmpdir=None, type='list'):
         tmpdir = dir_tensor.cpu().numpy().tobytes().decode().rstrip()
     else:
         mmcv.mkdir_or_exist(tmpdir)
-    
+
     # dump the part result to the dir
     mmcv.dump(result_part, osp.join(tmpdir, f'part_{rank}.pkl'))
-    
+
     # Synchronize here to ensure no rank finishes early
     dist.barrier()
 
@@ -498,7 +493,7 @@ def collect_results_cpu(result_part, size, tmpdir=None, type='list'):
         for i in range(world_size):
             part_file = osp.join(tmpdir, f'part_{i}.pkl')
             res_i = mmcv.load(part_file)
-            
+
             if res_i is None:
                 res_i = []
 
@@ -510,7 +505,6 @@ def collect_results_cpu(result_part, size, tmpdir=None, type='list'):
 
         part_list = part_list[:size]
 
-        # 删除临时文件
         shutil.rmtree(tmpdir)
 
         dist.barrier()

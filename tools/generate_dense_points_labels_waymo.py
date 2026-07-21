@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-07-10 06:17:10
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-07-22 05:59:52
-Description: 头部注释
-FilePath: /UniLiDAR/generate_dense_points_labels_waymo.py
-'''
 import os
 import sys
 import numpy as np
@@ -87,7 +78,6 @@ def process_file(args):
     velodyne_path = os.path.join(root_dir, "velodyne")
     label_path = os.path.join(root_dir, "velodyne")
     refine_path = os.path.join(root_dir, "refine")
-    # output_path = os.path.join(output_base_dir, "dense_labels")
     output_path = output_base_dir
     os.makedirs(output_path, exist_ok=True)
 
@@ -120,7 +110,7 @@ def process_file(args):
     except Exception as e:
         logger.error(f"Error processing file {bin_file}: {e}")
     finally:
-        # 主动清理大对象和垃圾回收
+        # Release the large arrays before the next iteration.
         for var in ["original_points", "original_labels", "pcd", "dense_points", "dense_labels"]:
             if var in locals():
                 del locals()[var]
@@ -135,16 +125,16 @@ def process_waymo_dataset(root_dir, log_queue):
     annotated_indices_path = 'seg_annotated_indices.txt'
     with open(annotated_indices_path, 'r') as f:
         annotated_files = set(line.strip() for line in f.readlines())
-    
+
     print(f"Loaded {len(annotated_files)} annotated files from seg_annotated_indices.txt")
 
     # Get all bin files and filter by annotated indices
     all_bin_files = natsorted([f for f in os.listdir(velodyne_path) if f.endswith('.bin')])
     annotated_bin_files = [f for f in all_bin_files if f in annotated_files]
-    
+
     print(f" Found {len(annotated_bin_files)} annotated files out of {len(all_bin_files)} total files")
     for bin_file in annotated_bin_files:
-        # 检查输出文件是否已存在，若存在则跳过
+        # Skip files that have already been generated.
         output_file_path = os.path.join(output_base_dir, bin_file.replace(".bin", ".label"))
         if os.path.exists(output_file_path):
             continue

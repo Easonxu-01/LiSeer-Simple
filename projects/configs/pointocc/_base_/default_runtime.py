@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-12-07 01:49:10
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2023-12-21 07:54:59
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/_base_/default_runtime.py
-'''
 checkpoint_config = dict(interval=1)
 # yapf:disable push
 # By default we use textlogger hook and tensorboard
@@ -26,7 +17,7 @@ log_config = dict(
                 notes= None
             )
         )
-        
+
     ])
 # yapf:enable
 dist_params = dict(backend='nccl')

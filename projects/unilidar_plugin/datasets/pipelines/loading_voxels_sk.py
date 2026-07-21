@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-12-21 13:07:43
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-05-12 20:43:29
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/pipelines/loading_voxels_sk.py
-'''
 import mmcv
 from mmcv.parallel import DataContainer
 import numpy as np
@@ -105,7 +96,7 @@ class LoadPointsFromFile_RPR(object):
         except ConnectionError:
             pts_bytes = self.file_client.get(pts_filename)
             points = np.frombuffer(pts_bytes, dtype=np.float32)
-            
+
         return torch.from_numpy(points)
 
     def _process_points(self, pts_filename, load_dim=None, use_dim=None,
@@ -323,7 +314,6 @@ class LoadPointsFromFile_Sampling(object):
             pts_bytes = self.file_client.get(pts_filename)
             points = np.frombuffer(pts_bytes, dtype=np.float32)
 
-        # points = self._sampling_numpy(points)
         return torch.from_numpy(points)
 
     def __call__(self, results):
@@ -338,7 +328,7 @@ class LoadPointsFromFile_Sampling(object):
 
                 - points (:obj:`BasePoints`): Point clouds data.
         """
-        
+
         pts_filename = results['pts_filename']
         points = self._load_points(pts_filename)
         points = points.reshape(-1, self.load_dim)
@@ -346,7 +336,7 @@ class LoadPointsFromFile_Sampling(object):
         # points_2 = self._sampling(points.cpu().numpy())
         # points_1 = self._sampling_numpy(points.cpu().numpy())
         attribute_dims = None
-            
+
 
         if self.use_color:
             assert len(self.use_dim) >= 6
@@ -358,13 +348,7 @@ class LoadPointsFromFile_Sampling(object):
                     points.shape[1] - 2,
                     points.shape[1] - 1,
                 ]))
-        
-        # if len(points.shape)==2:
-        #     points = points.reshape(1, points.shape[0], points.shape[1])
-        # if points.shape[1]==5:
-        # points_class = get_points_type(self.coord_type)
-        # points = points_class(
-        #     points, points_dim=points.shape[-1], attribute_dims=attribute_dims)
+
         results['points'] = points
         return results
 
@@ -461,7 +445,7 @@ class LoadVoxels(object):
         return int(pts.shape[0])
 
     def __call__(self, results):
-        
+
         """Private function to load 3D semantic segmentation annotations.
 
         Args:
@@ -503,16 +487,13 @@ class LoadVoxels(object):
         if results.get('voxel_path', None) is not None and self.file_client is None:
             self.file_client = mmcv.FileClient(**self.file_client_args)
         if results.get('voxel_path', None) is not None:
-            voxel_path = results['voxel_path'] 
-            voxel_semantic_mask_path = results['voxel_semantic_mask_path'] 
-            voxel_occ_mask_path = results['voxel_occ_mask_path'] 
-            voxel_invalidation = results['voxel_invalidation'] 
+            voxel_path = results['voxel_path']
+            voxel_semantic_mask_path = results['voxel_semantic_mask_path']
+            voxel_occ_mask_path = results['voxel_occ_mask_path']
+            voxel_invalidation = results['voxel_invalidation']
             try:
                 mmcv.check_file_exist(voxel_path)
                 voxel = _read_occupancy_SemKITTI(voxel_path)
-                # destination_path = "/home/eason/workspace_perception/UniLiDAR/temp"
-                # shutil.copy(voxel_path, destination_path)
-                # print(f"Ori file copied from {voxel_path} to {destination_path}")
             except ConnectionError:
                 mask_bytes = self.file_client.get(voxel_path)
                 # add .copy() to fix read-only bug
@@ -542,11 +523,11 @@ class LoadVoxels(object):
                 # add .copy() to fix read-only bug
                 voxel_invalid = np.frombuffer(
                     mask_bytes, dtype='int').copy()
-                
+
             voxel_semantic_mask[
                 np.isclose(voxel_invalid, 1)
             ] = 260  # Setting to unknown all voxels marked on invalid mask...
-            
+
         points = results['points']
 
         if not results.get('dense7sparse'):
@@ -564,24 +545,23 @@ class LoadVoxels(object):
             results.pop('RPR_indices_sparse', None)
             results.pop('RPR_indices_dense', None)
 
-                #这里增加一个功能：当判断是Waymo的数据时，将pts_semantic_mask中标签为0的点全部滤除，points根据idx执行对应操作。
+        # Waymo marks unlabelled points with class 0; drop them from both the point
+        # cloud and the mask so they never reach the loss.
         if 'waymo' in pts_semantic_mask_path:
             waymo_idx = (pts_semantic_mask == 0).squeeze()
             points = points[~waymo_idx]
             results['points'] = points
             pts_semantic_mask = pts_semantic_mask[~waymo_idx]
-        
-        # results['pts_semantic_mask'] = torch.from_numpy(pts_semantic_mask.astype(np.float32))
+
         results['pts_semantic_mask'] = pts_semantic_mask
-        
+
         if results.get('voxel_path', None) is not None:
             results['voxel'] = torch.from_numpy(voxel)
-            # results['voxel_semantic_mask'] = torch.from_numpy(voxel_semantic_mask.astype(np.float32))
             results['voxel_semantic_mask'] = voxel_semantic_mask.reshape(self.grid_size)
             results['voxel_occ_mask'] = torch.from_numpy(voxel_occ_mask)
             results['voxel_invalid'] = torch.from_numpy(voxel_invalid)
-            
-        # 计算限定范围在processed_label中的索引范围
+
+        # Index range of the restricted point-cloud range inside processed_label.
         pc_range_min = np.array(self.pc_range[:3])
         pc_range_max = np.array(self.pc_range[3:])
         restrict_pc_range_min = np.array(self.restrict_pc_range[:3])
@@ -589,11 +569,11 @@ class LoadVoxels(object):
 
         if results.get('voxel_path', None) is not None:
             shape = results['voxel_semantic_mask'].shape
-            
+
             start_index = []
             end_index = []
 
-            for i in range(3):  # 对X, Y, Z分别判断
+            for i in range(3):  # X, Y, Z
                 if restrict_pc_range_min[i] >= pc_range_min[i] and restrict_pc_range_max[i] <= pc_range_max[i]:
                     start = int((restrict_pc_range_min[i] - pc_range_min[i]) / 0.2)
                     end = int((restrict_pc_range_max[i] - pc_range_min[i]) / 0.2)
@@ -608,58 +588,22 @@ class LoadVoxels(object):
             if isinstance(self.RPR, tuple):
                 self.RPR = self.RPR[0]
             if self.RPR == True:
-                # 添加边界检查：确保end_index不超过voxel_semantic_mask的最大索引上限
-                # 获取voxel_semantic_mask的shape
+                # Clamp end_index to the voxel grid extent before slicing.
                 voxel_shape = results['voxel_semantic_mask'].shape
-                # 限制end_index不超过各维度的最大值
                 end_index = np.minimum(end_index, voxel_shape)
-                
-                # 提取对应的体素
+
                 restricted_voxels = results['voxel_semantic_mask'][start_index[0]:end_index[0], start_index[1]:end_index[1], start_index[2]:end_index[2]]
                 results['voxel_semantic_mask'] = restricted_voxels
-                
+
         results['pts_seg_fields'].append('pts_semantic_mask')
         if results.get('voxel_path', None) is not None:
             results['seg_fields'].append('voxel')
             results['seg_fields'].append('voxel_semantic_mask')
             results['seg_fields'].append('voxel_occ_mask')
             results['seg_fields'].append('voxel_invalid')
-        
+
         if self.cal_visible:
             visible_mask = np.zeros(self.grid_size, dtype=np.uint8)
-            # # camera branch
-            # if 'img_inputs' in results.keys():
-            #     _, rots, trans, intrins, post_rots, post_trans = results['img_inputs'][:6]
-            #     occ_uvds = self.project_points(torch.Tensor(untransformed_occ), 
-            #                                     rots, trans, intrins, post_rots, post_trans)  # N 6 3
-            #     N, n_cam, _ = occ_uvds.shape
-            #     img_visible_mask = np.zeros((N, n_cam))
-            #     img_h, img_w = results['img_inputs'][0].shape[-2:]
-            #     for cam_idx in range(n_cam):
-            #         basic_mask = (occ_uvds[:, cam_idx, 0] >= 0) & (occ_uvds[:, cam_idx, 0] < img_w) & \
-            #                     (occ_uvds[:, cam_idx, 1] >= 0) & (occ_uvds[:, cam_idx, 1] < img_h) & \
-            #                     (occ_uvds[:, cam_idx, 2] >= 0)
-
-            #         basic_valid_occ = occ_uvds[basic_mask, cam_idx]  # M 3
-            #         M = basic_valid_occ.shape[0]  # TODO M~=?
-            #         basic_valid_occ[:, 2] = basic_valid_occ[:, 2] * 10
-            #         basic_valid_occ = basic_valid_occ.cpu().numpy()
-            #         basic_valid_occ = basic_valid_occ.astype(np.int16)  # TODO first round then int?
-            #         depth_canva = np.ones((img_h, img_w), dtype=np.uint16) * 2048
-            #         nb_valid_mask = np.zeros((M), dtype=np.bool)
-            #         nb_valid_mask = nb_process_img_points(basic_valid_occ, depth_canva, nb_valid_mask)  # M
-            #         img_visible_mask[basic_mask, cam_idx] = nb_valid_mask
-
-            #     img_visible_mask = img_visible_mask.sum(1) > 0  # N  1:occupied  0: free
-            #     img_visible_mask = img_visible_mask.reshape(-1, 1).astype(pcd_label.dtype) 
-
-            #     img_pcd_np = np.concatenate([transformed_occ, img_visible_mask], axis=-1)
-            #     img_pcd_np = img_pcd_np[np.lexsort((transformed_occ[:, 0], transformed_occ[:, 1], transformed_occ[:, 2])), :]
-            #     img_pcd_np = img_pcd_np.astype(np.int64)
-            #     img_occ_label = np.zeros(self.grid_size, dtype=np.uint8)
-            #     voxel_img = nb_process_label(img_occ_label, img_pcd_np) 
-            #     visible_mask = visible_mask | voxel_img
-            #     results['img_visible_mask'] = voxel_img
 
 
             # lidar branch
@@ -671,7 +615,7 @@ class LoadVoxels(object):
                 pts_in_range = ((pts>=self.pc_range[:3]) & (pts<self.pc_range[3:])).sum(1)==3
                 pts = pts[pts_in_range]
                 pts = (pts - self.pc_range[:3])/self.voxel_size
-                pts = np.concatenate([pts, np.ones((pts.shape[0], 1)).astype(pts.dtype)], axis=1) 
+                pts = np.concatenate([pts, np.ones((pts.shape[0], 1)).astype(pts.dtype)], axis=1)
                 pts = pts[np.lexsort((pts[:, 0], pts[:, 1], pts[:, 2])), :].astype(np.int64)
                 pts_occ_label = np.zeros(self.grid_size, dtype=np.uint8)
                 voxel_pts = nb_process_label(pts_occ_label, pts)  # W H D 1:occupied 0:free
@@ -704,31 +648,30 @@ class LoadVoxels(object):
         return repr_str
 
     def project_points(self, points, rots, trans, intrins, post_rots, post_trans):
-        
+
         # from lidar to camera
         points = points.reshape(-1, 1, 3)
         points = points - trans.reshape(1, -1, 3)
         inv_rots = rots.inverse().unsqueeze(0)
         points = (inv_rots @ points.unsqueeze(-1))
-        
+
         # from camera to raw pixel
         points = (intrins.unsqueeze(0) @ points).squeeze(-1)
         points_d = points[..., 2:3]
         points_uv = points[..., :2] / points_d
-        
+
         # from raw pixel to transformed pixel
         points_uv = post_rots[:, :2, :2].unsqueeze(0) @ points_uv.unsqueeze(-1)
         points_uv = points_uv.squeeze(-1) + post_trans[..., :2].unsqueeze(0)
         points_uvd = torch.cat((points_uv, points_d), dim=2)
-        
+
         return points_uvd
-    
+
 # b1:boolean, u1: uint8, i2: int16, u2: uint16
 @nb.jit('b1[:](i2[:,:],u2[:,:],b1[:])', nopython=True, cache=True, parallel=False)
 def nb_process_img_points(basic_valid_occ, depth_canva, nb_valid_mask):
     # basic_valid_occ M 3
     # depth_canva H W
-    # label_size = M   # for original occ, small: 2w mid: ~8w base: ~30w
     canva_idx = -1 * np.ones_like(depth_canva, dtype=np.int16)
     for i in range(basic_valid_occ.shape[0]):
         occ = basic_valid_occ[i]
@@ -756,7 +699,7 @@ def nb_process_label_withvel(processed_label, sorted_label_voxel_pair):
             cur_sear_ind = cur_ind
         counter[sorted_label_voxel_pair[i, 3]] += 1
     processed_label[cur_sear_ind[0], cur_sear_ind[1], cur_sear_ind[2]] = np.argmax(counter)
-    
+
     return processed_label
 
 
@@ -775,7 +718,7 @@ def nb_process_label(processed_label, sorted_label_voxel_pair):
             cur_sear_ind = cur_ind
         counter[sorted_label_voxel_pair[i, 3]] += 1
     processed_label[cur_sear_ind[0], cur_sear_ind[1], cur_sear_ind[2]] = np.argmax(counter)
-    
+
     return processed_label
 
 def cart2polar(input_xyz):

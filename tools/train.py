@@ -3,7 +3,7 @@
 # ---------------------------------------------
 #  Modified by Zhiqi Li
 # ---------------------------------------------
- 
+
 from __future__ import division
 
 import argparse
@@ -20,7 +20,6 @@ import torch.multiprocessing as mp
 from mmdet import __version__ as mmdet_version
 from mmdet3d import __version__ as mmdet3d_version
 from mmseg import __version__ as mmseg_version
-#from mmdet3d.apis import train_model
 
 from mmdet3d.models import build_model
 from mmdet3d.utils import collect_env, get_root_logger
@@ -29,10 +28,10 @@ import sys
 sys.path.insert(0, '/home/eason/workspace_perception/UniLiDAR/')
 from projects.unilidar_plugin.occupancy.apis.train import custom_train_model, custom_train_multidb_model
 from projects.unilidar_plugin.datasets import custom_build_dataset as build_dataset
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1' 
-os.environ['JOBLIB_TEMP_FOLDER'] = '/data1' 
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+os.environ['JOBLIB_TEMP_FOLDER'] = '/data1'
 os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
-# os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'INFO' 
+# os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'INFO'
 # os.environ['CUDA_VISIBLE_DEVICES'] = '1,2,3,4,5,6'
 
 def parse_args():
@@ -116,7 +115,7 @@ def main():
             _module_path = _module_path + '.' + m
         print(_module_path)
         plg_lib = importlib.import_module(_module_path)
-    
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -126,11 +125,10 @@ def main():
         cfg.work_dir = args.work_dir
     elif cfg.get('work_dir', None) is None:
         cfg.work_dir = osp.join('./work_dirs', osp.splitext(osp.basename(args.config))[0])
-        
-    # if args.resume_from is not None:
+
     if args.resume_from is not None and osp.isfile(args.resume_from):
         cfg.resume_from = args.resume_from
-        
+
     if args.gpu_ids is not None:
         cfg.gpu_ids = args.gpu_ids
     else:
@@ -191,17 +189,13 @@ def main():
     model.init_weights()
     for param in model.parameters():
         param.requires_grad = True
-    # for n, p in model.named_parameters():
-    #     if p.grad is None:
-    #         print(f'{n} has no grad')
     if cfg.get('fine_tune', False):
         if cfg.get('unilidar', False):
             if cfg.get('sample_from_voxel', False):
-                # 首先，冻结所有参数
+                # Freeze everything, then re-enable the fine-tuned head parameters.
                 for param in model.parameters():
                     param.requires_grad = False
 
-                # 定义需要微调的参数名称列表
                 fine_tuning_params = [
                     'pts_bbox_head.fine_mlp_1.0.weight', 'pts_bbox_head.fine_mlp_1.0.bias',
                     'pts_bbox_head.fine_mlp_1.1.weight', 'pts_bbox_head.fine_mlp_1.1.bias',
@@ -211,17 +205,15 @@ def main():
                     'pts_bbox_head.fine_mlp_2.3.weight', 'pts_bbox_head.fine_mlp_2.3.bias'
                 ]
 
-                # 然后，根据参数的名称，解冻特定的参数
                 for name, param in model.named_parameters():
                     if name in fine_tuning_params:
                         param.requires_grad = True
         else:
             if cfg.get('sample_from_voxel', False):
-                # 首先，冻结模型中的所有参数
+                # Freeze everything, then re-enable the fine-tuned head parameters.
                 for param in model.parameters():
                     param.requires_grad = False
 
-                # 定义要解冻（进行微调）的参数名称列表
                 params_to_unfreeze = [
                     'pts_bbox_head.fine_mlp.0.weight',
                     'pts_bbox_head.fine_mlp.0.bias',
@@ -231,20 +223,18 @@ def main():
                     'pts_bbox_head.fine_mlp.3.bias'
                 ]
 
-                # 遍历模型的所有命名参数
                 for name, param in model.named_parameters():
                     if name in params_to_unfreeze:
-                        # 如果参数名称在列表中，则解冻该参数（允许其接受梯度）
                         param.requires_grad = True
 
-    
+
     if cfg.get('unilidar', False):
         datasets_nu = [build_dataset(cfg.data_nu.train)]
         datasets_sk = [build_dataset(cfg.data_sk.train)]
-        
+
         model.CLASSES_nu = datasets_nu[0].CLASSES
         model.CLASSES_sk = datasets_sk[0].CLASSES
-        
+
         custom_train_multidb_model(
             model,
             datasets_nu,
@@ -254,13 +244,13 @@ def main():
             validate=(not args.no_validate),
             timestamp=timestamp,
             meta=meta)
-    
+
     else:
         datasets = [build_dataset(cfg.data.train)]
-        
+
         # add an attribute for visualization convenience
         model.CLASSES = datasets[0].CLASSES
-    
+
         custom_train_model(
             model,
             datasets,
@@ -272,8 +262,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # current_method = mp.get_start_method()
-    # print(f"Current start method: {current_method}")
-    # mp.set_start_method('spawn', force=True)
-    # mp.set_start_method('fork', force=True)
     main()

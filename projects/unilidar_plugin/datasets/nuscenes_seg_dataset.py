@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-04-27 04:09:56
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-08-20 08:28:49
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/nuscenes_seg_dataset.py
-'''
 import numpy as np
 from mmdet.datasets import DATASETS
 from mmdet3d.datasets import NuScenesDataset
@@ -44,13 +35,13 @@ class NuscSegDataset(NuScenesDataset):
         """
         if self.test_mode:
             return self.prepare_test_data(idx)
-            
+
         while True:
             data = self.prepare_train_data(idx)
             if data is None:
                 idx = self._rand_another(idx)
                 continue
-            
+
             return data
 
     def prepare_train_data(self, index):
@@ -61,7 +52,7 @@ class NuscSegDataset(NuScenesDataset):
         # Pass the dataset to the pipeline during training to support mixed
         # data augmentation, such as polarmix and lasermix.
         input_dict['dataset'] = self
-        
+
         self.pre_pipeline(input_dict)
         example = self.pipeline(input_dict)
         return example
@@ -79,7 +70,7 @@ class NuscSegDataset(NuScenesDataset):
     def get_data_info(self, index):
 
         info = self.data_infos[index]
-        
+
         # standard protocal modified from SECOND.Pytorch
         input_dict = dict(
             sample_idx=info['token'],
@@ -93,7 +84,6 @@ class NuscSegDataset(NuScenesDataset):
             next_idx=info['next'],
             scene_token=info['scene_token'],
             can_bus=info['can_bus'],
-            # frame_idx=info['frame_idx'],
             timestamp=info['timestamp'] / 1e6,
             pc_range = np.array(self.pc_range),
             lidar_token=info['lidar_token'],
@@ -108,9 +98,9 @@ class NuscSegDataset(NuScenesDataset):
             lidar2img_rts = []
             lidar2cam_rts = []
             cam_intrinsics = []
-            
+
             lidar2cam_dic = {}
-            
+
             for cam_type, cam_info in info['cams'].items():
                 image_paths.append(cam_info['data_path'])
                 # obtain lidar to image transformation matrix
@@ -128,7 +118,7 @@ class NuscSegDataset(NuScenesDataset):
 
                 cam_intrinsics.append(viewpad)
                 lidar2cam_rts.append(lidar2cam_rt.T)
-                
+
                 lidar2cam_dic[cam_type] = lidar2cam_rt.T
 
             input_dict.update(
@@ -166,7 +156,7 @@ class NuscSegDataset(NuScenesDataset):
 
     def evaluate(self, results, logger=None, **kawrgs):
         eval_results = {}
-        
+
         if 'SC_metric_1' in results.keys():
             ''' evaluate SC '''
             evaluation_semantic = sum(results['SC_metric_1'])
@@ -177,7 +167,7 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SC Evaluation: SC_metric_1')
                 logger.info(res_table)
-        
+
         if 'SC_metric' in results.keys():
             ''' evaluate SC '''
             evaluation_semantic = sum(results['SC_metric'])
@@ -188,7 +178,7 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SC Evaluation: SC_metric')
                 logger.info(res_table)
-        
+
         if 'SSC_metric_1' in results.keys():
             ''' evaluate SSC '''
             evaluation_semantic = sum(results['SSC_metric_1'])
@@ -202,7 +192,7 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SSC Evaluation: SSC_metric_1')
                 logger.info(res_table)
-                
+
         if 'SSC_metric' in results.keys():
             ''' evaluate SSC '''
             evaluation_semantic = sum(results['SSC_metric'])
@@ -227,7 +217,7 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SC_fine Evaluation: SC_metric_fine_1')
                 logger.info(res_table)
-        
+
         ''' evaluate SSC_fine '''
         if 'SSC_metric_fine_1' in results.keys():
             evaluation_semantic = sum(results['SSC_metric_fine_1'])
@@ -241,7 +231,7 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SSC_fine Evaluation: SSC_metric_fine_1')
                 logger.info(res_table)
-                
+
                 ''' evaluate SC '''
         if 'SC_metric_fine' in results.keys():
             evaluation_semantic = sum(results['SC_metric_fine'])
@@ -252,7 +242,7 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SC_fine Evaluation: SC_metric_fine')
                 logger.info(res_table)
-        
+
         ''' evaluate SSC_fine '''
         if 'SSC_metric_fine' in results.keys():
             evaluation_semantic = sum(results['SSC_metric_fine'])
@@ -266,6 +256,6 @@ class NuscSegDataset(NuScenesDataset):
             if logger is not None:
                 logger.info('SSC_fine fine Evaluation: SSC_metric_fine')
                 logger.info(res_table)
-            
+
         return eval_results
 

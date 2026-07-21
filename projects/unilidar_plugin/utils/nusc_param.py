@@ -3,34 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-# nusc_class_frequencies = np.array([57330862, 25985376, 1561108, 28862014, 196106643, 15920504,
-#                 2158753, 26539491, 4004729, 34838681, 75173306, 2255027978, 50959399, 646022466, 869055679,
-#                 1446141335, 1724391378, 2242961742295])
-
 nusc_class_frequencies = np.array([2242961742295, 25985376, 1561108, 28862014, 196106643, 15920504,
                 2158753, 26539491, 4004729, 34838681, 75173306, 2255027978, 50959399, 646022466, 869055679,
                 1446141335, 1724391378])
-
-# nusc_class_names = [
-#     "noise",
-#     "barrier",
-#     "bicycle",
-#     "bus",
-#     "car",
-#     "construction",
-#     "motorcycle",
-#     "pedestrian",
-#     "trafficcone",
-#     "trailer",
-#     "truck",
-#     "driveable_surface",
-#     "other",
-#     "sidewalk",
-#     "terrain",
-#     "mannade",
-#     "vegetation",
-#     "free",
-# ]
 
 nusc_class_names = [
     "empty",
@@ -52,27 +27,7 @@ nusc_class_names = [
     "vegetation",
 ]
 
-# classname_to_color = {  # RGB.
-#     0: (0, 0, 0),  # Black. noise
-#     1: (112, 128, 144),  # Slategrey barrier
-#     2: (220, 20, 60),  # Crimson bicycle
-#     3: (255, 127, 80),  # Orangered bus
-#     4: (255, 158, 0),  # Orange car
-#     5: (233, 150, 70),  # Darksalmon construction
-#     6: (255, 61, 99),  # Red motorcycle
-#     7: (0, 0, 230),  # Blue pedestrian
-#     8: (47, 79, 79),  # Darkslategrey trafficcone
-#     9: (255, 140, 0),  # Darkorange trailer
-#     10: (255, 99, 71),  # Tomato truck
-#     11: (0, 207, 191),  # nuTonomy green driveable_surface
-#     12: (175, 0, 75),  # flat other
-#     13: (75, 0, 75),  # sidewalk
-#     14: (112, 180, 60),  # terrain
-#     15: (222, 184, 135),  # Burlywood mannade
-#     16: (0, 175, 0),  # Green vegetation
-# }
 classname_to_color = {  # RGB.
-    # 0: (0, 0, 0),  # Black. noise
     1: (112, 128, 144),  # Slategrey barrier
     2: (220, 20, 60),  # Crimson bicycle
     3: (255, 127, 80),  # Orangered bus

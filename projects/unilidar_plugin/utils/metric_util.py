@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 # author: Xinge
-# @file: metric_util.py 
+# @file: metric_util.py
 
 import numpy as np
 import torch
@@ -18,13 +18,11 @@ def per_class_iu(hist):
 
 def fast_hist_crop(output, target, unique_label):
     hist = fast_hist(output.flatten(), target.flatten(), np.max(unique_label) + 2)
-    
-    # print('groundtruth noise classified as: ', hist[0])
-    # print('predicted noise are actually: ', hist[:, 0])
-    
+
+
     hist = hist[unique_label + 1, :]
     hist = hist[:, unique_label + 1]
-    
+
     return hist
 
 class SSCMetrics:
@@ -195,8 +193,8 @@ class SSCMetrics:
                 fn_sum[j] += fn
 
         return tp_sum, fp_sum, fn_sum
-    
-    
+
+
 class MeanIoU:
     def __init__(self,
                  class_indices,
@@ -247,5 +245,5 @@ class MeanIoU:
         logger.info(f'Validation per class iou {self.name}:')
         for iou, label_str in zip(ious, self.label_str):
             logger.info('%s : %.2f%%' % (label_str, iou * 100))
-        
+
         return miou * 100

@@ -5,9 +5,21 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+build/
+dist/
 
 # Editor / local history
 .history/
+.idea/
+
+# Datasets, checkpoints and run outputs (host externally, not in git)
+data/
+work_dirs/
+ckpts/
+pretrain/
+*.pth
+*.ckpt
+*.pkl
 
 # Large media (host externally, not in git)
 *.mp4

@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2026-01-12 15:43:49
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-01-24 23:11:58
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/pointocc_model/Spectraldistiller.py
-'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,27 +5,30 @@ from typing import List, Dict, Tuple, Optional
 
 class TPVLowFreqSpectralDistiller(nn.Module):
     """
-    SI-STJD 低频蒸馏融合版：集成多尺度扩散响应与狄利克雷能量对齐。
-    
-    理论映射：
-    - TPV 表征被视为规则 2D 网格图上的信号 F。
-    - 使用稳定的扩散算子 (I - alpha L) 提取多尺度低频响应 G_b。
-    - L 是归一化图拉普拉斯算子，描述信号在空间上的“震荡”。
-    - (I - alpha L) 是低通滤波器，保留宏观语义（几何骨架）。
-    - 蒸馏损失 L = L_resp (形态一致性) + L_eng (几何平滑能量一致性)。
+    Low-frequency spectral distillation combining multi-scale diffusion responses
+    with Dirichlet-energy alignment.
+
+    A TPV representation is treated as a signal F on a regular 2D grid graph:
+
+    - The stable diffusion operator (I - alpha * L) extracts multi-scale
+      low-frequency responses G_b.
+    - L is the normalised graph Laplacian, measuring spatial oscillation.
+    - (I - alpha * L) acts as a low-pass filter that keeps the macroscopic
+      semantics, i.e. the geometric skeleton.
+    - The distillation loss is L_resp (response shape) + L_eng (Dirichlet energy).
     """
 
     def __init__(
         self,
-        num_scales: int = 8,            # B: 扩散尺度的数量（滤波器组大小）
-        alpha: float = 0.25,            # 扩散步长，对应离散化的时间步长 t
-        eta: Optional[List[float]] = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25],   # 各个尺度的损失权重
-        lambda_energy: float = 0.5,     # 狄利克雷能量对齐的相对权重
+        num_scales: int = 8,            # number of diffusion scales (filter-bank size)
+        alpha: float = 0.25,            # diffusion step, i.e. the discretised time step t
+        eta: Optional[List[float]] = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25],   # per-scale loss weights
+        lambda_energy: float = 0.5,     # relative weight of the Dirichlet-energy term
         num_moments: int = 8,
         lambda_moment: float = 0.5,
         eps: float = 1e-6,
         detach_teacher: bool = True,
-        pad_mode: str = "replicate"     # 边界处理：使用 replicate 保持流形边界连续性
+        pad_mode: str = "replicate"     # replicate padding keeps the manifold boundary continuous
     ):
         super().__init__()
         self.num_scales = num_scales
@@ -45,14 +39,14 @@ class TPVLowFreqSpectralDistiller(nn.Module):
         self.pad_mode = pad_mode
         self.num_moments = num_moments
         self.lambda_moment = lambda_moment
-        
-        # 默认权重：低频（b 越大）的权重略高，因为低频包含更稳健的语义骨架
+
+        # Default weights rise with b: lower frequencies carry the more robust skeleton.
         if eta is None:
             eta = [0.5 + 0.25 * b for b in range(self.num_scales)]
         self.register_buffer("eta", torch.tensor(eta, dtype=torch.float32))
 
-        # [理论核心] 定义归一化图拉普拉斯卷积核 (L = I - NeighborAvg)
-        # 对应图理论中规则网格的拉普拉斯算子实现
+        # Normalised graph Laplacian as a convolution kernel: L = I - NeighborAvg,
+        # the regular-grid form of the graph Laplacian.
         K_lap = torch.zeros((1, 1, 3, 3), dtype=torch.float32)
         K_lap[0, 0, 1, 1] = 1.0
         K_lap[0, 0, 0, 1] = -0.25
@@ -62,24 +56,22 @@ class TPVLowFreqSpectralDistiller(nn.Module):
         self.register_buffer("K_lap", K_lap)
 
     def _apply_laplacian(self, x: torch.Tensor) -> torch.Tensor:
-        """计算 L*x (拉普拉斯算子响应)"""
+        """Apply the Laplacian operator, returning L*x."""
         B, C, H, W = x.shape
         k = self.K_lap.expand(C, 1, 3, 3)
         x_pad = F.pad(x, (1, 1, 1, 1), mode=self.pad_mode)
-        # 使用 depthwise 卷积模拟图信号处理
         return F.conv2d(x_pad, k, bias=None, stride=1, padding=0, groups=C)
 
     def _diffuse_step(self, x: torch.Tensor) -> torch.Tensor:
-        """执行一步热传导扩散: D(x) = x - alpha * L(x)"""
+        """One heat-diffusion step: D(x) = x - alpha * L(x)."""
         return x - self.alpha * self._apply_laplacian(x)
 
     def _get_dirichlet_energy(self, x: torch.Tensor) -> torch.Tensor:
         """
-        计算每通道的狄利克雷能量: E = tr(x^T * L * x)
-        这是衡量几何平滑性的本征物理量。
+        Per-channel Dirichlet energy E = tr(x^T * L * x), the intrinsic measure of
+        geometric smoothness.
         """
         Lx = self._apply_laplacian(x)
-        # 在空间维度 (H, W) 求内积
         energy = torch.sum(x * Lx, dim=(2, 3)) # [B, C]
         return energy
 
@@ -103,40 +95,38 @@ class TPVLowFreqSpectralDistiller(nn.Module):
 
     def _normalize_response(self, x: torch.Tensor) -> torch.Tensor:
         """
-        响应形态归一化：
-        消除稀疏采样导致的绝对幅值偏差，只对齐信号的“空间分布形状”。
+        Normalise response magnitude so that sparse sampling cannot bias the loss;
+        only the spatial shape of the signal is aligned.
         """
         denom = torch.sqrt(torch.sum(x * x, dim=(1, 2, 3), keepdim=True) + self.eps)
         return x / denom
 
     def _match_view(self, s: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        """对单个 TPV 视图执行蒸馏"""
-        # 初始状态
+        """Distill a single TPV view."""
         gs, gt = s, t
         loss = s.new_tensor(0.0)
-        
+
         for b in range(self.num_scales):
-            # 1. 响应形态对齐 (低通形态)
+            # 1. Align the low-pass response shape.
             ns = self._normalize_response(gs)
             nt = self._normalize_response(gt)
             loss_resp = torch.mean((ns - nt) ** 2)
 
-            # 2. 能量谱对齐 (狄利克雷一致性)
+            # 2. Align the Dirichlet energy spectrum.
             Es = self._get_dirichlet_energy(gs)
             Et = self._get_dirichlet_energy(gt)
-            # 对通道维度进行归一化，学习特征间的相对能量分布
+            # Normalise across channels to learn the relative energy distribution.
             Es_n = F.normalize(Es, p=2, dim=1)
             Et_n = F.normalize(Et, p=2, dim=1)
             loss_eng = F.mse_loss(Es_n, Et_n)
 
-            # 累加损失，并结合当前尺度的权重 eta
             loss += self.eta[b].to(loss.dtype) * (loss_resp + self.lambda_energy * loss_eng)
 
-            # 准备下一尺度的扩散 (通过迭代增加扩散半径)
+            # Diffuse once more to widen the radius for the next scale.
             if b < self.num_scales - 1:
                 gs = self._diffuse_step(gs)
                 gt = self._diffuse_step(gt)
-            
+
         mom_s = self._spectral_moments(s)  # list of [B,C]
         mom_t = self._spectral_moments(t)  # list of [B,C]
 
@@ -147,9 +137,9 @@ class TPVLowFreqSpectralDistiller(nn.Module):
             lk = F.mse_loss(ms, mt)
             loss_mom = loss_mom + lk
 
-        # 归一化多尺度加权项，避免 num_scales 变化时整体梯度被额外放大
+        # Normalise by the scale weights so changing num_scales does not rescale the gradient.
         loss = loss / (self.eta.sum().to(loss.dtype) + self.eps)
-        # 对谱矩对齐按阶数取平均，避免 num_moments 增加时权重被线性放大
+        # Average the moment terms so a larger num_moments does not scale the loss linearly.
         loss = loss + (self.lambda_moment / float(self.num_moments)) * loss_mom
         return loss
 
@@ -538,7 +528,7 @@ class TPVHighFreqSpectralDistiller(nn.Module):
         ecc_t = F.normalize(self.ecc_curve_3d_local(t, taus=taus, kappa=self.ecc_kappa), p=2, dim=-1)  # [B,C,M]
         loss_ecc = torch.mean(torch.abs(ecc_s - ecc_t))
 
-        # 将谱矩对齐按阶数取平均，避免 num_moments 增加时梯度线性放大
+        # Average the moment terms so a larger num_moments does not scale the gradient linearly.
         loss_mom = loss_mom / float(self.num_moments)
 
         return loss_hf + self.lambda_moment * loss_mom + self.lambda_ecc * loss_ecc

@@ -25,7 +25,7 @@ from projects.unilidar_plugin.datasets import custom_build_dataset, Concatenated
 from mmdet.datasets import replace_ImageToTensor
 import time
 import os.path as osp
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1' 
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -213,11 +213,11 @@ def main():
     # build the model and load checkpoint
     cfg.model.train_cfg = None
     model = build_model(cfg.model, test_cfg=cfg.get('test_cfg'))
-    
+
     if cfg.get('test_dual', False):
         datasets_nu = [build_dataset(cfg.data_nu.test)]
         datasets_sk = [build_dataset(cfg.data_sk.test)]
-        
+
         model.CLASSES_nu = datasets_nu[0].CLASSES
         model.CLASSES_sk = datasets_sk[0].CLASSES
         datasets_nu = datasets_nu if isinstance(datasets_nu, (list, tuple)) else [datasets_nu]
@@ -237,7 +237,7 @@ def main():
             drop_last=True,
         )
     ]
-    
+
     else:
         # build the dataloader
         dataset = build_dataset(cfg.data.test)
@@ -249,8 +249,6 @@ def main():
             workers_per_gpu=cfg.data.workers_per_gpu,
             dist=distributed,
             shuffle=False,
-            #nonshuffler_sampler=cfg.data.nonshuffler_sampler,
-            # shuffler_sampler=cfg.data.shuffler_sampler,
         )
         model.CLASSES = dataset.CLASSES
     fp16_cfg = cfg.get('fp16', None)
@@ -259,12 +257,6 @@ def main():
     checkpoint = load_checkpoint(model, checkpoint_path, map_location='cpu')
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
-    # old versions did not save class info in checkpoints, this walkaround is
-    # for backward compatibility
-    # if 'CLASSES' in checkpoint.get('meta', {}):
-    #     model.CLASSES = checkpoint['meta']['CLASSES']
-    # else:
-    #     model.CLASSES = dataset.CLASSES
     # palette for visualization in segmentation tasks
     if 'PALETTE' in checkpoint.get('meta', {}):
         model.PALETTE = checkpoint['meta']['PALETTE']
@@ -277,11 +269,10 @@ def main():
             args.show_dir = osp.join('./work_dirs',
                             osp.splitext(osp.basename(args.config))[0],
                             'visualization')
-        print('save dir: ', args.show_dir)               
+        print('save dir: ', args.show_dir)
         os.makedirs(args.show_dir, exist_ok=True)
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        # outputs = single_gpu_test(model, data_loader, args.show, args.show_dir)
         outputs = custom_single_gpu_test(model, data_loader, args.show, args.show_dir)
     else:
         model = MMDistributedDataParallel(
@@ -293,11 +284,11 @@ def main():
 
     rank, _ = get_dist_info()
     if rank == 0 and distributed:
-        
+
         kwargs = {} if args.eval_options is None else args.eval_options
         kwargs['jsonfile_prefix'] = osp.join('test', args.config.split(
             '/')[-1].split('.')[-2], time.ctime().replace(' ', '_').replace(':', '_'))
-        
+
         if args.format_only:
             dataset.format_results(outputs, **kwargs)
 
@@ -312,7 +303,7 @@ def main():
                     eval_kwargs_sk.pop(key, None)
                 eval_kwargs_sk.update(dict(metric=args.eval, **kwargs))
                 print(dataset.evaluate_sk(outputs, **eval_kwargs_sk))
-                
+
                 eval_kwargs_nu = cfg.get('evaluation_nu', {}).copy()
                 # hard-code way to remove EvalHook args
                 for key in [

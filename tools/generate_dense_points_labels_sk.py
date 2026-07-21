@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-05-07 09:40:46
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-05-08 03:51:42
-Description: 头部注释
-FilePath: /UniLiDAR/generate_dense_points_labels.py
-'''
 import os
 import sys
 import numpy as np

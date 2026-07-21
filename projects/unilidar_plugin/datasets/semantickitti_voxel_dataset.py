@@ -1,12 +1,12 @@
 import numpy as np
-import os 
+import os
 from mmdet.datasets import DATASETS
 from projects.unilidar_plugin.utils.formating import cm_to_ious, format_SC_results, format_SSC_results_sk, format_SSC_results_dg
 from .semantickitti_dataset import SemanticKittiDataset
 from mmdet3d.datasets import SemanticKITTIDataset
 @DATASETS.register_module()
 class SemantickittiVoxelDataset(SemanticKITTIDataset):
-    
+
     METAINFO = {
         'classes': ('unlabeled', 'car', 'bicycle', 'motorcycle', 'truck', 'bus',
                'person', 'bicyclist', 'motorcyclist', 'road', 'parking',
@@ -65,13 +65,13 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
         """
         if self.test_mode:
             return self.prepare_test_data(idx)
-            
+
         while True:
             data = self.prepare_train_data(idx)
             if data is None:
                 idx = self._rand_another(idx)
                 continue
-            
+
             return data
 
     def prepare_train_data(self, index):
@@ -96,33 +96,32 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
     def get_data_info(self, index):
 
         info = self.data_infos[index]
-        # bs=len(index), 
         # standard protocal modified from SECOND.Pytorch
         input_dict = dict(
             sample_idx=info['sample_id'],
             lidar_points=info['lidar_points'],
             pts_filename = info['lidar_points']['lidar_path'],
-            pts_semantic_mask_path=info['pts_semantic_mask_path'],    
+            pts_semantic_mask_path=info['pts_semantic_mask_path'],
             num_pts_feats=info['lidar_points']['num_pts_feats'],
             voxels=info['voxels'],
             voxel_path=info['voxels']['voxel_path'],
             num_voxel_feats=info['voxels']['num_voxel_feats'],
-            voxel_semantic_mask_path=info['voxel_semantic_mask_path'], 
+            voxel_semantic_mask_path=info['voxel_semantic_mask_path'],
             voxel_occ_mask_path=info['voxel_occ_mask_path'],
             voxel_invalidation=info['voxel_invalidation'],
             seg_label_mapping = self.seg_label_mapping,
             classes = self.classes,
             curr=info,
         )
-        
+
         if self.modality['use_camera']:
             image_paths = []
             lidar2img_rts = []
             lidar2cam_rts = []
             cam_intrinsics = []
-            
+
             lidar2cam_dic = {}
-            
+
             for cam_type, cam_info in info['cams'].items():
                 image_paths.append(cam_info['data_path'])
                 # obtain lidar to image transformation matrix
@@ -140,7 +139,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
 
                 cam_intrinsics.append(viewpad)
                 lidar2cam_rts.append(lidar2cam_rt.T)
-                
+
                 lidar2cam_dic[cam_type] = lidar2cam_rt.T
 
             input_dict.update(
@@ -172,14 +171,14 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
                     input_dict['pts_filename'] = dense_pts
                     input_dict['pts_semantic_mask_path'] = dense_labels
             input_dict['voxel_path'] = os.path.join(self.data_root, input_dict['voxel_path'])
-            input_dict['voxel_semantic_mask_path'] = os.path.join(self.data_root, input_dict['voxel_semantic_mask_path'])      
-            input_dict['voxel_occ_mask_path'] = os.path.join(self.data_root, input_dict['voxel_occ_mask_path'])   
+            input_dict['voxel_semantic_mask_path'] = os.path.join(self.data_root, input_dict['voxel_semantic_mask_path'])
+            input_dict['voxel_occ_mask_path'] = os.path.join(self.data_root, input_dict['voxel_occ_mask_path'])
             input_dict['voxel_invalidation'] = os.path.join(self.data_root, input_dict['voxel_invalidation'])
         return input_dict
 
     def evaluate(self, results, logger=None, **kawrgs):
         eval_results = {}
-        
+
         if 'SC_metric_2' in results.keys():
             ''' evaluate SC '''
             evaluation_semantic = sum(results['SC_metric_2'])
@@ -190,7 +189,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SC Evaluation')
                 logger.info(res_table)
-        
+
         if 'SC_metric' in results.keys():
             ''' evaluate SC '''
             evaluation_semantic = sum(results['SC_metric'])
@@ -201,7 +200,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SC Evaluation')
                 logger.info(res_table)
-        
+
         if 'SSC_metric_2' in results.keys():
             ''' evaluate SSC '''
             evaluation_semantic = sum(results['SSC_metric_2'])
@@ -215,7 +214,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SSC Evaluation')
                 logger.info(res_table)
-                
+
         if 'SSC_metric' in results.keys():
             ''' evaluate SSC '''
             evaluation_semantic = sum(results['SSC_metric'])
@@ -240,7 +239,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SC_fine Evaluation')
                 logger.info(res_table)
-        
+
         ''' evaluate SSC_fine '''
         if 'SSC_metric_fine_2' in results.keys():
             evaluation_semantic = sum(results['SSC_metric_fine_2'])
@@ -254,7 +253,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SSC_fine Evaluation')
                 logger.info(res_table)
-                
+
                 ''' evaluate SC '''
         if 'SC_metric_fine' in results.keys():
             evaluation_semantic = sum(results['SC_metric_fine'])
@@ -265,7 +264,7 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SC_fine Evaluation')
                 logger.info(res_table)
-        
+
         ''' evaluate SSC_fine '''
         if 'SSC_metric_fine' in results.keys():
             evaluation_semantic = sum(results['SSC_metric_fine'])
@@ -279,6 +278,5 @@ class SemantickittiVoxelDataset(SemanticKITTIDataset):
             if logger is not None:
                 logger.info('SSC_fine fine Evaluation')
                 logger.info(res_table)
-            
+
         return eval_results
-        

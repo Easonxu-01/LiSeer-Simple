@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2026-01-12 17:44:31
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-01-12 17:52:45
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/pointocc_model/distill_epoch_runner.py
-'''
 import torch
 from mmcv.runner import EpochBasedRunner, RUNNERS
 
@@ -15,7 +6,7 @@ from mmcv.runner import EpochBasedRunner, RUNNERS
 class DistillEpochBasedRunner(EpochBasedRunner):
     """Epoch-based runner that supports a frozen teacher model for distillation.
 
-    使用方式（示例）::
+    Example::
 
         runner = DistillEpochBasedRunner(
             model=student,
@@ -25,15 +16,16 @@ class DistillEpochBasedRunner(EpochBasedRunner):
             logger=logger,
             meta=meta)
 
-    约定:
-        - ``model`` 为 student，只对其构建 optimizer 并反向传播。
-        - ``model_t`` 为 teacher，通常在外部已经 ``eval()`` 且 ``requires_grad=False``。
-        - student 的 ``train_step`` 需要支持形如:
+    Contract:
+        - ``model`` is the student: it owns the optimizer and receives gradients.
+        - ``model_t`` is the teacher, normally already ``eval()`` with
+          ``requires_grad=False`` before it is handed over.
+        - the student's ``train_step`` must accept ``model_t``::
 
               def train_step(self, data_batch, optimizer, model_t=None, **kwargs):
                   ...
 
-          本 runner 会在训练时将 ``model_t`` 以关键字参数传入。
+          The runner passes ``model_t`` as a keyword argument during training.
     """
 
     def __init__(self, model, optimizer=None, model_t=None, **kwargs):
@@ -43,16 +35,16 @@ class DistillEpochBasedRunner(EpochBasedRunner):
     def run_iter(self, data_batch, train_mode, **kwargs):
         """Run a single iteration.
 
-        在训练模式下，调用:
-            model.train_step(data_batch, optimizer, model_t=self.model_t, **kwargs)
-        在验证/测试模式下，调用:
-            model.val_step(data_batch, **kwargs)
+        Training calls ``model.train_step(data_batch, optimizer,
+        model_t=self.model_t, **kwargs)``; validation and test call
+        ``model.val_step(data_batch, **kwargs)``.
         """
         if self.batch_processor is not None:
             outputs = self.batch_processor(
                 self.model, data_batch, train_mode=train_mode, **kwargs)
         elif train_mode:
-            # student 负责计算损失并反向；teacher 通常在模型内部使用。
+            # The student computes and backpropagates the loss; the teacher is
+            # consumed inside the model.
             if self.model_t is not None:
                 outputs = self.model.train_step(
                     data_batch, self.optimizer, model_t=self.model_t, **kwargs)

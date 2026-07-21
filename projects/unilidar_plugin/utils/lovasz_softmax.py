@@ -61,7 +61,7 @@ def iou(preds, labels, C, EMPTY=1., ignore=None, per_image=False):
         preds, labels = (preds,), (labels,)
     ious = []
     for pred, label in zip(preds, labels):
-        iou = []    
+        iou = []
         for i in range(C):
             if i != ignore: # The ignored label is sometimes among predicted classes (ENet - CityScapes)
                 intersection = ((label == i) & (pred == i)).sum()
@@ -252,16 +252,16 @@ def jaccard_loss(probas, labels,ignore=None, smooth = 100, bk_class = None):
       ignore: void class labels
     """
     vprobas, vlabels = flatten_probas(probas, labels, ignore)
-    
-    
+
+
     true_1_hot = torch.eye(vprobas.shape[1])[vlabels]
-    
+
     if bk_class:
         one_hot_assignment = torch.ones_like(vlabels)
         one_hot_assignment[vlabels == bk_class] = 0
         one_hot_assignment = one_hot_assignment.float().unsqueeze(1)
         true_1_hot = true_1_hot*one_hot_assignment
-    
+
     true_1_hot = true_1_hot.to(vprobas.device)
     intersection = torch.sum(vprobas * true_1_hot)
     cardinality = torch.sum(vprobas + true_1_hot)
@@ -290,7 +290,7 @@ def hinge_jaccard_loss(probas, labels,ignore=None, classes = 'present', hinge = 
             max_non_class_pred = torch.max(cprobas[:,non_c_ind],dim = 1)[0]
             TP = torch.sum(torch.clamp(class_pred - max_non_class_pred, max = hinge)+1.) + smooth
             FN = torch.sum(torch.clamp(max_non_class_pred - class_pred, min = -hinge)+hinge)
-            
+
             if (~c_sample_ind).sum() == 0:
                 FP = 0
             else:
@@ -298,17 +298,17 @@ def hinge_jaccard_loss(probas, labels,ignore=None, classes = 'present', hinge = 
                 class_pred = nonc_probas[:,c]
                 max_non_class_pred = torch.max(nonc_probas[:,non_c_ind],dim = 1)[0]
                 FP = torch.sum(torch.clamp(class_pred - max_non_class_pred, max = hinge)+1.)
-            
+
             losses.append(1 - TP/(TP+FP+FN))
-    
+
     if len(losses) == 0: return 0
     return mean(losses)
 
 # --------------------------- HELPER FUNCTIONS ---------------------------
 def isnan(x):
     return x != x
-    
-    
+
+
 def mean(l, ignore_nan=False, empty=0):
     """
     nanmean compatible with generators.

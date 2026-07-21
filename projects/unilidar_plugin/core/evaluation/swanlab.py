@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-07-16 06:49:55
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-07-16 06:49:58
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/core/evaluation/swanlab.py
-'''
 # ---------------------------------------------
 #  Created by Shuocheng Yang, 2025/06/21
 # ---------------------------------------------

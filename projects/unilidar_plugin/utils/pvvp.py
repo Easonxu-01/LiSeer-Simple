@@ -1,13 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-10-12 01:46:14
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2023-10-12 06:48:09
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/utils/pvvp.py
-'''
-
 import math
 from functools import partial
 from mmcv.runner import BaseModule

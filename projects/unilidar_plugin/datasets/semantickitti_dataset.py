@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-12-21 07:59:25
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2024-01-18 08:14:18
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/semantickitti_dataset.py
-'''
 import numpy as np
 from mmdet.datasets import DATASETS
 from projects.unilidar_plugin.utils.formating import cm_to_ious, format_SC_results, format_SSC_results

@@ -16,7 +16,7 @@ def map_pointcloud_to_image(
     lidar2ego_rotation,
     ego2global_translation,
     ego2global_rotation,
-    sensor2ego_translation, 
+    sensor2ego_translation,
     sensor2ego_rotation,
     cam_ego2global_translation,
     cam_ego2global_rotation,
@@ -92,7 +92,7 @@ def worker(info):
     points = np.fromfile(lidar_path,
                          dtype=np.float32,
                          count=-1).reshape(-1, 5)[..., :4]
-    
+
     lidar2ego_translation = info['lidar2ego_translation']
     lidar2ego_rotation = info['lidar2ego_rotation']
     ego2global_translation = info['ego2global_translation']
@@ -106,17 +106,17 @@ def worker(info):
         img = mmcv.imread(
             os.path.join(info['cams'][cam_key]['data_path']))
         pts_img, depth = map_pointcloud_to_image(
-            points.copy(), img, 
-            copy.deepcopy(lidar2ego_translation), 
-            copy.deepcopy(lidar2ego_rotation), 
+            points.copy(), img,
+            copy.deepcopy(lidar2ego_translation),
+            copy.deepcopy(lidar2ego_rotation),
             copy.deepcopy(ego2global_translation),
             copy.deepcopy(ego2global_rotation),
-            copy.deepcopy(sensor2ego_translation), 
-            copy.deepcopy(sensor2ego_rotation), 
-            copy.deepcopy(cam_ego2global_translation), 
+            copy.deepcopy(sensor2ego_translation),
+            copy.deepcopy(sensor2ego_rotation),
+            copy.deepcopy(cam_ego2global_translation),
             copy.deepcopy(cam_ego2global_rotation),
             copy.deepcopy(cam_intrinsic))
-        
+
         file_name = os.path.split(info['cams'][cam_key]['data_path'])[-1]
         np.concatenate([pts_img[:2, :].T, depth[:, None]],
                        axis=1).astype(np.float32).flatten().tofile(
@@ -131,7 +131,7 @@ if __name__ == '__main__':
         po.apply_async(func=worker, args=(info, ))
     po.close()
     po.join()
-    
+
     po2 = Pool(12)
     infos = mmcv.load(info_path_val)['infos']
     for info in infos:

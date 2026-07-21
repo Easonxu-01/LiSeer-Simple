@@ -1,4 +1,3 @@
-
 import torch
 
 def coarse_to_fine_coordinates(coarse_cor, ratio, topk=30000):
@@ -32,18 +31,18 @@ def project_points_on_img(points, rots, trans, intrins, post_rots, post_trans, b
         # project 3D point cloud (after bev-aug) onto multi-view images for corresponding 2D coordinates
         inv_bda = bda_mat.inverse()
         points = (inv_bda @ points.unsqueeze(-1)).squeeze(-1)
-        
+
         # from lidar to camera
         points = points.view(-1, 1, 3)
         points = points - trans.view(1, -1, 3)
         inv_rots = rots.inverse().unsqueeze(0)
         points = (inv_rots @ points.unsqueeze(-1))
-        
+
         # from camera to raw pixel
         points = (intrins.unsqueeze(0) @ points).squeeze(-1)
         points_d = points[..., 2:3]
         points_uv = points[..., :2] / (points_d + 1e-5)
-        
+
         # from raw pixel to transformed pixel
         points_uv = post_rots[..., :2, :2].unsqueeze(0) @ points_uv.unsqueeze(-1)
         points_uv = points_uv.squeeze(-1) + post_trans[..., :2].unsqueeze(0)
@@ -54,5 +53,5 @@ def project_points_on_img(points, rots, trans, intrins, post_rots, post_trans, b
         mask = (points_d[..., 0] > 1e-5) \
             & (points_uv[..., 0] > -1) & (points_uv[..., 0] < 1) \
             & (points_uv[..., 1] > -1) & (points_uv[..., 1] < 1)
-    
+
     return points_uv.permute(2,1,0,3), mask

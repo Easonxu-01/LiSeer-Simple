@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-06-09 09:11:06
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-07-22 08:09:16
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/zltwaymo.py
-'''
 import mmcv
 import numpy as np
 import os
@@ -14,11 +5,9 @@ import tempfile
 import torch
 from mmcv.utils import print_log
 from os import path as osp
-# ERROR ROOT at LINE 331, AT line 236 in format_result, we adjust the worker to be really small
-from mmdet3d.datasets import DATASETS #really fucked up for not adding '3d'
+from mmdet3d.datasets import DATASETS
 from mmdet3d.core.bbox import Box3DMode, points_cam2img
 from mmdet3d.datasets.kitti_dataset import KittiDataset
-# from .waymo_let_metric import compute_waymo_let_metric
 
 from waymo_open_dataset import dataset_pb2 as open_dataset
 import mmcv
@@ -337,10 +326,8 @@ class CustomWaymoDataset(KittiDataset):
         self.load_interval = load_interval
         if isinstance(self.data_infos, dict) and self.data_infos.get('data_list') is not None:
             self.meta_infos = self.data_infos['metainfo']
-            # self.data_infos = self.data_infos['data_list'][::load_interval]
             data_infos = self.data_infos['data_list'][::load_interval]
             self.data_infos = []
-            # seg_annotated_indices = []
             for idx, info in enumerate(data_infos):
                 if info["lidar_points"]["seg_annotated"] == True:
                     self.data_infos.append(info)
@@ -360,15 +347,7 @@ class CustomWaymoDataset(KittiDataset):
                 print(f"Loaded {len(self.data_infos)} annotated files from seg_annotated_indices.txt")
             else:
                 self.data_infos = self.data_infos[::load_interval]
-            # seg_annotated_indices.append(info["lidar_points"]["lidar_path"])
         print(f"Loaded {len(self.data_infos)} files from {self.ann_file}")
-        # # Save seg_annotated indices to txt file
-        # if seg_annotated_indices:
-        #     save_path = '/home/eason/workspace_perception/UniLiDAR/seg_annotated_indices.txt'
-        #     with open(save_path, 'w') as f:
-        #         for idx in seg_annotated_indices:
-        #             f.write(f'{idx}\n')
-        #     print(f'Saved {len(seg_annotated_indices)} seg_annotated indices to {save_path}')
         self.data_infos_full = self.data_infos
         # Ensure sampler flag length matches current dataset length after any filtering/subsampling
         # This avoids a mismatch that would make the sampler see a tiny dataset and yield very few steps per epoch
@@ -381,14 +360,6 @@ class CustomWaymoDataset(KittiDataset):
 
             if gt_bin != None:
                 self.gt_bin = gt_bin
-            # elif load_interval==1 and 'val' in ann_file:
-            #     self.gt_bin = 'gt.bin'
-            # elif load_interval==5 and 'val' in ann_file:
-            #     self.gt_bin = 'gt_subset.bin'
-            # elif load_interval==20 and 'train' in ann_file:
-            #     self.gt_bin = 'gt_train_subset.bin'
-            # else:
-            #     assert gt_bin == 'wrong'
     def _get_pts_filename(self, idx):
         pts_filename = osp.join(self.root_split, self.pts_prefix, f'{idx:07d}.bin')
         return pts_filename
@@ -411,7 +382,6 @@ class CustomWaymoDataset(KittiDataset):
                     lidar to different cameras
                 - ann_info (dict): annotation info
         """
-        # index=475  # in infos_train.pkl is index 485
         info = self.data_infos[index]
         sample_idx = info['image']['image_idx']
         img_filename = os.path.join(self.data_root,
@@ -500,7 +470,6 @@ class CustomWaymoDataset(KittiDataset):
             f'invalid data_format {data_format}'
         print("still work before format_results ---  if not isinstance")
         # np.save('debug_eval/zltwaymo_eval_result_before_format_results',outputs)
-        # print('saved!')
         # exit(0)
         if (not isinstance(outputs[0], dict)) or 'img_bbox' in outputs[00]:
             raise TypeError('Not supported type for reformat results.')
@@ -521,11 +490,10 @@ class CustomWaymoDataset(KittiDataset):
             result_files = self.bbox2result_kitti(outputs, self.CLASSES,
                                                   pklfile_prefix,
                                                   submission_prefix)
-        # print(result_files)
         # np.save('debug_eval/zltwaymo_eval_result_kitti_format',result_files)## turn into cam-coord, it sucks
         # exit(0)
         # open('zlt_output_kitti_format_debug.txt','w').write(str(result_files))  #we got absolutely right data
-        # exit(0)  
+        # exit(0)
         if 'waymo' in data_format:
             waymo_root = osp.join(
                 self.data_root.split('kitti_format')[0], 'waymo_format')
@@ -556,7 +524,7 @@ class CustomWaymoDataset(KittiDataset):
             print("still work before converter convert!!!")
             print(waymo_tfrecords_dir, waymo_results_save_dir, waymo_results_final_path)
             # exit(0)
-            converter.convert()         
+            converter.convert()
             print("still work after converter convert!!!")
             save_tmp_dir.cleanup()
 
@@ -596,7 +564,6 @@ class CustomWaymoDataset(KittiDataset):
         """
         print("metric here is-----------{}".format(metric))
         # np.save('debug_eval/zltwaymo_eval_result',results)
-        # print('saved!')## result still correct here!
         # exit(0)
         assert ('waymo' in metric or 'kitti' in metric), \
             f'invalid metric {metric}'
@@ -620,8 +587,8 @@ class CustomWaymoDataset(KittiDataset):
             from time import time
             _ = time()
             ap_dict = None
-            print('time usage of compute_let_metric: {} s'.format(time()-_))        
-            
+            print('time usage of compute_let_metric: {} s'.format(time()-_))
+
             if eval_tmp_dir is not None:
                 eval_tmp_dir.cleanup()
 
@@ -665,7 +632,6 @@ class CustomWaymoDataset(KittiDataset):
         """
         print("metric here is-----------{}".format(metric))
         # np.save('debug_eval/zltwaymo_eval_result',results)
-        # print('saved!')## result still correct here!
         # exit(0)
         assert ('waymo' in metric or 'kitti' in metric), \
             f'invalid metric {metric}'
@@ -714,7 +680,6 @@ class CustomWaymoDataset(KittiDataset):
             # if you are going to replace final result.bin with gt boxes, do it here
             box_dict = self.convert_valid_bboxes(pred_dicts, info)
             # np.save('debug_eval/zltwaymo_box_dict',box_dict)
-            # print(box_dict)
             # exit(0)
             if len(box_dict['bbox']) > 0:
                 box_2d_preds = box_dict['bbox']

@@ -1,13 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-12-07 01:49:10
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2024-02-29 14:08:49
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/core/visualizer/show_occ.py
-'''
-
 import torch.nn.functional as F
 import torch
 import numpy as np
@@ -26,7 +16,7 @@ def save_occ(pred_c, pred_f, img_metas, path, visible_mask=None, gt_occ=None, da
     if pred_f is not None:
         if not isinstance(gt_occ, list) and not isinstance(gt_occ, torch.TensorType):
             gt_occ = gt_occ.data[0]
-        if isinstance(gt_occ, list):        
+        if isinstance(gt_occ, list):
             if all(isinstance(x, torch.Tensor) for x in gt_occ):
                 for i in range(len(gt_occ)):
                     gt_occ[i] = gt_occ[i].reshape(256, 256, 32)
@@ -36,7 +26,7 @@ def save_occ(pred_c, pred_f, img_metas, path, visible_mask=None, gt_occ=None, da
         pred_c = F.softmax(pred_c, dim=1)
         pred_f = F.softmax(pred_f, dim=1)
         B = pred_c.shape[0]
-        
+
         for b in range(B):
             pred_c = pred_c[b].cpu().numpy()  # C W H D
             pred_f = pred_f[b].cpu().numpy() # C W H D
@@ -138,7 +128,7 @@ def save_occ(pred_c, pred_f, img_metas, path, visible_mask=None, gt_occ=None, da
     else:
         if not isinstance(gt_occ, list) and not isinstance(gt_occ, torch.Tensor):
             gt_occ = gt_occ.data[0]
-        if isinstance(gt_occ, list):        
+        if isinstance(gt_occ, list):
             if all(isinstance(x, torch.Tensor) for x in gt_occ):
                 for i in range(len(gt_occ)):
                     gt_occ[i] = gt_occ[i].reshape(256, 256, 32)
@@ -147,7 +137,7 @@ def save_occ(pred_c, pred_f, img_metas, path, visible_mask=None, gt_occ=None, da
             gt_occ = gt_occ.reshape(-1, 1, 256, 256, 32)
         pred_c = F.softmax(pred_c, dim=1)
         B = pred_c.shape[0]
-        
+
         for b in range(B):
             pred_c = pred_c[b].cpu().numpy()  # C W H D
             if isinstance(gt_occ, DataContainer):

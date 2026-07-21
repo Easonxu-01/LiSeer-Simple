@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2023-12-21 07:58:18
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2023-12-21 08:28:28
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/seg3d_dataset.py
-'''
 # Copyright (c) OpenMMLab. All rights reserved.
 from os import path as osp
 from typing import Callable, List, Optional, Sequence, Union

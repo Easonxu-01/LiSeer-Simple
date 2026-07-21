@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-01-25 12:16:57
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-09-13 16:56:11
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/pipelines/collect3Dinput.py
-'''
 from mmdet.datasets.builder import PIPELINES
 from mmcv.parallel import DataContainer as DC
 import torch

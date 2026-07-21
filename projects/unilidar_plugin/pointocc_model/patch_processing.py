@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-12-23 03:27:11
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2024-12-23 03:33:13
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/pointocc_model/patch_processing.py
-'''
 import torch
 from torch import Tensor
 import torch.nn as nn

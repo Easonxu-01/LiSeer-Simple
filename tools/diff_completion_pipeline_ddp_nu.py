@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-11-04 06:39:27
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2024-11-07 04:11:06
-Description: 头部注释
-FilePath: /lidiff/tools/diff_completion_pipeline_ddp_nu.py
-'''
 from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.data_classes import LidarPointCloud
 import numpy as np
@@ -64,7 +55,7 @@ class DiffCompletion(LightningModule):
         self.hparams['data']['max_range'] = 50.
         self.hparams['data']['num_points'] = 100000
         self.w_uncond = self.hparams['train']['uncond_w']
-        
+
         exp_dir = diff_path.split('/')[-1].split('.')[0].replace('=','')  + f'_T{denoising_steps}_s{cond_weight}'
         os.makedirs(f'./results/{exp_dir}', exist_ok=True)
         with open(f'./results/{exp_dir}/exp_config.yaml', 'w+') as exp_config:
@@ -96,7 +87,7 @@ class DiffCompletion(LightningModule):
 
         torch.cuda.empty_cache()
 
-        return x_t                                                                                        
+        return x_t
 
     def reset_partial_pcd(self, x_part, x_uncond):
         x_part = self.points_to_tensor(x_part.F.reshape(1,-1,3).detach())
@@ -113,7 +104,7 @@ class DiffCompletion(LightningModule):
         pcd_scan.points = o3d.utility.Vector3dVector(scan)
         pcd_scan = pcd_scan.farthest_point_down_sample(int(self.hparams['data']['num_points'] / 10))
         scan = torch.tensor(np.array(pcd_scan.points)).cuda()
-        
+
         scan = scan.repeat(10,1)
         scan = scan[None,:,:]
 
@@ -162,7 +153,7 @@ class DiffCompletion(LightningModule):
 
     def classfree_forward(self, x_t, x_cond, x_uncond, t):
         x_t_sparse = x_t.sparse()
-        x_cond = self.forward(x_t, x_t_sparse, x_cond, t)            
+        x_cond = self.forward(x_t, x_t_sparse, x_cond, t)
         x_uncond = self.forward(x_t, x_t_sparse, x_uncond, t)
 
         return x_uncond + self.w_uncond * (x_cond - x_uncond)
@@ -229,7 +220,6 @@ def inference(rank, diff, refine, denoising_steps, cond_weight, world_size):
         lidar_token = sample['data']['LIDAR_TOP']
         lidar_data = nusc.get('sample_data', lidar_token)
         lidar_filepath = os.path.join(nusc.dataroot, lidar_data['filename'])
-        # print(lidar_filepath)
         # Load point cloud
         pc = LidarPointCloud.from_file(lidar_filepath)
         points = pc.points.T[:, :3]  # Extract x, y, z coordinates
@@ -256,11 +246,10 @@ def inference(rank, diff, refine, denoising_steps, cond_weight, world_size):
         o3d.io.write_point_cloud(output_refine_path, pcd_refine)
 
         # # Save diffused point cloud
-        # pcd_diff = o3d.geometry.PointCloud()
         # pcd_diff.points = o3d.utility.Vector3dVector(diff_scan)
         # pcd_diff.estimate_normals()
         # o3d.io.write_point_cloud(output_diff_path, pcd_diff)
-        
+
     cleanup()
 
 @click.command()

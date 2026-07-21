@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-06-09 09:10:29
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-08-19 02:19:37
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/datasets/waymo_temporal_zlt.py
-'''
 import re
 import random
 import pickle
@@ -26,7 +17,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
     def __init__(self,
                  *args,
                  load_interval=1,
-                 history_len=1, 
+                 history_len=1,
                  input_sample_policy=None,
                  skip_len=0,
                  withimage=False,
@@ -67,9 +58,6 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
 
 
     def __len__(self):
-        # if not hasattr(self, 'data_infos') or self.data_infos is None:
-        #     return 0
-        # return len(self.data_infos) // self.load_interval_waymo
         if len(self.data_infos) // self.load_interval_waymo >= 23691:
             return 23691
         else:
@@ -80,7 +68,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             return self.prepare_test_data(idx)
         if self.use_streaming:
             return self.prepare_streaming_train_data(idx)
-        
+
         while True:
             data = self.prepare_train_data(idx)
             if data is None:
@@ -107,7 +95,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             random.shuffle(idx_list)
             idx_list = sorted(idx_list[1:]) # drop one frame to add some randomness
             idx_list.append(index)
-            
+
         # Step 2: sample the index list
         i_list = self.get_input_idx(idx_list)
 
@@ -116,7 +104,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
         for i in i_list:
             i = max(0, i)
             input_dict = self.get_data_info(i)
-            if input_dict is None: 
+            if input_dict is None:
                 return None
 
             # Step 4: prepare the data by dataloader pipeline
@@ -142,13 +130,13 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
         self.pre_pipeline(input_dict)
         example = self.pipeline(input_dict)
         return example
-    
+
     def get_input_idx(self, idx_list):
         '''
         sample the input index list
         Args:
-            idx_list (List[int]): the index list from `index - self.history_len` to `index`. 
-                                  It contains current frame index, but it dropped another random frame index to add randomness. 
+            idx_list (List[int]): the index list from `index - self.history_len` to `index`.
+                                  It contains current frame index, but it dropped another random frame index to add randomness.
                                   So the length is `self.history_len`.
         Returns:
             sampled_idx_list (List[int]): the index list after sampling
@@ -156,14 +144,14 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
 
         if self.input_sample_policy['type'] == 'normal':
             return idx_list
-        
+
         elif self.input_sample_policy['type'] == 'large interval':
             sampled_idx_list = []
             for i in range(0, self.input_sample_policy['number']):
                 sampled_idx = max(0, self.history_len - 1 - i * self.input_sample_policy['interval'])
                 sampled_idx_list.append(idx_list[sampled_idx])
             return sorted(sampled_idx_list)
-        
+
         elif self.input_sample_policy['type'] == 'random interval':
             fix_interval = self.input_sample_policy['fix interval']
             slow_interval = random.randint(0, fix_interval-1)
@@ -173,22 +161,22 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             for i in range(0, self.input_sample_policy['number']):
                 sampled_idx = max(self.history_len - 1 - i * random_interval, 0)
                 sampled_idx_list.append(idx_list[sampled_idx])
-                
+
             return sorted(sampled_idx_list)
-        
+
         else:
             raise NotImplementedError('not implemented input_sample_policy type')
 
     def union2one(self, queue):
         """
         convert sample queue into one single sample.
-        Args: 
+        Args:
             queue (List[Dict]): the sample queue
         Returns:
             queue (Dict): the single sample
         """
-        
-        # Step 1: 1. union the `img` tensor into a single tensor. 
+
+        # Step 1: 1. union the `img` tensor into a single tensor.
         # 2. union the `img_metas` dict into a dict[dict]
         # 3. add prev_bev_exists and scene_token
         prev_scene_token=None
@@ -215,8 +203,8 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
 
     def get_data_info(self, index):
         '''
-        get the data info according to the index. Most of them are image meta data. 
-        Args: 
+        get the data info according to the index. Most of them are image meta data.
+        Args:
             index (Int): the index of the data.
         Returns:
             input dict (Dict): the data info dict.
@@ -224,25 +212,17 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
 
         # Step 1: get the data info
         info = self.data_infos_full[index]
-        
+
         # Step 2: get the image file name and idx
         if isinstance(info, dict) and info.get('sample_idx') is not None:
             sample_idx = info['sample_idx']
             scene_idx = sample_idx % 1000000 // 1000
             frame_idx = sample_idx % 1000000 % 1000
-            # img_filename = os.path.join(self.data_root, info['image']['image_path'])
         else:
             match = re.search(r'(\d+)\.bin$', info['point_cloud']['velodyne_path'])
             sample_idx = int(match.group(1))
             scene_idx = sample_idx % 1000000 // 1000
             frame_idx = sample_idx % 1000000 % 1000
-            # img_filename = os.path.join(self.data_root, info['image']['image_path'])
-
-        # # Step 3: get the `lidar2img` (why here it get the lidar2img and in the following code it get another lidar2img)
-        # rect = info['calib']['R0_rect'].astype(np.float32)
-        # Trv2c = info['calib']['Tr_velo_to_cam'].astype(np.float32)
-        # P0 = info['calib']['P0'].astype(np.float32)
-        # lidar2img = P0 @ rect @ Trv2c
 
         # the Tr_velo_to_cam is computed for all images but not saved in .info for img1-4
         # the size of img0-2: 1280x1920; img3-4: 886x1920. Attention
@@ -261,11 +241,11 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
                 sensor2ego = pose['sensor2ego']
                 lidar2img = intrinsics @ np.linalg.inv(sensor2ego)
                 ego2global = pose['ego2global']
-                
+
                 # Attention! (this code means the pose info dismatch the image data file)
-                if idx_img == 2: 
+                if idx_img == 2:
                     image_paths.append(img_filename.replace('image_0', f'image_3'))
-                elif idx_img == 3: 
+                elif idx_img == 3:
                     image_paths.append(img_filename.replace('image_0', f'image_2'))
                 else:
                     image_paths.append(img_filename.replace('image_0', f'image_{idx_img}'))
@@ -287,7 +267,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             reset_random=False,
             img_prefix=None,
         )
-        
+
         if self.random:
             input_dict['reset_random'] = bool(np.random.rand() < self.reset_random_prob)
             sparse_pts = input_dict['pts_filename']
@@ -313,11 +293,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             input_dict['ego2global'] = ego2global
             input_dict['global_to_curr_lidar_rt'] = np.linalg.inv(pose['ego2global'])
 
-        # Step 7: get the annos info
-        # annos = self.get_ann_info(index)
-        # input_dict['ann_info'] = annos
-
-        # Step 8: get the can_bus info (In `waymo` dataset, we do not have can_bus info)
+        # Waymo has no can_bus info; keep the field for downstream compatibility.
         can_bus = np.zeros(9)
         input_dict['can_bus'] = can_bus
 
@@ -335,51 +311,12 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
         if self.test_mode == True:
             info = self.data_infos[index]
         else: info = self.data_infos_full[index]
-        
-        # rect = info['calib']['R0_rect'].astype(np.float32)
-        # Trv2c = info['calib']['Tr_velo_to_cam'].astype(np.float32)
 
-        # annos = info['annos']
-        # # we need other objects to avoid collision when sample
-        # annos = self.remove_dontcare(annos)
-
-        # loc = annos['location']
-        # dims = annos['dimensions']
-        # rots = annos['rotation_y']
-        # gt_names = annos['name']
-        # gt_bboxes_3d = np.concatenate([loc, dims, rots[..., np.newaxis]],
-        #                               axis=1).astype(np.float32)
-
-        # gt_bboxes_3d = CameraInstance3DBoxes(gt_bboxes_3d).convert_to(
-        #     self.box_mode_3d, np.linalg.inv(rect @ Trv2c))
-
-
-        # gt_bboxes = annos['bbox']
-
-        # selected = self.drop_arrays_by_name(gt_names, ['DontCare'])
-        # gt_bboxes = gt_bboxes[selected].astype('float32')
-        # gt_names = gt_names[selected]
-        # gt_labels = []
-        # for cat in gt_names:
-        #     if cat in self.CLASSES:
-        #         gt_labels.append(self.CLASSES.index(cat))
-        #     else:
-        #         gt_labels.append(-1)
-        # gt_labels = np.array(gt_labels).astype(np.int64)
-        # gt_labels_3d = copy.deepcopy(gt_labels)
-
-        # anns_results = dict(
-        #     gt_bboxes_3d=gt_bboxes_3d,
-        #     gt_labels_3d=gt_labels_3d,
-        #     bboxes=gt_bboxes,
-        #     labels=gt_labels,
-        #     gt_names=gt_names)
-        
         return anns_results
 
     def evaluate(self, results, logger=None, **kawrgs):
         eval_results = {}
-        
+
         if 'SC_metric_2' in results.keys():
             ''' evaluate SC '''
             evaluation_semantic = sum(results['SC_metric_2'])
@@ -390,7 +327,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SC Evaluation')
                 logger.info(res_table)
-        
+
         if 'SC_metric' in results.keys():
             ''' evaluate SC '''
             evaluation_semantic = sum(results['SC_metric'])
@@ -401,7 +338,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SC Evaluation')
                 logger.info(res_table)
-        
+
         if 'SSC_metric_2' in results.keys():
             ''' evaluate SSC '''
             evaluation_semantic = sum(results['SSC_metric_2'])
@@ -417,7 +354,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SSC Evaluation')
                 logger.info(res_table)
-                
+
         if 'SSC_metric' in results.keys():
             ''' evaluate SSC '''
             evaluation_semantic = sum(results['SSC_metric'])
@@ -444,7 +381,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SC_fine Evaluation')
                 logger.info(res_table)
-        
+
         ''' evaluate SSC_fine '''
         if 'SSC_metric_fine_2' in results.keys():
             evaluation_semantic = sum(results['SSC_metric_fine_2'])
@@ -460,7 +397,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SSC_fine Evaluation')
                 logger.info(res_table)
-                
+
                 ''' evaluate SC '''
         if 'SC_metric_fine' in results.keys():
             evaluation_semantic = sum(results['SC_metric_fine'])
@@ -471,7 +408,7 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SC_fine Evaluation')
                 logger.info(res_table)
-        
+
         ''' evaluate SSC_fine '''
         if 'SSC_metric_fine' in results.keys():
             evaluation_semantic = sum(results['SSC_metric_fine'])
@@ -487,5 +424,5 @@ class CustomWaymoDataset_T(CustomWaymoDataset):
             if logger is not None:
                 logger.info('SSC_fine fine Evaluation')
                 logger.info(res_table)
-            
+
         return eval_results

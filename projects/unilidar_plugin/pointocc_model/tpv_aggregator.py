@@ -2,8 +2,6 @@ import torch, torch.nn as nn, torch.nn.functional as F
 from mmdet3d.models.builder import VOXEL_ENCODERS
 from mmengine.model import BaseModule
 from copy import deepcopy
-# from utils.lovasz_losses import lovasz_softmax
-# from utils.sem_geo_loss import geo_scal_loss, sem_scal_loss
 from projects.unilidar_plugin.utils.semkitti import geo_scal_loss, sem_scal_loss, CE_ssc_loss
 from projects.unilidar_plugin.utils.lovasz_softmax import lovasz_softmax
 import numpy as np
@@ -86,9 +84,7 @@ def _cb_adc_consistency_loss(
           per-view occupancy is available.
     """
 
-    # ============================================================
     # 0) Checks
-    # ============================================================
     if logits_p.shape != logits_q.shape:
         raise ValueError(
             f"logits_p and logits_q must have the same shape, "
@@ -156,19 +152,15 @@ def _cb_adc_consistency_loss(
 
     denom_valid = valid_count.clamp_min(1.0)
 
-    # ============================================================
     # 1) Temperature-scaled distributions
-    # ============================================================
     log_p = F.log_softmax(logits_p / T, dim=1)
     log_q = F.log_softmax(logits_q / T, dim=1)
 
     p = torch.exp(log_p)
     q = torch.exp(log_q)
 
-    # ============================================================
     # 2) Symmetric JS divergence
     #    Keep the same style as the original working baseline.
-    # ============================================================
     m = 0.5 * (p + q)
     log_m = torch.log(m + eps)
 
@@ -178,10 +170,8 @@ def _cb_adc_consistency_loss(
     js_div = 0.5 * (kl_pm + kl_qm)
     js_div = js_div.clamp_min(0.0)
 
-    # ============================================================
     # 3) Entropy confidence weight
     #    Not detached. This preserves the original self-pressure mechanism.
-    # ============================================================
     entropy_p = -(p * log_p).sum(dim=1)
     entropy_q = -(q * log_q).sum(dim=1)
 
@@ -190,10 +180,8 @@ def _cb_adc_consistency_loss(
 
     weighted_js = js_div * weight_conf
 
-    # ============================================================
     # 4) GT boundary and minority masks
     #    Boundary is one-voxel-thin. No maxpooling / dilation.
-    # ============================================================
     with torch.no_grad():
         is_boundary = torch.zeros_like(valid)
 
@@ -255,31 +243,23 @@ def _cb_adc_consistency_loss(
 
             is_minority = is_minority * valid
 
-    # ============================================================
     # 5) Base JS consistency
-    # ============================================================
     L_base = (weighted_js * valid).sum() / denom_valid
 
-    # ============================================================
     # 6) Boundary JS extra
     #    Normalize by valid_count to keep it as a mild additive term.
-    # ============================================================
     if boundary_weight is not None and boundary_weight > 0.0:
         L_boundary = (weighted_js * is_boundary).sum() / denom_valid
     else:
         L_boundary = logits_p.sum() * 0.0
 
-    # ============================================================
     # 7) Minority JS extra
-    # ============================================================
     if minority_weight is not None and minority_weight > 0.0:
         L_minority = (weighted_js * is_minority).sum() / denom_valid
     else:
         L_minority = logits_p.sum() * 0.0
 
-    # ============================================================
     # 8) Same-category single-view continuity
-    # ============================================================
     def tv_pair(a, b):
         return 0.5 * (a - b).abs().sum(dim=1)
 
@@ -337,7 +317,6 @@ def _cb_adc_consistency_loss(
         # Normalize by valid_count, not pair_count.
         L_continuity = cont_sum / denom_valid
 
-    # ============================================================
     # 9) Asymmetric empty-pull
     #
     # Since true per-view occupancy is unavailable, we use prediction-based
@@ -346,7 +325,6 @@ def _cb_adc_consistency_loss(
     #   p predicts empty, q predicts non-empty -> q.detach() teaches p
     #
     # This term is additive. It does not replace the symmetric JS base.
-    # ============================================================
     L_empty_asym = logits_p.sum() * 0.0
 
     with torch.no_grad():
@@ -411,9 +389,7 @@ def _cb_adc_consistency_loss(
             (kl_q_to_p * pull_p_mask).sum()
         ) / denom_valid
 
-    # ============================================================
     # 10) Total
-    # ============================================================
     total_unscaled = (
         L_base
         + (boundary_weight or 0.0) * L_boundary
@@ -424,9 +400,7 @@ def _cb_adc_consistency_loss(
 
     total = total_unscaled * (T ** 2) * consistency_loss_weight * outer_scale
 
-    # ============================================================
     # 11) Diagnostics
-    # ============================================================
     if return_dict:
         with torch.no_grad():
             scale = (T ** 2) * consistency_loss_weight * outer_scale
@@ -574,15 +548,17 @@ class TPVAggregator_Occ(BaseModule):
         self.ce_loss_func = CE_ssc_loss
         self.lovasz_loss_func = lovasz_softmax
 
-        # 初始化动态统计的 class_counts
+        # Running per-class frequencies used by the seesaw re-weighting.
         self.register_buffer(
-            "class_counts", torch.ones(self.classes)  # 初始化为 1，防止除零
+            "class_counts", torch.ones(self.classes)  # start at 1 to avoid division by zero
         )
 
     def seesaw_loss(self, logits, labels, p=0.8, eps=1e-6, ignore_index=0):
-        """
-        logits: 任意形状，只要保证 dim=1 是 channel (C)
-        labels: 与 logits 对应的语义标签，形状任意，只要与 logits 的空间维度匹配
+        """Seesaw loss over arbitrary spatial shapes.
+
+        Args:
+            logits: any shape, provided dim=1 is the channel axis (C).
+            labels: semantic labels whose spatial dims match ``logits``.
         """
         # ---- reshape: (B, C, ...) → (N, C) ----
         B, C = logits.shape[:2]
@@ -593,23 +569,23 @@ class TPVAggregator_Occ(BaseModule):
         # ---- mask ignore_index ----
         valid = labels_flat != ignore_index
         if not valid.any():
-            # 没有有效点 → 返回 0 loss
+            # No valid point in this batch.
             return logits.sum() * 0
         logits_flat = logits_flat[valid]
         labels_flat = labels_flat[valid]
         # ---- one-hot ----
         targets = F.one_hot(labels_flat, num_classes=C).float()
         def distribution_agnostic_seesaw_loss(logits, targets, p=0.8, eps=1e-6):
-            # 类频统计
+            # Accumulate class frequencies.
             batch_class_count = targets.sum(dim=0)
             self.class_counts += batch_class_count
             cc = self.class_counts
-            # s 矩阵
+            # Pairwise mitigation matrix.
             conditions = cc[:, None] > cc[None, :]
             trues = (cc[None, :] / cc[:, None]).pow(p)
             falses = torch.ones_like(trues)
             s = torch.where(conditions, trues, falses)
-            # 防溢出
+            # Shift logits for numerical stability.
             logits = logits - logits.max(dim=-1, keepdim=True)[0]
             numerator = torch.exp(logits)
             denominator = (
@@ -1024,7 +1000,7 @@ class TPVAggregator_Occ(BaseModule):
             return res
 
 class SensorEncoder(nn.Module):
-    """把原始 sensor 参数编码成 embedding 向量."""
+    """Encode raw sensor parameters into an embedding vector."""
     def __init__(self, in_dim=5, emb_dim=128, hidden_dim=128):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -1039,7 +1015,7 @@ class SensorEncoder(nn.Module):
         return self.mlp(sensor_params)  # [B, emb_dim]
 
 class SensorHead(nn.Module):
-    """从全局特征预测传感器参数."""
+    """Regress sensor parameters from a global feature vector."""
     def __init__(self, feat_dim, out_dim=5, hidden_dim=128):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -1056,10 +1032,12 @@ class SensorHead(nn.Module):
 
 class FiLMLayer(nn.Module):
     """
-    FiLM: 给定 sensor embedding e, 生成 gamma, beta,
-    对 feature map 做逐通道仿射变换:
+    Feature-wise Linear Modulation. A sensor embedding e produces (gamma, beta)
+    that affinely transform the feature map channel-wise:
+
         F' = (1 + gamma(e)) * F + beta(e)
-    支持 x 形状 [B, C, L] 或 [B, C, H, W].
+
+    Accepts x of shape [B, C, L] or [B, C, H, W].
     """
     def __init__(self, sensor_emb_dim, num_channels, hidden_dim=128):
         super().__init__()
@@ -1072,14 +1050,14 @@ class FiLMLayer(nn.Module):
 
     def forward(self, x, sensor_emb):
         """
-        x: [B, C, L] 或 [B, C, H, W]
+        x: [B, C, L] or [B, C, H, W]
         sensor_emb: [B, sensor_emb_dim]
         """
         B, C = x.shape[0], x.shape[1]
-        assert C == self.num_channels, "FiLM通道数必须匹配"
+        assert C == self.num_channels, "FiLM channel count must match the input"
 
         gamma_beta = self.fc(sensor_emb)           # [B, 2C]
-        gamma, beta = torch.chunk(gamma_beta, 2, dim=1)  # 各 [B, C]
+        gamma, beta = torch.chunk(gamma_beta, 2, dim=1)  # each [B, C]
 
         if x.dim() == 3:
             # [B, C, L]
@@ -1090,7 +1068,7 @@ class FiLMLayer(nn.Module):
             gamma = gamma.unsqueeze(-1).unsqueeze(-1)  # [B, C, 1, 1]
             beta = beta.unsqueeze(-1).unsqueeze(-1)
         else:
-            raise NotImplementedError(f"不支持的x维度: {x.shape}")
+            raise NotImplementedError(f"unsupported input rank: {x.shape}")
 
         return x * (1 + gamma) + beta
 
@@ -1101,7 +1079,7 @@ class TPVAggregator_Seg(BaseModule):
         in_dims=64, hidden_dims=128, out_dims=None,
         scale_h=2, scale_w=2, scale_z=2, use_checkpoint=False,
         loss_weight=[1,1], dual = False,
-        # NEW: 传感器相关超参数
+        # Sensor-conditioning hyper-parameters (S-FiLM).
         sensor_in_dim=5,
         sensor_emb_dim=256,
         sensor_loss_weight=0.6,
@@ -1140,45 +1118,45 @@ class TPVAggregator_Seg(BaseModule):
         self.ce_loss_func = torch.nn.CrossEntropyLoss(ignore_index=0)
         self.lovasz_loss_func = lovasz_softmax
 
-        # 初始化动态统计的 class_counts
+        # Running per-class frequencies used by the seesaw re-weighting.
         self.register_buffer("class_counts",
-            torch.ones(self.classes)  # 初始化为 1，防止除零
+            torch.ones(self.classes)  # start at 1 to avoid division by zero
         )
-        # NEW: 传感器编码器 / 预测头 / FiLM 层
+        # Sensor encoder / regression head / FiLM layer.
         self.sensor_in_dim = sensor_in_dim
         self.sensor_emb_dim = sensor_emb_dim
         self.sensor_loss_weight = sensor_loss_weight
         self.sensor_film = sensor_film
         if not self.dense_train and self.sensor_film:
-            # 用于把 raw sensor vector 编成 embedding
+            # Raw sensor vector -> embedding.
             self.sensor_encoder = SensorEncoder(
                 in_dim=sensor_in_dim,
                 emb_dim=sensor_emb_dim,
                 hidden_dim=sensor_emb_dim
             )
-            # 从全局特征预测传感器参数
-            # 这里用 in_dims 作为 global_feat 维度（来自 fused 的通道数）
+            # Predict sensor parameters from the pooled global feature; its width
+            # is in_dims, i.e. the channel count of the fused TPV feature.
             self.sensor_head = SensorHead(
                 feat_dim=in_dims,
                 out_dim=sensor_in_dim,
                 hidden_dim=sensor_emb_dim
             )
-            # 对 fused 特征 [B, C, L] 做 FiLM 调制
+            # Modulates the fused feature [B, C, L].
             self.film_layer = FiLMLayer(
                 sensor_emb_dim=sensor_emb_dim,
                 num_channels=in_dims,
                 hidden_dim=sensor_emb_dim
             )
-        # NEW: FiLM 混合系数 alpha，0 表示纯 GT，1 表示纯 Pred
+        # FiLM mixing coefficient: 0 = ground-truth sensor vector, 1 = predicted.
         self.film_alpha = 0.0
-        # 初始值匹配 curriculum 第一个 phase (0-8)，hook 会在 before_train_epoch 中按 schedule 更新
-        # phase0: beams(32,64), height(1.7,1.9), H_res(900,2400), theta_low(-25,-20), theta_up(0,10)
-        # mean=(a+b)/2, std=(b-a)/√12
+        # Initialised for the first curriculum phase (epochs 0-8); the curriculum hook
+        # refreshes these in before_train_epoch. Phase 0 ranges are beams(32,64),
+        # height(1.7,1.9), H_res(900,2400), theta_low(-25,-20), theta_up(0,10), with
+        # mean=(a+b)/2 and std=(b-a)/√12.
         self.register_buffer('sensor_mean', torch.tensor([48.0, 1.8, 1650.0, -22.5, 5.0], dtype=torch.float32))
         self.register_buffer('sensor_std', torch.tensor([9.24, 0.058, 433.0, 1.44, 2.89], dtype=torch.float32))
 
-    # NEW: 提供一个接口在训练过程中调节 FiLM 的 alpha，
-    # 例如用 hook 在不同 epoch 设置 alpha 从 0->1
+    # Lets a training hook ramp alpha from 0 to 1 across epochs.
     def set_film_alpha(self, alpha: float):
         self.film_alpha = float(alpha)
 
@@ -1187,9 +1165,11 @@ class TPVAggregator_Seg(BaseModule):
         self.sensor_std = std.to(self.sensor_std.device)
 
     def seesaw_loss(self, logits, labels, p=0.8, eps=1e-6, ignore_index=0):
-        """
-        logits: 任意形状，只要保证 dim=1 是 channel (C)
-        labels: 与 logits 对应的语义标签，形状任意，只要与 logits 的空间维度匹配
+        """Seesaw loss over arbitrary spatial shapes.
+
+        Args:
+            logits: any shape, provided dim=1 is the channel axis (C).
+            labels: semantic labels whose spatial dims match ``logits``.
         """
         # ---- reshape: (B, C, ...) → (N, C) ----
         B, C = logits.shape[:2]
@@ -1200,23 +1180,23 @@ class TPVAggregator_Seg(BaseModule):
         # ---- mask ignore_index ----
         valid = labels_flat != ignore_index
         if not valid.any():
-            # 没有有效点 → 返回 0 loss
+            # No valid point in this batch.
             return logits.sum() * 0
         logits_flat = logits_flat[valid]
         labels_flat = labels_flat[valid]
         # ---- one-hot ----
         targets = F.one_hot(labels_flat, num_classes=C).float()
         def distribution_agnostic_seesaw_loss(logits, targets, p=0.8, eps=1e-6):
-            # 类频统计
+            # Accumulate class frequencies.
             batch_class_count = targets.sum(dim=0)
             self.class_counts += batch_class_count
             cc = self.class_counts
-            # s 矩阵
+            # Pairwise mitigation matrix.
             conditions = cc[:, None] > cc[None, :]
             trues = (cc[None, :] / cc[:, None]).pow(p)
             falses = torch.ones_like(trues)
             s = torch.where(conditions, trues, falses)
-            # 防溢出
+            # Shift logits for numerical stability.
             logits = logits - logits.max(dim=-1, keepdim=True)[0]
             numerator = torch.exp(logits)
             denominator = (
@@ -1236,34 +1216,32 @@ class TPVAggregator_Seg(BaseModule):
         tpv_list[2]: bs, c, z, w
 
         Args:
-            logits_vox_t: Teacher 模型的 voxel 预测结果，用于知识蒸馏
-            logits_pts_t: Teacher 模型的 point 预测结果，用于知识蒸馏
-            skip_consistency: 为 True 时跳过内部 consistency 分支（由上层按组串行计算）
+            logits_vox_t: teacher voxel predictions, used for distillation.
+            logits_pts_t: teacher point predictions, used for distillation.
+            skip_consistency: skip the internal consistency branch when the caller
+                already evaluates it group by group.
         """
-        # 当 d2skd=True 时，强制 return_loss=False（只输出预测结果）
+        # In cross-density distillation the aggregator only emits predictions.
         if self.d2skd:
             return_loss = False
 
-        # 只有在训练时（sensor_vec 不为 None）且未跳过时，才执行 consistency 逻辑
+        # The consistency branch only runs during training (sensor_vec is not None).
         if self.consistency and sensor_vec is not None and not skip_consistency:
             if isinstance(points, list):
                 points_list = points
             else:
-                # 如果 points 是一个 tensor，检查其 batch size
-                # 如果 batch size > 1，需要拆分成 list，确保每个元素对应一个样本
+                # Split a batched tensor so that each entry is one sample.
                 if isinstance(points, torch.Tensor) and points.dim() >= 2 and points.size(0) > 1:
-                    # 将 tensor 按 batch 维度拆分成 list
                     points_list = [points[i:i+1] for i in range(points.size(0))]
                 else:
                     points_list = [points]
             num_samples = len(points_list)
 
-            # 逐样本运行，收集 voxel logits 做一致性
+            # Run sample by sample, collecting voxel logits for the consistency term.
             losses, voxel_logits, point_logits = [], [], []
             sensor_outs = []
             voxel_labels_for_consistency = []
 
-            # helper 提取容器内元素
             def _get(container, idx):
                 if container is None:
                     return None
@@ -1274,28 +1252,26 @@ class TPVAggregator_Seg(BaseModule):
                 return container
 
             for i in range(num_samples):
-                # 约定：按照 (0,1)、(2,3)、(4,5)… 成对采样。
-                # 每一对中的第一个样本作为主样本参与监督损失与反向传播，
-                # 成对中的第二个样本仅用于一致性正则（推理模式，不参与反向传播）。
+                # Views arrive in pairs (0,1), (2,3), (4,5), ... The first sample of
+                # each pair is the main view and carries the supervised losses; the
+                # second contributes only to the consistency regulariser.
                 is_main_view = (i % 2 == 0)
 
                 tpv_xy_i, tpv_yz_i, tpv_zx_i = [
                     feat.index_select(0, torch.tensor([i], device=feat.device)) for feat in tpv_list
                 ]
                 pts_i = points_list[i]
-                # 确保 pts_i 的 batch size 为 1，与 tpv_xy_i 等特征的 batch size 一致
+                # Align the point batch with the per-view TPV features (batch size 1).
                 if isinstance(pts_i, torch.Tensor) and pts_i.dim() >= 2 and pts_i.size(0) > 1:
-                    # 如果 batch size > 1，只取第一个样本
                     pts_i = pts_i[0:1]
                 elif isinstance(pts_i, torch.Tensor) and pts_i.dim() == 2:
-                    # 如果是 2D tensor (n, 3)，添加 batch 维度
                     pts_i = pts_i.unsqueeze(0)
                 voxel_label_i = _get(voxel_label, i)
                 point_labels_i = _get(point_labels, i)
                 sensor_vec_i = _get(sensor_vec, i)
                 dataset_flag_i = _get(dataset_flag, i)
 
-                # 提取对应的 teacher 预测结果（仅对主样本使用）
+                # Teacher predictions are only consumed by the main view.
                 logits_vox_t_i = None
                 logits_pts_t_i = None
                 if is_main_view:
@@ -1311,7 +1287,7 @@ class TPVAggregator_Seg(BaseModule):
                             logits_pts_t_i = logits_pts_t[i:i+1] if logits_pts_t is not None else None
 
                 if is_main_view:
-                    # 主样本：完整计算监督损失并参与反向传播
+                    # Main view: full supervised losses.
                     out_i = self._forward_single(
                         [tpv_xy_i, tpv_yz_i, tpv_zx_i],
                         points=pts_i,
@@ -1338,15 +1314,15 @@ class TPVAggregator_Seg(BaseModule):
                         point_logits.append(pts_out_i)
                         sensor_outs.append(sensor_out_i)
                 else:
-                    # 辅助样本：不计算监督损失，但参与一致性损失的反向传播
-                    # （CBA-CL 默认两个 view 都回梯度，因此这里不再使用 torch.no_grad）
+                    # Auxiliary view: no supervised loss, but CBA-CL propagates
+                    # gradients through both views, so no torch.no_grad here.
                     out_i = self._forward_single(
                         [tpv_xy_i, tpv_yz_i, tpv_zx_i],
                         points=pts_i,
-                        voxel_label=None,          # 不计算监督 voxel loss
-                        point_labels=None,         # 不计算监督 point loss
+                        voxel_label=None,          # no supervised voxel loss
+                        point_labels=None,         # no supervised point loss
                         dataset_flag=dataset_flag_i,
-                        return_loss=False,         # 只拿 logits
+                        return_loss=False,         # logits only
                         sensor_vec=sensor_vec_i,
                         return_logits=True,
                         logits_vox_t=None,
@@ -1362,34 +1338,26 @@ class TPVAggregator_Seg(BaseModule):
 
             if len(losses) == 0:
                 agg_loss = {}
-                # 防御性：如果没有loss，需要获取一个device
                 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             else:
-                # 收集所有可能的keys
                 all_keys = set()
                 for ld in losses:
                     all_keys.update(ld.keys())
                 all_keys.add('loss_consistency')
 
-                # [FIX 1] 关键修改：对 keys 进行排序，确保所有 Rank 的字典插入顺序一致
-                # 否则 dict.values() 的顺序在不同 Rank 间可能错乱，导致 all_reduce 错误
-                # 注意：在训练时，所有 rank 的 loss keys 通常是一致的，所以这里只做排序
-                # 如果确实需要同步 keys，可以使用更简单的方法（如文件或假设一致性）
+                # Sort the keys so every rank inserts them in the same order; otherwise
+                # dict.values() may be misordered across ranks and corrupt all_reduce.
                 sorted_keys = sorted(list(all_keys))
 
-                # 可选：如果需要确保所有 rank 的 keys 一致，可以使用 barrier
-                # 但通常训练时 keys 应该是一致的，所以这里直接使用排序后的 keys
                 if dist.is_available() and dist.is_initialized():
-                    dist.barrier()  # 确保所有 rank 都到达这里
+                    dist.barrier()
 
-                # 初始化agg_loss
                 agg_loss = {}
                 device = losses[0][list(losses[0].keys())[0]].device
 
-                # [FIX 2] 使用排序后的 sorted_keys 进行迭代
                 for k in sorted_keys:
                     if k == 'loss_consistency':
-                        # 占位，稍后覆盖。使用 requires_grad=True 防止 DDP 检查报错（虽然会被覆盖）
+                        # Placeholder, overwritten below; requires_grad keeps DDP happy.
                         agg_loss[k] = torch.tensor(0.0, device=device, requires_grad=True)
                     else:
                         sample_tensor = None
@@ -1402,44 +1370,40 @@ class TPVAggregator_Seg(BaseModule):
                         else:
                             agg_loss[k] = torch.zeros((), device=device)
 
-                # 聚合loss
                 for ld in losses:
-                    for k in sorted_keys: # 同样使用 sorted_keys，虽非必须但保持习惯一致
+                    for k in sorted_keys:
                         if k != 'loss_consistency' and k in ld:
                             agg_loss[k] = agg_loss[k] + ld[k]
 
-                # 平均：按“主样本数量（即 loss 的个数）”做归一化，
-                # 而不是按所有 view 的数量，避免重复采样时整体 loss 被错误缩小。
+                # Normalise by the number of main views (i.e. of losses), not by the
+                # total view count, so repeated sampling does not shrink the loss.
                 for k in agg_loss:
                     if k != 'loss_consistency':
-                        agg_loss[k] = agg_loss[k] / (len(losses) + 1e-8)  # 防止除零
-            # T: 温度系数。
-            # T > 1 会让分布变平滑，关注整体分布的一致性（Dark Knowledge）。
-            # T = 1 是最标准的设置。建议先用 1.0，如果想要更强的平滑约束再调大。
+                        agg_loss[k] = agg_loss[k] / (len(losses) + 1e-8)
+            # Softmax temperature for the consistency term. T > 1 flattens the
+            # distributions and emphasises agreement on the overall shape.
             T = 1.5
-            # 初始化consistency loss，确保所有rank都有这个key
+            # Always define the consistency key so every rank reduces the same dict.
             if len(voxel_logits) > 0:
                 device = voxel_logits[0].device
                 loss_consistency_val = voxel_logits[0].sum() * 0.0
             else:
-                # 如果没有样本，创建一个带梯度的 0 tensor，防止 DDP 报错 unused parameters
+                # No sample: emit a differentiable zero so DDP does not flag unused parameters.
                 if 'device' not in locals():
                      device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
                 loss_consistency_val = torch.tensor(0.0, device=device, requires_grad=True)
-            # 只有当有足够的样本或需要复制样本时才计算
             if num_samples == 1 and len(voxel_logits) > 0:
                 voxel_logits.append(voxel_logits[0].detach())
                 voxel_labels_for_consistency.append(voxel_labels_for_consistency[0])
-                num_samples = 2 # 更新本地计数
+                num_samples = 2
             if len(voxel_logits) > 1:
-                # 与外部 _cb_adc_consistency_loss 保持一致的实现；两个 view 都参与反向传播。
                 cl_weight = float(self.consistency_loss_weight)
                 cl_total = loss_consistency_val.new_zeros(())
                 pairs = 0
-                # 只在每对内部计算：(0,1)、(2,3)、(4,5)…，不跨组比较
+                # Compare within each pair only: (0,1), (2,3), (4,5), ...
                 for i in range(0, len(voxel_logits) - 1, 2):
                     j = i + 1
-                    # 主样本有 voxel_label，辅助样本无；同组共用主样本的 label
+                    # Only the main view carries a label; the pair shares it.
                     group_idx = i // 2
                     vi = voxel_labels_for_consistency[group_idx] if group_idx < len(voxel_labels_for_consistency) else None
                     if vi is None:
@@ -1458,11 +1422,10 @@ class TPVAggregator_Seg(BaseModule):
                 if pairs > 0:
                     loss_consistency_val = loss_consistency_val + cl_total / pairs
 
-            # 最终赋值
             agg_loss['loss_consistency'] = loss_consistency_val
             return agg_loss
 
-        # 防御性检查：确保 points 是 tensor 而不是 list
+        # Collapse a list of point tensors into a single batched tensor.
         if isinstance(points, list):
             if len(points) == 0:
                 raise ValueError("points list is empty")
@@ -1483,7 +1446,7 @@ class TPVAggregator_Seg(BaseModule):
         tpv_zh = tpv_yz.permute(0, 1, 3, 2)
         bs, c, _, _ = tpv_hw.shape
 
-        # 对齐标签 batch 维度，防止数据构建时出现 batch=1 的标签与更大 batch 特征不一致
+        # Broadcast batch-1 labels produced by the data pipeline up to the feature batch.
         if voxel_label is not None and voxel_label.shape[0] != bs:
             if voxel_label.shape[0] == 1:
                 voxel_label = voxel_label.expand(bs, *voxel_label.shape[1:])
@@ -1514,18 +1477,16 @@ class TPVAggregator_Seg(BaseModule):
                 mode='bilinear'
             )
 
-        # points: bs, n, 3  (若为单样本 n,3，自动补 batch 维)
+        # points: (bs, n, 3); a bare (n, 3) tensor gets a batch axis.
         if points.dim() == 2:
             points = points.unsqueeze(0)
         points_bs, n, _ = points.shape
 
-        # 确保 points 的 batch size 与 tpv_hw 的 batch size 一致
-        # 如果 points 的 batch size 大于 tpv_hw 的 batch size，只取第一个样本
+        # Reconcile the point batch with the TPV feature batch.
         if points_bs > bs:
-            points = points[0:1]  # 只取第一个样本
+            points = points[0:1]
             points_bs = 1
         elif points_bs < bs:
-            # 如果 points 的 batch size 小于 tpv_hw 的 batch size，扩展 points
             if points_bs == 1:
                 points = points.expand(bs, -1, -1)
                 points_bs = bs
@@ -1562,68 +1523,49 @@ class TPVAggregator_Seg(BaseModule):
 
         fused_pts = tpv_hw_pts + tpv_zh_pts + tpv_wz_pts
         fused = torch.cat([fused_vox, fused_pts], dim=-1) # bs, c, whz+n
-        # ---------------- Sensor head + FiLM 分支开始 ----------------
+        # ---------------- S-FiLM: sensor head + FiLM modulation ----------------
         sensor_loss = fused.new_tensor(0.0)
-        pred_sensor_output = None  # 用于测试阶段返回预测的传感器参数
-        # 用于日志的误差统计
-        sensor_mae = fused.new_tensor(0.0)           # 总 MAE
-        sensor_mae_norm = fused.new_tensor(0.0)      # 归一化后的总 MAE
-        sensor_mae_per_dim = fused.new_tensor([0.0, 0.0, 0.0, 0.0, 0.0])  # 每一维的 MAE
-        # 只有在模型有相关模块时才执行（防御性写法）
+        pred_sensor_output = None                    # returned at test time
+        sensor_mae = fused.new_tensor(0.0)           # MAE in raw units
+        sensor_mae_norm = fused.new_tensor(0.0)      # MAE in normalised space
+        sensor_mae_per_dim = fused.new_tensor([0.0, 0.0, 0.0, 0.0, 0.0])
         if hasattr(self, 'sensor_head') and hasattr(self, 'sensor_encoder') and not self.dense_train:
-            # 训练阶段：有 GT sensor_vec
+            # Training: ground-truth sensor_vec is available.
             if sensor_vec is not None:
-                # 1. 归一化 GT 传感器参数
+                # Normalise the ground-truth sensor parameters.
                 sensor_gt = sensor_vec.to(self.sensor_mean.device).float()        # [B, D]
                 if sensor_gt.dim() == 1:  # shape is [D]
                     sensor_gt = sensor_gt.unsqueeze(0)  # → [1, D]
                 sensor_gt_norm = (sensor_gt - self.sensor_mean) / self.sensor_std # [B, D]
-                # 2. 从 fused 里提取全局特征，用于预测传感器参数
-                # fused: [B, C, L]，使用自适应平均池化得到 [B, C]
+                # Pool fused [B, C, L] into a global [B, C] descriptor.
                 global_feat = F.adaptive_avg_pool1d(fused, output_size=1).squeeze(-1)  # [B, C]
-                # 3. 预测 normalized 参数
+                # Regress the normalised parameters.
                 pred_sensor_norm = self.sensor_head(global_feat)  # [B, D]
-                # 4. 反归一化成原始空间，并计算回归 loss
+                # Denormalise back to raw units for the reported error.
                 pred_sensor_raw = pred_sensor_norm * self.sensor_std + self.sensor_mean  # [B, D]
-                # --------- 误差统计（用于 logger） ---------
-                # 绝对误差: [B, D]
                 abs_err = (pred_sensor_raw - sensor_gt).abs()
-                # scalar：所有维度、整个 batch 的平均 MAE
                 sensor_mae = abs_err.mean()
                 sensor_mae_norm = (pred_sensor_norm - sensor_gt_norm).abs().mean()
-                # 每个维度单独一个 MAE（shape [D]），可选
                 sensor_mae_per_dim = abs_err.mean(dim=0)  # [D]
-                # 在归一化空间计算 loss，使各维度梯度更均衡；对 height(dim1)/theta_up(dim4) 加权
+                # Regress in normalised space so per-dimension gradients stay balanced.
                 per_dim_loss = F.smooth_l1_loss(pred_sensor_norm, sensor_gt_norm, reduction='none')  # [B, D]
-                # dim_weights = fused.new_tensor([2.0, 1.5, 3.0, 1.0, 1.0])   # beam, height, H_res, theta_low, theta_up
                 sensor_loss = per_dim_loss.mean()
-                # 5. Progressive 混合（在 normalized 空间中）
+                # Progressively blend ground-truth and predicted parameters.
                 alpha = float(self.film_alpha)
-                alpha = max(0.0, min(1.0, alpha))  # 防止出界
+                alpha = max(0.0, min(1.0, alpha))
                 sensor_mix_norm = (1.0 - alpha) * sensor_gt_norm + alpha * pred_sensor_norm.detach()
-                # 6. 编码成 embedding，供 FiLM 使用
                 sensor_emb = self.sensor_encoder(sensor_mix_norm)  # [B, sensor_emb_dim]
-                # 7. 对 fused 特征做 FiLM 调制
-                # fused: [B, C, L]
                 fused = self.film_layer(fused, sensor_emb)
-                # 训练阶段也可以把 raw prediction 存下来用于分析
                 pred_sensor_output = pred_sensor_raw  # [B, D]
-            # 测试 / 推理阶段：没有 GT，只用预测的传感器参数
+            # Inference: no ground truth, condition FiLM on the prediction itself.
             else:
-                # 1. 全局特征
                 global_feat = fused.mean(dim=-1)  # [B, C]
-                # 2. 预测 normalized 参数
                 pred_sensor_norm = self.sensor_head(global_feat)  # [B, D]
-                # 3. 反归一化得到原始空间的预测（可以返回给上层，用于分析）
                 pred_sensor_raw = pred_sensor_norm * self.sensor_std + self.sensor_mean  # [B, D]
-                # 4. 直接用预测值（normalized）作为 FiLM 条件
                 sensor_emb = self.sensor_encoder(pred_sensor_norm)  # [B, sensor_emb_dim]
-                # 5. FiLM 调制
                 fused = self.film_layer(fused, sensor_emb)
                 pred_sensor_output = pred_sensor_raw  # [B, D]
-        # ---------------- Sensor head + FiLM 分支结束 ----------------
-        # 继续原有 head 流程
-        # 如果 sensor_vec is None，则直接不做 FiLM，兼容老逻辑
+        # ---------------- Segmentation head ----------------
         fused = fused.permute(0, 2, 1)
         if self.use_checkpoint:
             fused = torch.utils.checkpoint.checkpoint(self.decoder, fused)
@@ -1642,8 +1584,6 @@ class TPVAggregator_Seg(BaseModule):
             scattered = scatter_nd(indices=voxels_ind[b], updates=feats_vox[b], shape=output_shape)  # (W,H,Z,C)
             batch_logits_vox.append(scattered.permute(3,0,1,2))  # (C,W,H,Z)
         logits_vox = torch.stack(batch_logits_vox, dim=0)
-        # print(logits_vox.shape)
-        # np.save("baseline_logits.npy", logits_vox.detach().float().cpu().numpy())
         logits_pts = logits[:, :, (-n):].reshape(bs, self.classes, n, 1, 1)
 
         if return_loss:
@@ -1661,22 +1601,20 @@ class TPVAggregator_Seg(BaseModule):
                 valid_mask = point_labels != 0  # Ignore label 0
                 if valid_mask.any():
                     point_loss = self.lovasz_loss_func(torch.softmax(logits_pts, dim=1), point_labels, ignore=0)
-                    # torch.argmax(torch.softmax(logits_pts, dim=1), dim=1).reshape(1, -1).detach().cpu().numpy().tofile("predicted_labels.bin")
                     seesaw_loss_points = self.seesaw_loss(logits_pts, point_labels, ignore_index=0)
 
             # Voxel-level loss
             if voxel_label is not None:
                 valid_voxel_mask = voxel_label != 0
                 if valid_voxel_mask.any():
-                    # 使用 Lovasz-Softmax 代替 CE 作为 voxel 级主损失
+                    # Lovasz-Softmax replaces CE as the main voxel-level loss.
                     voxel_probs = torch.softmax(logits_vox, dim=1)
                     voxel_loss = self.lovasz_loss_func(voxel_probs, voxel_label, ignore=0)
                     seesaw_loss_voxels = self.seesaw_loss(logits_vox, voxel_label, ignore_index=0)
 
-            # NEW: 传感器回归 loss
             sensor_loss_term = sensor_loss * self.sensor_loss_weight
 
-            # NEW: 知识蒸馏 loss（如果提供了 teacher 预测结果）
+            # Spectral distillation against the teacher, when one is provided.
             distill_loss_vox = zero_voxel
             if logits_vox_t is not None and not self.dense_train:
                 distill_loss_vox = self.spectral_distiller(logits_vox, logits_vox_t)
@@ -1690,12 +1628,10 @@ class TPVAggregator_Seg(BaseModule):
                 'sensor_mae_total': sensor_mae_norm.detach(),
             }
 
-            # 添加蒸馏 loss（如果启用）
             if distill_loss_vox != 0:
                 loss_dict['loss_distill_vox'] = 500.0 * distill_loss_vox
-            # 如果你想按维度打日志
+            # Per-dimension sensor MAE, logged for the curriculum hook.
             if sensor_mae_per_dim is not None:
-                # 假设 D == 6
                 dim_names = ['beam', 'height', 'H_res', 'theta_low', 'theta_up']
                 for i, name in enumerate(dim_names):
                     loss_dict[f'sensor_mae_{name}'] = sensor_mae_per_dim[i].detach()

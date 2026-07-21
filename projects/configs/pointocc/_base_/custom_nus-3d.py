@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-12-23 01:27:13
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2024-12-23 01:27:14
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/pointocc/_base_/custom_nus-3d.py
-'''
 # If point cloud range is changed, the models should also change their point
 # cloud range accordingly
 point_cloud_range = [-50, -50, -5, 50, 50, 3]

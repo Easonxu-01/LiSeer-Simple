@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-12-23 01:24:22
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-06-11 22:07:42
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/pointocc/pointtpv_nusc_seg_random.py
-'''
 _base_ = [
     './_base_/default_runtime.py',
     './_base_/custom_nus-3d.py',
@@ -33,27 +24,13 @@ dense_train = False
 sensor_film = True
 plugin_dir = "projects/unilidar_plugin/"
 
-# occ_path = "./data/nuScenes-Occupancy"
 train_ann_file = "./data/nuscenes/nuscenes_occ_infos_train.pkl"
 val_ann_file = "./data/nuscenes/nuscenes_occ_infos_val.pkl"
 # For nuScenes we usually do 10-class detection
-class_names = ['noise', 'flat.driveable_surface', 'flat.sidewalk', 'flat.terrain', 
-             'flat.other', 'static.manmade', 'static.vegetation', 'static.other', 
+class_names = ['noise', 'flat.driveable_surface', 'flat.sidewalk', 'flat.terrain',
+             'flat.other', 'static.manmade', 'static.vegetation', 'static.other',
              'vehicle.ego']
 
-# CLASS_NAMES_DG = ['Other', 'Driveable Ground', 'Structure', 'Vehicle', 'Nature', 'Living Being', 'Dynamic Object', 'Static Object', 'Other Ground']
-
-# NUSCENES_TO_CL =  {
-#     0: 0,   # noise -> Other
-#     24: 1,  # flat.driveable_surface -> Driveable Ground
-#     25: 8,  # flat.sidewalk -> Structure
-#     26: 3,  # flat.terrain -> Nature
-#     27: 4,  # flat.other -> Other Ground
-#     28: 2,  # static.manmade -> Structure
-#     29: 4,  # static.vegetation -> Nature
-#     30: 5,  # static.other -> Static Object
-#     31: 3,  # vehicle.ego -> Vehicle
-# }
 
 CLASS_NAMES_DG = ['Other', 'Driveable Ground', 'Structure', 'Vehicle', 'Nature', 'Living Being', 'Movable objects', 'Other Ground']
 
@@ -84,9 +61,7 @@ cylinder=False
 RPR = True
 coor_alignment = False
 ori_point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
-# point_cloud_range = [0, -25.6, -3.4, 51.2, 25.6, 3.0]
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
-# point_cloud_range = [0, -25.6, -3.4, 51.2, 25.6, 3.0] if unilidar else [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 model_empty_idx = 0  # noise 0-->255
 empty_idx = 0  # noise 0-->255
 num_cls_nu = 8 if DG else 17
@@ -99,11 +74,6 @@ sensor = dict(
     horizontal_angular_resolution=[600, 1800],
     lower_vertical_field_of_view_bound=[-30, -15],
     upper_vertical_field_of_view_bound=[2, 15],
-    # LiDAR_height=[1, 2],
-    # num_of_beams=[16, 128],
-    # horizontal_angular_resolution=[900, 3600],
-    # lower_vertical_field_of_view_bound=[-40, -5],
-    # upper_vertical_field_of_view_bound=[0, 25],
 )
 
 schedule=[(0, 8, {
@@ -128,7 +98,7 @@ schedule=[(0, 8, {
                           'LiDAR_height': (1.2, 2)
                       })]
 
-cascade_ratio = 2 
+cascade_ratio = 2
 dataset_flag_nu = 1 if dataset_type == 'NuscSegDataset' else 2
 
 
@@ -137,7 +107,7 @@ find_unused_parameters = False
 unique_label = [0, 1, 2, 3, 4, 5, 6, 7] if DG else [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 track_running_stats = False
 
-_dim_ = 128 
+_dim_ = 128
 
 tpv_w_ = 240
 tpv_h_ = 180
@@ -263,7 +233,6 @@ model = dict(
 
 
 bda_aug_conf = dict(
-            # rot_lim=(-22.5, 22.5),
             rot_lim=(-0, 0),
             scale_lim=(0.95, 1.05),
             flip_dx_ratio=0.5,
@@ -283,7 +252,7 @@ if DG:
         shift_coors=[0, 0, -0.2],
         Random = Random,
         dense7sparse = dense7sparse if Random else False),
-        dict(type='PointsegMapping', 
+        dict(type='PointsegMapping',
                 grid_size = grid_size,
                 grid_size_vox = [tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
                 coarse_ratio = coarse_ratio,
@@ -297,90 +266,6 @@ if DG:
                 RPR = RPR,
                 restrict_pc_range = point_cloud_range),
         dict(type='VoxelClassMapping'),
-        # dict(
-        #     type='RandomChoice',
-        #     transforms=[
-        #         [
-        #             dict(
-        #                 type='LaserMix',
-        #                 num_areas=[3, 4, 5, 6],
-        #                 pitch_angles=[-25, 3],
-        #                 grid_size=grid_size,
-        #                 grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-        #                 max_volume_space=[51.2, 3.1415926, 3],
-        #                 min_volume_space=[0, -3.1415926, -3.4],
-        #                 fill_label=0,
-        #                 pre_transform=[
-        #                     dict(
-        #                         type='LoadPointsFromFile_RPR',
-        #                         coord_type='LIDAR',
-        #                         load_dim=3 if Random else 5,
-        #                         use_dim=3 if Random else 5,
-        #                         shift_height=coor_alignment,
-        #                         RPR=RPR,
-        #                         point_cloud_range=point_cloud_range if RPR else ori_point_cloud_range,
-        #                         dataset_flag=dataset_flag_nu,
-        #                         shift_coors=[0, 0, -0.2],
-        #                         Random=Random),
-        #                     dict(type='PointsegMapping',
-        #                         grid_size=grid_size,
-        #                         grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-        #                         coarse_ratio=coarse_ratio,
-        #                         pc_range=ori_point_cloud_range,
-        #                         fill_label=0,
-        #                         unique_label=unique_label,
-        #                         fixed_volume_space=True,
-        #                         max_volume_space=[51.2, 3.1415926, 3],
-        #                         min_volume_space=[0, -3.1415926, -3.4],
-        #                         cal_visible=False,
-        #                         RPR=RPR,
-        #                         restrict_pc_range=point_cloud_range),
-        #                     dict(type='VoxelClassMapping'),
-        #                 ],
-        #                 prob=1)
-        #         ],
-        #         [
-        #             dict(
-        #                 type='PolarMix',
-        #                 instance_classes=[0, 1, 2, 3, 4, 5, 6, 7],
-        #                 swap_ratio=0.5,
-        #                 rotate_paste_ratio=1.0,
-        #                 grid_size=grid_size,
-        #                 grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-        #                 max_volume_space=[51.2, 3.1415926, 3],
-        #                 min_volume_space=[0, -3.1415926, -3.4],
-        #                 fill_label=0,
-        #                 pre_transform=[
-        #                     dict(
-        #                         type='LoadPointsFromFile_RPR',
-        #                         coord_type='LIDAR',
-        #                         load_dim=3 if Random else 5,
-        #                         use_dim=3 if Random else 5,
-        #                         shift_height=coor_alignment,
-        #                         RPR=RPR,
-        #                         point_cloud_range=point_cloud_range if RPR else ori_point_cloud_range,
-        #                         dataset_flag=dataset_flag_nu,
-        #                         shift_coors=[0, 0, -0.2],
-        #                         Random=Random),
-        #                     dict(type='PointsegMapping',
-        #                         grid_size=grid_size,
-        #                         grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-        #                         coarse_ratio=coarse_ratio,
-        #                         pc_range=ori_point_cloud_range,
-        #                         fill_label=0,
-        #                         unique_label=unique_label,
-        #                         fixed_volume_space=True,
-        #                         max_volume_space=[51.2, 3.1415926, 3],
-        #                         min_volume_space=[0, -3.1415926, -3.4],
-        #                         cal_visible=False,
-        #                         RPR=RPR,
-        #                         restrict_pc_range=point_cloud_range),
-        #                     dict(type='VoxelClassMapping'),
-        #                 ],
-        #                 prob=1)
-        #         ],
-        #     ],
-        #     prob=[0.5, 0.5]),
         dict(type='Collect3Dinput', keys=['train_grid', 'grid_ind', 'grid_ind_vox', 'train_voxel_label', 'train_pts_label', 'reset_random']),
     ]
     test_pipeline = [
@@ -394,7 +279,7 @@ if DG:
         dataset_flag=dataset_flag_nu,
         shift_coors=[0, 0, -0.2],
         Random = False),
-        dict(type='PointsegMapping', 
+        dict(type='PointsegMapping',
                 grid_size = grid_size,
                 grid_size_vox = [tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
                 coarse_ratio = coarse_ratio,
@@ -425,11 +310,7 @@ else:
         shift_coors=[0, 0, -0.2],
         Random = Random,
         dense7sparse = dense7sparse if Random else False),
-    # dict(type='LoadPointsFromMultiSweeps_RPR',
-    #     sweeps_num=10,
-    #     RPR=False,
-    #     point_cloud_range=point_cloud_range if RPR else ori_point_cloud_range,),
-    dict(type='PointsegMapping', 
+    dict(type='PointsegMapping',
                 grid_size = grid_size,
                 grid_size_vox = [tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
                 coarse_ratio = coarse_ratio,
@@ -442,88 +323,6 @@ else:
                 cal_visible=False,
                 RPR = RPR,
                 restrict_pc_range = point_cloud_range),
-    # dict(
-    #         type='RandomChoice',
-    #         transforms=[
-    #             [
-    #                 dict(
-    #                     type='LaserMix',
-    #                     num_areas=[3, 4, 5, 6],
-    #                     pitch_angles=[-25, 3],
-    #                     grid_size=grid_size,
-    #                     grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-    #                     max_volume_space=[51.2, 3.1415926, 3],
-    #                     min_volume_space=[0, -3.1415926, -3.4],
-    #                     fill_label=0,
-    #                     pre_transform=[
-    #                         dict(
-    #                             type='LoadPointsFromFile_RPR',
-    #                             coord_type='LIDAR',
-    #                             load_dim=3 if Random else 5,
-    #                             use_dim=3 if Random else 5,
-    #                             shift_height=coor_alignment,
-    #                             RPR=RPR,
-    #                             point_cloud_range=point_cloud_range if RPR else ori_point_cloud_range,
-    #                             dataset_flag=dataset_flag_nu,
-    #                             shift_coors=[0, 0, -0.2],
-    #                             Random=Random),
-    #                         dict(type='PointsegMapping',
-    #                             grid_size=grid_size,
-    #                             grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-    #                             coarse_ratio=coarse_ratio,
-    #                             pc_range=ori_point_cloud_range,
-    #                             fill_label=0,
-    #                             unique_label=unique_label,
-    #                             fixed_volume_space=True,
-    #                             max_volume_space=[51.2, 3.1415926, 3],
-    #                             min_volume_space=[0, -3.1415926, -3.4],
-    #                             cal_visible=False,
-    #                             RPR=RPR,
-    #                             restrict_pc_range=point_cloud_range),
-    #                     ],
-    #                     prob=1)
-    #             ],
-    #             [
-    #                 dict(
-    #                     type='PolarMix',
-    #                     instance_classes=[0, 1, 2, 3, 4, 5, 6, 7],
-    #                     swap_ratio=0.5,
-    #                     rotate_paste_ratio=1.0,
-    #                     grid_size=grid_size,
-    #                     grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-    #                     max_volume_space=[51.2, 3.1415926, 3],
-    #                     min_volume_space=[0, -3.1415926, -3.4],
-    #                     fill_label=0,
-    #                     pre_transform=[
-    #                         dict(
-    #                             type='LoadPointsFromFile_RPR',
-    #                             coord_type='LIDAR',
-    #                             load_dim=3 if Random else 5,
-    #                             use_dim=3 if Random else 5,
-    #                             shift_height=coor_alignment,
-    #                             RPR=RPR,
-    #                             point_cloud_range=point_cloud_range if RPR else ori_point_cloud_range,
-    #                             dataset_flag=dataset_flag_nu,
-    #                             shift_coors=[0, 0, -0.2],
-    #                             Random=Random),
-    #                         dict(type='PointsegMapping',
-    #                             grid_size=grid_size,
-    #                             grid_size_vox=[tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
-    #                             coarse_ratio=coarse_ratio,
-    #                             pc_range=ori_point_cloud_range,
-    #                             fill_label=0,
-    #                             unique_label=unique_label,
-    #                             fixed_volume_space=True,
-    #                             max_volume_space=[51.2, 3.1415926, 3],
-    #                             min_volume_space=[0, -3.1415926, -3.4],
-    #                             cal_visible=False,
-    #                             RPR=RPR,
-    #                             restrict_pc_range=point_cloud_range),
-    #                     ],
-    #                     prob=1)
-    #             ],
-    #         ],
-    #         prob=[0.5, 0.5]),
     dict(type='Collect3Dinput', keys=['train_grid', 'grid_ind', 'grid_ind_vox', 'train_voxel_label', 'train_pts_label', 'reset_random']),
 ]
 
@@ -539,11 +338,7 @@ else:
         dataset_flag=dataset_flag_nu,
         shift_coors=[0, 0, -0.2],
         Random = False),
-        # dict(type='LoadPointsFromMultiSweeps_RPR',
-        # sweeps_num=10,
-        # RPR=False,
-        # point_cloud_range=point_cloud_range if RPR else ori_point_cloud_range,),
-        dict(type='PointsegMapping', 
+        dict(type='PointsegMapping',
                 grid_size = grid_size,
                 grid_size_vox = [tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
                 coarse_ratio = coarse_ratio,
@@ -559,7 +354,7 @@ else:
         dict(type='Collect3Dinput', keys=['train_grid', 'grid_ind', 'grid_ind_vox', 'train_voxel_label', 'train_pts_label', 'dataset_flag'],
                 meta_keys=['pc_range', 'occ_size', 'scene_token', 'lidar_token']),
     ]
-    
+
 
 test_config=dict(
     type=dataset_type,
@@ -600,50 +395,6 @@ data = dict(
     nonshuffler_sampler=dict(type='DistributedSampler'),
 )
 
-# optimizer = dict(
-#     type='AdamW',
-#     lr=3e-3,
-#     paramwise_cfg=dict(
-#         custom_keys={
-#             'img_backbone': dict(lr_mult=0.1),
-#         }),
-#     weight_decay=0.01)
-
-# optimizer_config = dict(grad_clip=dict(max_norm=30, norm_type=2))
-# # learning policy
-# lr_config = dict(
-#     policy='CosineRestart',  # Hook type
-#     periods=[12, 8, 4],  # Restart periods (3 cycles, 24 total epochs)
-#     restart_weights=[1, 0.5, 0.3],  # Restart weights (decaying weight per cycle)
-#     min_lr_ratio=1e-2,  # Minimum learning rate as a ratio of base_lr
-#     by_epoch=True,  # Adjust LR based on epoch count
-#     warmup='linear',  # Warmup strategy
-#     warmup_iters=9999,
-#     warmup_ratio=1.0 / 3,
-# )
-
-# optimizer = dict(
-#     type='AdamW',
-#     lr=6e-4,
-#     paramwise_cfg=dict(
-#         custom_keys={
-#             'img_backbone': dict(lr_mult=0.1),
-#         }),
-#     weight_decay=0.01)
-# # 与 LiDAR 课程阶段对齐：每阶段独立 Cosine 退火，进入新阶段时 LR 从 base 重启
-# lr_curriculum_periods = [end - start for start, end, _ in schedule]
-# lr_curriculum_restart_weights = [1.0, 0.4, 0.2]
-# optimizer_config = dict(grad_clip=dict(max_norm=30, norm_type=2))
-# # 三阶段 CosineRestart：与 schedule 等长 periods，每阶段末降到 min_lr 后在下一阶段初回到 base_lr
-# lr_config = dict(
-#     policy='CosineRestart',
-#     periods=lr_curriculum_periods,
-#     restart_weights=lr_curriculum_restart_weights,
-#     by_epoch=True,
-#     warmup='linear',
-#     warmup_iters=2500,
-#     warmup_ratio=1.0 / 3,
-#     min_lr=2e-4)
 
 optimizer = dict(
     type='AdamW',
@@ -670,8 +421,7 @@ evaluation = dict(
     rule='greater',
 )
 
-# load_from = 'ckpts/best_SSC_mean_epoch_13.pth'
-work_dir = './work_dirs/unilidar_seg_pointseggrad_repeatnutrain_sixhardrandomLCur_DG_film_seesaw_rereconsistency_RPR'    
+work_dir = './work_dirs/unilidar_seg_pointseggrad_repeatnutrain_sixhardrandomLCur_DG_film_seesaw_rereconsistency_RPR'
 log_config = dict(
     interval=50,
     hooks=[

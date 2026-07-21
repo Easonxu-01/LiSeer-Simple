@@ -1,13 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-12-23 01:24:22
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-06-11 22:10:29
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/pointocc/pointtpv_waymo_seg_random.py
-'''
-
 _base_ = [
     './_base_/default_runtime.py',
 ]
@@ -162,7 +152,6 @@ cylinder=False
 RPR = True
 coor_alignment = False
 ori_point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
-# point_cloud_range = [0, -25.6, -3.4, 51.2, 25.6, 3.0] if unilidar else [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 point_cloud_range = [-51.2, -51.2, -5.0, 51.2, 51.2, 3.0]
 occ_size = [256, 256, 32] # ground truth
 final_occ_size =  [480, 360, 32]# model output
@@ -178,11 +167,6 @@ sensor = dict(
     horizontal_angular_resolution=[600, 1800],
     lower_vertical_field_of_view_bound=[-28, -22],
     upper_vertical_field_of_view_bound=[2, 15],
-    # LiDAR_height=[1, 2],
-    # num_of_beams=[16, 128],
-    # horizontal_angular_resolution=[900, 3600],
-    # lower_vertical_field_of_view_bound=[-40, -5],
-    # upper_vertical_field_of_view_bound=[0, 25],
 )
 
 schedule=[(0, 8, {
@@ -207,7 +191,7 @@ schedule=[(0, 8, {
                           'LiDAR_height': (0.8, 2.2)
                       })]
 
-cascade_ratio = 2 
+cascade_ratio = 2
 dataset_flag = 3
 
 
@@ -216,7 +200,7 @@ find_unused_parameters = False
 unique_label = [0, 1, 2, 3, 4, 5, 6, 7] if DG else [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20,21,22]
 track_running_stats = False
 
-_dim_ = 128 
+_dim_ = 128
 
 tpv_w_ = 240
 tpv_h_ = 180
@@ -354,7 +338,6 @@ model = dict(
 
 
 bda_aug_conf = dict(
-            # rot_lim=(-22.5, 22.5),
             rot_lim=(-0, 0),
             scale_lim=(0.95, 1.05),
             flip_dx_ratio=0.5,
@@ -375,13 +358,13 @@ dict(
     dense7sparse = dense7sparse if Random else False),
 dict(
     type='LoadVoxels',
-    to_float32=True, 
-    use_semantic=True, 
-    cylinder=cylinder, 
-    occ_path=occ_path, 
-    grid_size=occ_size, 
+    to_float32=True,
+    use_semantic=True,
+    cylinder=cylinder,
+    occ_path=occ_path,
+    grid_size=occ_size,
     use_vel=False,
-    unoccupied=empty_idx, 
+    unoccupied=empty_idx,
     pc_range = ori_point_cloud_range,
     RPR = RPR,
     restrict_pc_range = point_cloud_range,
@@ -389,7 +372,7 @@ dict(
     random=Random,
     file_client_args=dict(backend='disk')),
 dict(type='VoxelClassMapping'),
-dict(type='PointsegMapping', 
+dict(type='PointsegMapping',
             grid_size = grid_size,
             grid_size_vox = [tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
             coarse_ratio = coarse_ratio,
@@ -419,20 +402,20 @@ test_pipeline = [
     shift_coors=[0, 0, -0.2],),
     dict(
     type='LoadVoxels',
-    to_float32=True, 
-    use_semantic=True, 
-    cylinder=cylinder, 
-    occ_path=occ_path, 
-    grid_size=occ_size, 
+    to_float32=True,
+    use_semantic=True,
+    cylinder=cylinder,
+    occ_path=occ_path,
+    grid_size=occ_size,
     use_vel=False,
-    unoccupied=empty_idx, 
+    unoccupied=empty_idx,
     pc_range = ori_point_cloud_range,
     RPR = RPR,
     restrict_pc_range = point_cloud_range,
     cal_visible=visible_mask,
     file_client_args=dict(backend='disk')),
     dict(type='VoxelClassMapping'),
-    dict(type='PointsegMapping', 
+    dict(type='PointsegMapping',
             grid_size = grid_size,
             grid_size_vox = [tpv_w_*scale_w, tpv_h_*scale_h, tpv_z_*scale_z],
             coarse_ratio = coarse_ratio,
@@ -448,7 +431,7 @@ test_pipeline = [
     dict(type='Collect3Dinput', keys=['train_grid', 'grid_ind', 'grid_ind_vox', 'train_voxel_label', 'train_pts_label', 'dataset_flag'],
             meta_keys=['pc_range', 'occ_size', 'scene_token', 'lidar_token']),
 ]
-    
+
 
 test_config=dict(
     type=dataset_type,
@@ -525,8 +508,7 @@ evaluation = dict(
 )
 
 load_from = None
-#work_dir = './work_dirs/unilidar_seg_pointseg_waymotrain_randomD_DG_RPR' 
-work_dir = './work_dirs/unilidar_seg_pointseggrad_real2waymotrain_sixhardrandomLCur_DG_film_seesaw_reconsistency_RPR' 
+work_dir = './work_dirs/unilidar_seg_pointseggrad_real2waymotrain_sixhardrandomLCur_DG_film_seesaw_reconsistency_RPR'
 log_config = dict(
     interval=50,
     hooks=[

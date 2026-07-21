@@ -31,16 +31,7 @@ sys.setrecursionlimit(1000000)
 
 import os
 
-os.environ['JOBLIB_TEMP_FOLDER'] = '/data1' 
-
-# import os, pandarallel
-
-#clean up the /tmp folder	
-# if os.path.isdir("/tmp") : 
-#     os.system('rm -R /tmp/*')
-
-# os.environ['JOBLIB_TEMP_FOLDER'] = '/tmp'	
-# pandarallel.initialize(nb_workers = int(os.cpu_count())-1, use_memory_fs = False , progress_bar=True,verbose=2 ) 
+os.environ['JOBLIB_TEMP_FOLDER'] = '/data1'
 
 def custom_train_detector(model,
                    dataset,
@@ -49,13 +40,13 @@ def custom_train_detector(model,
                    validate=False,
                    timestamp=None,
                    meta=None):
-    
+
     logger = get_root_logger(cfg.log_level)
-    
+
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
-    
-    
-    
+
+
+
     data_loaders = [
         build_dataloader(
             ds,
@@ -70,16 +61,16 @@ def custom_train_detector(model,
         ) for ds in dataset
     ]
 
-    # 构建 student / teacher 模型（用于 d2skd 蒸馏）
+    # Student / teacher pair for cross-density distillation (d2skd).
     use_d2skd = getattr(cfg, 'd2skd', False)
-    model_s = model  # student
-    model_t = None   # teacher
+    model_s = model
+    model_t = None
 
     if use_d2skd:
-        # 复制一份结构完全相同的 teacher 模型
+        # The teacher is a structural copy of the student.
         model_t = copy.deepcopy(model_s)
 
-        # teacher 的权重：优先使用 cfg.d2skd_load_from，没有则回退到 cfg.load_from
+        # Teacher weights: prefer cfg.d2skd_load_from, else fall back to cfg.load_from.
         teacher_ckpt = getattr(cfg, 'd2skd_load_from', None)
         if teacher_ckpt is None:
             teacher_ckpt = getattr(cfg, 'load_from', None)
@@ -87,16 +78,17 @@ def custom_train_detector(model,
         if teacher_ckpt is not None:
             load_checkpoint(model_t, teacher_ckpt, map_location='cpu')
         else:
-            logger.warning('d2skd = True 但未提供 teacher checkpoint (d2skd_load_from / load_from)，'
-                           'teacher 将使用随机初始化参数。')
+            logger.warning('d2skd = True but no teacher checkpoint was given '
+                           '(d2skd_load_from / load_from); the teacher will use '
+                           'randomly initialised weights.')
 
-        # 冻结 teacher 参数，仅做 inference
+        # Freeze the teacher; it is only ever used for inference.
         for p in model_t.parameters():
             p.requires_grad = False
         model_t.eval()
-        
-        # 设置 dense_train：student 为 False，teacher 为 True
-        # 在模型包装前设置，确保设置生效
+
+        # dense_train is False for the student and True for the teacher. This must be
+        # set before the models are wrapped for it to take effect.
         if hasattr(model_s, 'tpv_aggregator'):
             model_s.tpv_aggregator.dense_train = False
             model_s.tpv_aggregator.d2skd = False
@@ -113,32 +105,30 @@ def custom_train_detector(model,
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
         if use_d2skd and model_t is not None:
-            # Teacher 模型所有参数都被冻结，不需要 DDP，直接放到 GPU 上即可
-            # 注意：teacher 只用于 inference，不需要梯度同步
+            # The teacher is fully frozen and inference-only, so it needs no DDP wrapper
+            # or gradient synchronisation.
             model_t = model_t.cuda()
     else:
         model_s = MMDataParallel(
             model_s.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
         if use_d2skd and model_t is not None:
-            # Teacher 模型所有参数都被冻结，不需要 DataParallel，直接放到 GPU 上即可
+            # Fully frozen: no DataParallel wrapper needed.
             model_t = model_t.cuda(cfg.gpu_ids[0])
 
-    # 之后逻辑仍然以 model 指向 student 以保持兼容
+    # `model` keeps pointing at the student for the rest of this function.
     model = model_s
-    
-    # 分布式下，同步各进程的模型参数（包括 teacher）
+
+    # Broadcast parameters from rank 0, teacher included.
     if dist.is_available() and dist.is_initialized():
         if dist.get_rank() == 0:
-            # Rank 0 的进程负责初始化参数，其他进程将从这里同步参数
             pass
         for param in model.parameters():
             dist.broadcast(param.data, src=0)
         if use_d2skd and model_t is not None:
             for param in model_t.parameters():
                 dist.broadcast(param.data, src=0)
-    
-    # build runner
-    # 只对 student 构建优化器，teacher 始终冻结
+
+    # Only the student gets an optimizer; the teacher stays frozen.
     optimizer = build_optimizer(model, cfg.optimizer)
 
     assert 'runner' in cfg
@@ -179,7 +169,7 @@ def custom_train_detector(model,
     runner.register_training_hooks(cfg.lr_config, optimizer_config,
                                    cfg.checkpoint_config, cfg.log_config,
                                    cfg.get('momentum_config', None))
-    
+
     if distributed:
         if isinstance(runner, EpochBasedRunner):
             runner.register_hook(DistSamplerSeedHook())
@@ -221,18 +211,16 @@ def custom_train_detector(model,
                 f'{type(hook_cfg)}'
             hook_cfg = hook_cfg.copy()
             priority = hook_cfg.pop('priority', 'NORMAL')
-            # hook = build_from_cfg(hook_cfg, HOOKS) 
-            # FIXME hardcode specifying dataloader as parameter 
-            # val_dataloader 只在 validate=True 时定义
+            # FIXME: the dataloader is passed positionally; val_dataloader only
+            # exists when validate=True.
             hook_kwargs = {}
             if validate and 'val_dataloader' in locals():
                 hook_kwargs['dataloader'] = val_dataloader
-            hook = build_from_cfg(hook_cfg, HOOKS, hook_kwargs) 
+            hook = build_from_cfg(hook_cfg, HOOKS, hook_kwargs)
             runner.register_hook(hook, priority=priority)
 
-    # 将 teacher 模型挂到 runner 上以供后续使用
+    # Expose the teacher on the runner; runner.model stays the student.
     if use_d2skd and model_t is not None:
-        # runner.model 仍然是 student；额外挂一个 model_t
         runner.model_t = model_t
 
     if cfg.resume_from:
@@ -250,15 +238,14 @@ def custom_train_multidb_detector(model,
                    validate=False,
                    timestamp=None,
                    meta=None):
-    
+
     logger = get_root_logger(cfg.log_level)
-    
+
     dataset_1 = dataset_1 if isinstance(dataset_1, (list, tuple)) else [dataset_1]
     dataset_2 = dataset_2 if isinstance(dataset_2, (list, tuple)) else [dataset_2]
-    
+
     merged_dataset = ConcatenatedDataset(dataset_1, dataset_2)
-    # merged_dataset = [dataset_1[0], dataset_2[0]]
-    
+
     data_loaders = [
         build_dataloader(
             merged_dataset,
@@ -273,7 +260,7 @@ def custom_train_multidb_detector(model,
             drop_last=True,
         )
     ]
-    
+
 
     # put model on gpus
     if distributed:
@@ -319,7 +306,7 @@ def custom_train_multidb_detector(model,
     runner.register_training_hooks(cfg.lr_config, optimizer_config,
                                    cfg.checkpoint_config, cfg.log_config,
                                    cfg.get('momentum_config', None))
-    
+
     if distributed:
         if isinstance(runner, EpochBasedRunner):
             runner.register_hook(DistSamplerSeedHook())
@@ -328,42 +315,7 @@ def custom_train_multidb_detector(model,
     if validate:
         # Support batch_size > 1 in validation
         val_samples_per_gpu = cfg.data_nu.val.pop('samples_per_gpu', 1)
-        
-        # if val_samples_per_gpu > 1:
-        #     assert NotImplementedError()
-        #     # Replace 'ImageToTensor' to 'DefaultFormatBundle'
-        #     cfg.data_nu.val.pipeline = replace_ImageToTensor(
-        #         cfg.data_nu.val.pipeline)
-        #     cfg.data_sk.val.pipeline = replace_ImageToTensor(
-        #         cfg.data_sk.val.pipeline)
-        # val_dataset_1 = [build_dataset(cfg.data_nu.val, dict(test_mode=True))]
-        # val_dataset_2 = [build_dataset(cfg.data_sk.val, dict(test_mode=True))]
-        # val_dataset_1 = val_dataset_1 if isinstance(val_dataset_1, (list, tuple)) else [val_dataset_1]
-        # val_dataset_2 = val_dataset_2 if isinstance(val_dataset_2, (list, tuple)) else [val_dataset_2]
 
-        # val_dataset_merge = ConcatenatedDataset(val_dataset_1, val_dataset_2)
-
-        # val_dataloader = build_dataloader(
-        #     val_dataset,
-        #     samples_per_gpu=val_samples_per_gpu,
-        #     workers_per_gpu=cfg.data_merge.workers_per_gpu,
-        #     dist=distributed,
-        #     shuffle=False,
-        #     shuffler_sampler=cfg.data_merge.shuffler_sampler,  # dict(type='DistributedGroupSampler'),
-        #     nonshuffler_sampler=cfg.data_merge.nonshuffler_sampler,  # dict(type='DistributedSampler'),
-        #     drop_last=True,
-        # )
-
-        
-        # eval_cfg_nu = cfg.get('evaluation_nu', {})
-        # eval_cfg_nu['by_epoch'] = cfg.runner['type'] != 'IterBasedRunner'
-        # eval_cfg_nu['jsonfile_prefix'] = osp.join('val', cfg.work_dir, time.ctime().replace(' ','_').replace(':','_'))
-        # eval_cfg_sk = cfg.get('evaluation_sk', {})
-        # eval_cfg_sk['by_epoch'] = cfg.runner['type'] != 'IterBasedRunner'
-        # eval_cfg_sk['jsonfile_prefix'] = osp.join('val', cfg.work_dir, time.ctime().replace(' ','_').replace(':','_'))
-        # eval_hook = OccDistEvalHook if distributed else OccEvalHook
-        # runner.register_hook(eval_hook(val_dataloader, **eval_cfg_nu))
-        # runner.register_hook(eval_hook(val_dataloader, **eval_cfg_sk))
         if val_samples_per_gpu > 1:
             assert NotImplementedError()
             # Replace 'ImageToTensor' to 'DefaultFormatBundle'
@@ -398,13 +350,12 @@ def custom_train_multidb_detector(model,
                 f'{type(hook_cfg)}'
             hook_cfg = hook_cfg.copy()
             priority = hook_cfg.pop('priority', 'NORMAL')
-            # hook = build_from_cfg(hook_cfg, HOOKS) 
-            # FIXME hardcode specifying dataloader as parameter 
-            # val_dataloader 只在 validate=True 时定义
+            # FIXME: the dataloader is passed positionally; val_dataloader only
+            # exists when validate=True.
             hook_kwargs = {}
             if validate and 'val_dataloader' in locals():
                 hook_kwargs['dataloader'] = val_dataloader
-            hook = build_from_cfg(hook_cfg, HOOKS, hook_kwargs) 
+            hook = build_from_cfg(hook_cfg, HOOKS, hook_kwargs)
             runner.register_hook(hook, priority=priority)
 
     if cfg.resume_from:

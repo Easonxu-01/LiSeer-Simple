@@ -1,4 +1,3 @@
-
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
 import platform
@@ -45,15 +44,7 @@ def build_dataloader(dataset,
         DataLoader: A PyTorch dataloader.
     """
     rank, world_size = get_dist_info()
-    
-    # 添加调试信息
-    # print(f"[DEBUG] Dataset length: {len(dataset)}")
-    # if hasattr(dataset, 'flag'):
-    #     print(f"[DEBUG] Dataset flag size: {dataset.flag.size}")
-    #     print(f"[DEBUG] Group sizes: {np.bincount(dataset.flag)}")
-    # print(f"[DEBUG] World size: {world_size}, Rank: {rank}")
-    # print(f"[DEBUG] Samples per GPU: {samples_per_gpu}")
-    
+
     if dist:
         # DistributedGroupSampler will definitely shuffle the data to satisfy
         # that images on each GPU are in the same group
@@ -102,11 +93,6 @@ def build_dataloader(dataset,
         worker_init_fn=init_fn,
         **kwargs)
 
-    # # 添加dataloader长度调试信息
-    # print(f"[DEBUG] DataLoader length: {len(data_loader)}")
-    # if sampler is not None:
-    #     print(f"[DEBUG] Sampler length: {len(sampler)}")
-
     return data_loader
 
 
@@ -142,9 +128,9 @@ def custom_build_dataset(cfg, default_args=None):
     from mmdet.datasets.dataset_wrappers import (ClassBalancedDataset,
                                                  ConcatDataset, RepeatDataset)
     if isinstance(cfg, (list, tuple)):
-        # list/tuple 形式的 cfg：把多个子 cfg 各自构建后用 ConcatDataset 拼接。
-        # 若第一个子 cfg 提供了 `repeat` 字段（>1），则把列表整体复制 repeat 次，
-        # 实现 "把这组数据集重复 N 倍" 的语义；不指定时退化为简单 concat。
+        # A list/tuple cfg builds each sub-config and concatenates the results. If the
+        # first sub-config sets `repeat` > 1, the whole list is duplicated that many
+        # times; otherwise this is a plain concat.
         sub_datasets = [custom_build_dataset(c, default_args) for c in cfg]
         first = cfg[0] if len(cfg) > 0 else None
         repeat_n = None
@@ -168,11 +154,10 @@ def custom_build_dataset(cfg, default_args=None):
     elif isinstance(cfg.get('ann_file'), (list, tuple)):
         dataset = _concat_dataset(cfg, default_args)
     else:
-        # 通用 `repeat` 支持：单 dict 配置中若顶层带有 `repeat` 字段（>1），
-        # 则在构建底层 dataset 后用 RepeatDataset 包一层，使其 __len__ 变为
-        # 原长度 * repeat（flag 也会被自动 tile，与 DistributedGroupSampler 兼容）。
-        # 同时无论 repeat 是否生效，都会从 cfg 中剥离该字段，避免传给那些
-        # __init__ 不接受 `repeat` 的数据集类（如 ZLTWaymoDataset）时报错。
+        # Generic `repeat` support: a top-level `repeat` > 1 wraps the dataset in a
+        # RepeatDataset so __len__ becomes len * repeat; `flag` is tiled automatically,
+        # which keeps DistributedGroupSampler working. The key is stripped from cfg
+        # either way, since dataset classes such as ZLTWaymoDataset reject it.
         repeat = cfg.get('repeat', None)
         if repeat is not None:
             cfg = copy.deepcopy(cfg)

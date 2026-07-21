@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2026-06-23 16:32:49
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-06-26 21:13:03
-Description: 头部注释
-FilePath: /LiSeer-Simple/setup.py
-'''
 from setuptools import find_packages, setup
 
 

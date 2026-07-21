@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2024-12-17 13:30:22
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2026-06-11 23:35:20
-Description: 头部注释
-FilePath: /UniLiDAR/projects/unilidar_plugin/pointocc_model/pointtpv_seg.py
-'''
 import torch
 import torch.distributed as dist
 from mmdet3d.models import builder
@@ -28,7 +19,7 @@ import torch.nn.functional as F
 
 @DETECTORS.register_module()
 class PointTPV_Seg(CenterPoint):
-    
+
     def __init__(self,
                  lidar_tokenizer=None,
                  lidar_backbone=None,
@@ -121,7 +112,7 @@ class PointTPV_Seg(CenterPoint):
         )
         if self.d2skd:
             self.spectral_distiller = TPVLowFreqSpectralDistiller()
-        # 预定义边界参数，避免每次调用都创建新tensor
+        # Registered as buffers so the tensors are built once and follow the module device.
         min_bound = torch.tensor([0, -3.1415926, -3.4], dtype=torch.float32)
         max_bound = torch.tensor([51.2, 3.1415926, 3], dtype=torch.float32)
         grid_size = torch.tensor([480, 360, 32], dtype=torch.float32)
@@ -341,17 +332,13 @@ class PointTPV_Seg(CenterPoint):
         ):
         """Forward training function.
         """
-        # 初始化 sensor_params，避免后续未定义
         sensor_params = None
-        
-        # 保存原始 grid_ind 和 grid_ind_vox（用于 teacher）
+        # Un-resampled inputs, kept for the distillation teacher.
         grid_ind_orig = grid_ind
         grid_ind_vox_orig = grid_ind_vox
-        
-        # 初始化 teacher 特征，避免后续未定义
         x_lidar_tpv_t = None
         loss_distill = None
-        
+
         train_grid_orig = train_grid
         local_reset_random = self._should_reset_random(reset_random)
         reset_random_flag = self._all_ranks_reset_random_flag(local_reset_random) if self.random else False
@@ -359,10 +346,10 @@ class PointTPV_Seg(CenterPoint):
         if enable_model_random:
             train_grid, grid_ind, grid_ind_vox, train_pts_label, sensor_params = self._sampling(train_grid, grid_ind, grid_ind_vox, train_pts_label)
 
-        # CBA-CL：默认走 tpv_aggregator 的内部 consistency 分支（两个 view 都回梯度）。
-        # 这里只负责把整批（含成对的两个 view）特征一次性抽出来，配对与一致性
-        # 损失计算都交给 aggregator 内部分支处理（skip_consistency=False）。
-        # 仅当 random 采样产生 2x 样本时进入。
+        # CBA-CL runs inside the aggregator's own consistency branch, where both views
+        # receive gradients. Here we only extract features for the whole batch (both
+        # views at once); pairing and the consistency loss stay in the aggregator.
+        # Reached only when random sampling produced 2x samples.
         if self.consistency and enable_model_random and isinstance(grid_ind, list) and len(grid_ind) >= 2:
             repeat = max(1, getattr(self, "sample_repeat_count", 2))
             total_samples = len(grid_ind)
@@ -370,14 +357,14 @@ class PointTPV_Seg(CenterPoint):
                 repeat = total_samples
             base_bs = total_samples // repeat
 
-            # 整批抽特征（含成对的两个 view），backbone 只跑一次
+            # One backbone pass over the full batch, paired views included.
             x_lidar_tpv = self.extract_feat(train_grid, grid_ind)
 
-            # aggregator 内部按 view 索引；points / point_labels / sensor 都是 per-view
+            # The aggregator indexes per view: points / point_labels / sensor are per-view.
             points_for_agg = grid_ind_vox if grid_ind_vox else grid_ind
 
-            # voxel_label 是 per-scene（采样不复制），需要扩展为 per-view；
-            # dataset_flag 同理。两个 view 共用所属场景的 label / flag。
+            # voxel_label and dataset_flag are per-scene and are not duplicated by the
+            # sampler, so expand them per view; both views share the scene's label/flag.
             per_view_voxel = []
             per_view_flag = []
             for b in range(base_bs):
@@ -411,7 +398,7 @@ class PointTPV_Seg(CenterPoint):
             return agg_loss
 
         if model_t is not None and self.d2skd:
-            # teacher 完全在 no_grad 下前向，避免构建计算图占用显存
+            # Teacher runs entirely under no_grad to avoid holding a graph in memory.
             with torch.no_grad():
                 x_lidar_tpv_t = model_t.extract_feat(
                     train_grid=train_grid_orig,
@@ -492,12 +479,12 @@ class PointTPV_Seg(CenterPoint):
                             sensor_params_i = sensor_params
                     else:
                         sensor_params_i = sensor_params
-                # 如果启用蒸馏，需要获取 teacher 的预测结果
+                # Teacher predictions, only needed when distillation is enabled.
                 logits_vox_t = None
                 logits_pts_t = None
                 if model_t is not None and self.d2skd:
                     x_i_t = [feat.index_select(0, torch.tensor([i], device=feat.device)) for feat in x_lidar_tpv_t]
-                    # Teacher 使用原始 grid_ind（未采样）进行预测
+                    # The teacher consumes the original, un-resampled grid indices.
                     if isinstance(grid_ind_vox_orig, list):
                         points_i_t = grid_ind_vox_orig[i] if i < len(grid_ind_vox_orig) else grid_ind_orig[i]
                     elif grid_ind_vox_orig is not None:
@@ -510,9 +497,8 @@ class PointTPV_Seg(CenterPoint):
                             points_i_t = grid_ind_orig[i]
                         else:
                             points_i_t = grid_ind_orig[i:i+1]
-                    
+
                     with torch.no_grad():
-                        # Teacher 使用原始输入进行预测
                         teacher_outs = model_t.tpv_aggregator(
                             x_i_t,
                             points=points_i_t,
@@ -523,9 +509,7 @@ class PointTPV_Seg(CenterPoint):
                             sensor_vec=None,
                         )
                         logits_vox_t, logits_pts_t, _ = teacher_outs
-                        # print(logits_vox_t.shape)
-                        # np.save("teacher_logits.npy", logits_vox_t.detach().float().cpu().numpy())
-                
+
                 loss_i = self.tpv_aggregator(
                     x_i,
                     points=points_i,
@@ -537,7 +521,7 @@ class PointTPV_Seg(CenterPoint):
                     logits_vox_t=logits_vox_t,
                     logits_pts_t=logits_pts_t,
                 )
-                # 如果计算了 spectral distillation loss，需要加入到输出中
+                # Fold the spectral distillation term into the loss dict.
                 if model_t is not None and self.d2skd and return_loss and loss_distill is not None:
                     if isinstance(loss_i, dict):
                         loss_i['loss_inter_distill'] = 250.0 * loss_distill
@@ -551,45 +535,39 @@ class PointTPV_Seg(CenterPoint):
             agg_loss = self._apply_dynamic_loss_balance(agg_loss)
             return agg_loss
         else:
-            # 确保 grid_ind_ 是 tensor 而不是 list
-            # 防御性检查：如果 grid_ind_ 仍然是 list，强制转换为 tensor
+            # Collapse the remaining list inputs into batched tensors. Equal shapes can be
+            # concatenated; otherwise fall back to the first element so the batch stays valid.
             if isinstance(grid_ind_, list):
-                # 如果所有元素的 shape 相同，可以 cat
                 if all(pl.shape == grid_ind_[0].shape for pl in grid_ind_):
                     grid_ind_ = torch.cat([pl[None, ...] for pl in grid_ind_], dim=0)
                 else:
-                    # 如果 shape 不同，说明应该走 list 分支，但检查失败了
-                    # 这种情况下，我们需要强制进入 list 分支，或者取第一个元素
-                    # 为了安全，我们取第一个元素并添加 batch 维度
                     grid_ind_ = grid_ind_[0].unsqueeze(0) if len(grid_ind_) > 0 else grid_ind_
-            
-            # 确保 train_voxel_label 和 train_pts_label 也是 tensor
+
             if isinstance(train_voxel_label, list):
                 if all(pl.shape == train_voxel_label[0].shape for pl in train_voxel_label):
                     train_voxel_label = torch.cat([pl[None, ...] for pl in train_voxel_label], dim=0)
                 else:
                     train_voxel_label = train_voxel_label[0].unsqueeze(0) if len(train_voxel_label) > 0 else train_voxel_label
-            
+
             if isinstance(train_pts_label, list):
                 if all(pl.shape == train_pts_label[0].shape for pl in train_pts_label):
                     train_pts_label = torch.cat([pl[None, ...] for pl in train_pts_label], dim=0)
                 else:
                     train_pts_label = train_pts_label[0].unsqueeze(0) if len(train_pts_label) > 0 else train_pts_label
-            
-            # 如果启用蒸馏，需要获取 teacher 的预测结果
+
+            # Teacher predictions, only needed when distillation is enabled.
             logits_vox_t = None
             logits_pts_t = None
             if model_t is not None and self.d2skd:
-                # Teacher 使用原始 grid_ind（未采样）进行预测
+                # The teacher consumes the original, un-resampled grid indices.
                 grid_ind_t = grid_ind_vox_orig if grid_ind_vox_orig is not None else grid_ind_orig
                 if isinstance(grid_ind_t, list):
                     if all(pl.shape == grid_ind_t[0].shape for pl in grid_ind_t):
                         grid_ind_t = torch.cat([pl[None, ...] for pl in grid_ind_t], dim=0)
                     else:
                         grid_ind_t = grid_ind_t[0].unsqueeze(0) if len(grid_ind_t) > 0 else grid_ind_t
-                
+
                 with torch.no_grad():
-                    # Teacher 使用原始输入进行预测
                     teacher_outs = model_t.tpv_aggregator(
                         x_lidar_tpv_t,
                         points=grid_ind_t,
@@ -600,21 +578,19 @@ class PointTPV_Seg(CenterPoint):
                         sensor_vec=None,
                     )
                     logits_vox_t, logits_pts_t, _ = teacher_outs
-                    # print(logits_vox_t.shape)
-                    # np.save("teacher_logits.npy", logits_vox_t.detach().float().cpu().numpy())
             outs = self.tpv_aggregator(
-                x_lidar_tpv, 
-                points=grid_ind_, 
-                voxel_label=train_voxel_label, 
-                point_labels=train_pts_label, 
-                dataset_flag=dataset_flag, 
-                return_loss=return_loss, 
+                x_lidar_tpv,
+                points=grid_ind_,
+                voxel_label=train_voxel_label,
+                point_labels=train_pts_label,
+                dataset_flag=dataset_flag,
+                return_loss=return_loss,
                 sensor_vec=sensor_params if sensor_params is not None else None,
                 logits_vox_t=logits_vox_t,
                 logits_pts_t=logits_pts_t,
             )
-            
-            # 如果计算了 spectral distillation loss，需要加入到输出中
+
+            # Fold the spectral distillation term into the loss dict.
             if model_t is not None and self.d2skd and return_loss and loss_distill is not None:
                 if isinstance(outs, dict):
                     outs['loss_inter_distill'] = 666 * loss_distill
@@ -624,11 +600,11 @@ class PointTPV_Seg(CenterPoint):
             return outs
 
     def train_step(self, data, optimizer, model_t=None, **kwargs):
-        """重载 train_step 以支持蒸馏 teacher (model_t)。"""
+        """Override train_step so a distillation teacher (``model_t``) can be passed through."""
         losses = self.forward_train(model_t=model_t, **data)
         loss, log_vars = self._parse_losses(losses)
 
-        # 估计 batch size，用 train_grid 的 batch 维度
+        # Infer the batch size from the train_grid batch dimension.
         num_samples = 1
         if 'train_grid' in data:
             tg = data['train_grid']
@@ -642,7 +618,7 @@ class PointTPV_Seg(CenterPoint):
             log_vars=log_vars,
             num_samples=num_samples)
         return outputs
-    
+
     def simple_test(self,
                 train_grid=None,
                 grid_ind=None,
@@ -653,7 +629,7 @@ class PointTPV_Seg(CenterPoint):
                 return_loss=False,
                 **kwargs):
         """Forward testing function for semantic segmentation.
-        
+
         Args:
             train_grid (torch.Tensor): Input point cloud data
             voxel_label (torch.Tensor): Ground truth labels
@@ -661,7 +637,7 @@ class PointTPV_Seg(CenterPoint):
             dataset_flag (torch.Tensor): Dataset type flag
             visible_mask (torch.Tensor): Mask for visible points
             return_loss (bool): Whether to return loss
-            
+
         Returns:
             dict: Test results containing predictions and metrics
         """
@@ -745,8 +721,8 @@ class PointTPV_Seg(CenterPoint):
             predict_labels_pts = predict_labels_pts.squeeze(-1).squeeze(-1)
             predict_labels_pts = torch.argmax(predict_labels_pts, dim=1) # bs, n
             predict_labels_pts = predict_labels_pts.detach().cpu()
-            val_pt_labs = train_pts_label.squeeze(-1).detach().cpu() 
-        
+            val_pt_labs = train_pts_label.squeeze(-1).detach().cpu()
+
         tc = getattr(self, 'test_cfg', None)
         save_infer = False
         if tc is not None:
@@ -772,7 +748,7 @@ class PointTPV_Seg(CenterPoint):
             predict_labels_pts, pred_list, train_grid, kwargs)
 
         return test_output
-    
+
     def forward_test(self,
                 train_grid=None,
                 grid_ind=None,
@@ -870,22 +846,22 @@ class PointTPV_Seg(CenterPoint):
                     rows = rows[:n_i]
                     ply_path = osp.join(out_root, f'{stem}.ply')
                     save_tensor_as_ply(rows, ply_path)
-    
+
     def evaluation_semantic(self, pred, gt, dataset_flag):
         """Evaluate semantic segmentation results.
-        
+
         Args:
             pred (torch.Tensor): Predicted point cloud labels, shape [B, N, num_classes]
             gt (torch.Tensor): Ground truth point cloud labels, shape [B, N]
             dataset_flag (torch.Tensor): Dataset type flag
             visible_mask (torch.Tensor, optional): Mask for visible points
-            
+
         Returns:
             tuple: (IoU histogram matrix, visible IoU histogram matrix)
         """
         pred = pred.cpu().numpy()
         gt = gt.cpu().numpy()
-        
+
         # Determine number of classes based on dataset
         if isinstance(dataset_flag, list):
             if len(dataset_flag) == 1:
@@ -897,7 +873,7 @@ class PointTPV_Seg(CenterPoint):
         else:
             assert isinstance(dataset_flag, torch.Tensor)
             dataset_flag = dataset_flag.item()
-            
+
         uniq_gt = np.unique(gt)
         if len(uniq_gt) >= 2 and np.sort(uniq_gt)[-2] <= 7:
             max_label = 8
@@ -909,20 +885,20 @@ class PointTPV_Seg(CenterPoint):
             max_label = 23
         else:
             max_label = 8
-            
+
         # Create mask for valid points (excluding noise/unknown)
         valid_mask = gt != 0
-        
+
         # Compute IoU histogram for all valid points
         hist = fast_hist(pred[valid_mask], gt[valid_mask], max_label=max_label)
-            
+
         return hist
-    
+
     @torch.no_grad()
     def _mixup_minority(self, points, grid_ind, grid_ind_vox, labels, num_add=2):
         """
         Instance-aware minority class mixup with physical placement validation.
-    
+
         Args:
             points:        [N, C]   layout: [:, 0:3]=rel_xyz, [:, 3:6]=xyz_pol(rho,phi,z),
                                             [:, 6:8]=xy(cart),  [:, 8:]=other features
@@ -931,15 +907,15 @@ class PointTPV_Seg(CenterPoint):
             labels:        [N]
             num_add:       how many copies per instance to *attempt* to place
                         (each copy is only kept if placement is valid)
-    
+
         Returns:
             augmented points / grid_ind / grid_ind_vox / labels
         """
         device = points.device
         dtype = points.dtype
-    
+
         MINORITY_CLASSES = (5, 6)
-    
+
         # ---- Tunables ------------------------------------------------------
         # Cluster: BFS in polar voxel space; max neighbour distance in voxel idx
         CLUSTER_MAX_VOX_DIST = 1
@@ -965,16 +941,14 @@ class PointTPV_Seg(CenterPoint):
         crop_range = max_bound - min_bound
         intervals = crop_range / grid_size
         intervals_vox = crop_range / grid_size_vox
-    
-        # -----------------------------------------------------------------
+
         # 0. Select minority points
-        # -----------------------------------------------------------------
         minority_mask = torch.zeros_like(labels, dtype=torch.bool)
         for c in MINORITY_CLASSES:
             minority_mask = minority_mask | (labels == c)
         if not minority_mask.any():
             return points, grid_ind, grid_ind_vox, labels
-    
+
         minor_pts = points[minority_mask]
         minor_lbs = labels[minority_mask]
         minor_grid = grid_ind[minority_mask]      # polar voxel idx
@@ -990,16 +964,14 @@ class PointTPV_Seg(CenterPoint):
         ground_class_mask = (bg_labels == 1) | (bg_labels == 7)
         ground_xy = bg_xy[ground_class_mask]
         ground_z = bg_z[ground_class_mask]
-    
-        # -----------------------------------------------------------------
+
         # 1. Cluster minority points -> instances
         #    Use a hash on the polar voxel grid + 6-neighbour BFS.
         #    For typical KITTI frames this is < 50 minority points -> trivial cost.
-        # -----------------------------------------------------------------
         N_minor = minor_pts.shape[0]
         if N_minor < CLUSTER_MIN_PTS:
             return points, grid_ind, grid_ind_vox, labels
-    
+
         # Do the clustering on CPU (small N, host-side is faster and simpler)
         minor_grid_cpu = minor_grid.detach().to(torch.int64).cpu().numpy()
         # Build a hash table voxel -> point index
@@ -1009,7 +981,7 @@ class PointTPV_Seg(CenterPoint):
                 int(minor_grid_cpu[i, 1]),
                 int(minor_grid_cpu[i, 2]))
             vox_to_idx.setdefault(key, []).append(i)
-    
+
         visited = [False] * N_minor
         instances = []   # list of list-of-point-indices
         for seed in range(N_minor):
@@ -1040,25 +1012,21 @@ class PointTPV_Seg(CenterPoint):
                                         stack.append(j)
             if len(comp) >= CLUSTER_MIN_PTS:
                 instances.append(comp)
-    
+
         if not instances:
             return points, grid_ind, grid_ind_vox, labels
-    
-        # -----------------------------------------------------------------
+
         # 2. For each instance, attempt num_add valid placements
-        # -----------------------------------------------------------------
         add_points_list = []
         add_labels_list = []
         add_grid_list = []
         add_grid_vox_list = []
-    
+
         # Pre-compute existing-cloud sorted-by-phi index for fast cell lookup
         all_xy = points[:, 6:8]                          # [N, 2]
-        # -----------------------------------------------------------------
         # Pre-compute sorted-by-phi index over the WHOLE existing cloud,
         # used for occlusion-violation check. Sorting once per frame is O(N log N);
         # inside the placement loop each query is O(log N + window).
-        # -----------------------------------------------------------------
         all_rho_full = points[:, 3].contiguous()         # rho
         all_phi_full = points[:, 4].contiguous()         # phi in [-pi, pi]
 
@@ -1087,12 +1055,12 @@ class PointTPV_Seg(CenterPoint):
 
         phi_tol = 1.5 * TWO_PI / 1800.0   # ~1.5 horizontal bins
         GROUND_PHI_TOL = max(phi_tol * 4, 0.02)  # wider window for ground lookup
-    
+
         for inst in instances:
             inst_idx = torch.tensor(inst, device=device, dtype=torch.long)
             ip = minor_pts[inst_idx]                     # [K, C]
             il = minor_lbs[inst_idx]                     # [K]
-    
+
             ip_xy = ip[:, 6:8]                           # cartesian xy
             ip_z = ip[:, 5]                              # z
             # Instance centroid (in cartesian, on xy plane)
@@ -1104,7 +1072,7 @@ class PointTPV_Seg(CenterPoint):
             rel_xy = ip_xy - torch.stack([cx, cy])
             z_min_inst = ip_z.min()
             z_max_inst = ip_z.max()
-    
+
             for _copy in range(num_add):
                 placed = False
                 for _try in range(PLACEMENT_TRIES):
@@ -1117,7 +1085,7 @@ class PointTPV_Seg(CenterPoint):
                     new_phi = (new_phi + math.pi) % (2 * math.pi) - math.pi
                     new_cx = new_rho * torch.cos(new_phi)
                     new_cy = new_rho * torch.sin(new_phi)
-    
+
                     # rotate instance rigidly so it still "faces" the new bearing
                     cos_dphi = torch.cos(d_phi)
                     sin_dphi = torch.sin(d_phi)
@@ -1129,7 +1097,7 @@ class PointTPV_Seg(CenterPoint):
                     # at new range — optional; we set scale=1 along radial too for safety)
                     new_rel_xy = rel_xy @ R.T
                     new_xy = new_rel_xy + torch.stack([new_cx, new_cy])
-    
+
                     # ---- find ground at target xy (phi-window restricted) ---
                     if g_phi_ring is None:
                         target_ground_z = torch.tensor(0.0, device=device, dtype=dtype)
@@ -1147,14 +1115,14 @@ class PointTPV_Seg(CenterPoint):
                         if torch.sqrt(d2[nearest]) > GROUND_SEARCH_RADIUS:
                             continue
                         target_ground_z = cand_z[nearest]
-    
+
                     z_shift = target_ground_z - z_min_inst
                     # clip shift to avoid pathological large jumps
                     z_shift = torch.clamp(z_shift, min=-MAX_GROUND_DROP, max=MAX_GROUND_LIFT)
                     # tiny vertical jitter on top of ground snap
                     z_shift = z_shift + (torch.rand((), device=device) * 2 - 1) * Z_JITTER
                     new_z = ip_z + z_shift
-    
+
                     # ---- occlusion-violation check (phi-window binary search) ---
                     # Replaces the previous O(K * B_full) dense pairwise check, which was
                     # the cause of the 10 GB+ memory spikes per try.
@@ -1183,14 +1151,14 @@ class PointTPV_Seg(CenterPoint):
                             break
                     if conflict_any:
                         continue
-    
+
                     # ---- bounds check (polar ROI) ---------------------------
                     new_xyz_pol = torch.stack([new_rho_pts, new_phi_pts, new_z], dim=1)
                     in_bound = ((new_xyz_pol >= min_bound) &
                                 (new_xyz_pol < (max_bound - 1e-3))).all(dim=1)
                     if not in_bound.all():
                         continue
-    
+
                     # ---- valid placement: build output rows ------------------
                     # grid indices
                     new_grid_ind = torch.floor((new_xyz_pol - min_bound) / intervals).to(torch.int32)
@@ -1198,12 +1166,12 @@ class PointTPV_Seg(CenterPoint):
                     # voxel centres for rel_xyz
                     voxel_centers = (new_grid_ind.float() + 0.5) * intervals + min_bound
                     new_rel_xyz = new_xyz_pol - voxel_centers
-    
+
                     # carry-over features unchanged (intensity etc.)
                     feat = ip[:, 8:]
                     # assemble: [rel_xyz (3) | xyz_pol (3) | xy (2) | feat]
                     chunk_aug = torch.cat([new_rel_xyz, new_xyz_pol, new_xy, feat], dim=1)
-    
+
                     add_points_list.append(chunk_aug)
                     add_labels_list.append(il)
                     add_grid_list.append(new_grid_ind.float())
@@ -1213,97 +1181,90 @@ class PointTPV_Seg(CenterPoint):
                 # if not placed after PLACEMENT_TRIES, skip this copy
                 if not placed:
                     continue
-    
+
         if not add_points_list:
             return points, grid_ind, grid_ind_vox, labels
-    
+
         final_points = torch.cat([points] + add_points_list, dim=0)
         final_labels = torch.cat([labels] + add_labels_list, dim=0)
         final_grid = torch.cat([grid_ind] + add_grid_list, dim=0)
         final_grid_vox = torch.cat([grid_ind_vox] + add_grid_vox_list, dim=0)
-    
+
         return final_points, final_grid, final_grid_vox, final_labels
 
     @torch.no_grad()
     def _sampling(self, points, grid_ind, grid_ind_vox, labels):
-        # --------------------------------------------------
-        # Dense training mode: 均匀下采样
-        # --------------------------------------------------
+        # Dense training mode: uniform sub-sampling.
         if self.dense_train:
-            # 保存原始输入格式
             was_single_tensor = not isinstance(points, list)
-            
-            # 确保输入是 list 格式并 detach
+
+            # Normalise every input to a detached list.
             if isinstance(points, list):
                 points = [p.detach() for p in points]
             else:
                 points = [points.detach()]
-            
+
             if isinstance(grid_ind, list):
                 grid_ind = [g.detach() if isinstance(g, torch.Tensor) else g for g in grid_ind]
             else:
                 grid_ind = [grid_ind.detach() if isinstance(grid_ind, torch.Tensor) else grid_ind]
-            
+
             if isinstance(grid_ind_vox, list):
                 grid_ind_vox = [g.detach() if isinstance(g, torch.Tensor) else g for g in grid_ind_vox]
             else:
                 grid_ind_vox = [grid_ind_vox.detach() if isinstance(grid_ind_vox, torch.Tensor) else grid_ind_vox]
-            
+
             if isinstance(labels, list):
                 labels = [l.detach() if isinstance(l, torch.Tensor) else l for l in labels]
             else:
                 labels = [labels.detach() if isinstance(labels, torch.Tensor) else labels]
-            
+
             results_points = []
             results_grid_ind = []
             results_grid_ind_vox = []
             results_labels = []
-            
+
             max_points = 500000
-            
+
             for idx in range(len(points)):
                 curr_points = points[idx]
                 curr_labels = labels[idx]
                 curr_grid_ind = grid_ind[idx]
                 curr_grid_ind_vox = grid_ind_vox[idx]
-                
+
                 num_points = curr_points.shape[0]
-                
-                # 如果点数小于等于 500000，直接返回原始数据
+
                 if num_points <= max_points:
                     results_points.append(curr_points)
                     results_grid_ind.append(curr_grid_ind)
                     results_grid_ind_vox.append(curr_grid_ind_vox)
                     results_labels.append(curr_labels)
                 else:
-                    # 均匀下采样到最多 500000 个点
+                    # Uniformly sub-sample down to max_points.
                     device = curr_points.device
                     indices = torch.randperm(num_points, device=device)[:max_points]
-                    
+
                     sampled_points = curr_points[indices]
                     sampled_labels = curr_labels[indices]
                     sampled_grid_ind = curr_grid_ind[indices]
                     sampled_grid_ind_vox = curr_grid_ind_vox[indices]
-                    
+
                     results_points.append(sampled_points)
                     results_grid_ind.append(sampled_grid_ind)
                     results_grid_ind_vox.append(sampled_grid_ind_vox)
                     results_labels.append(sampled_labels)
-            
-            # sensor_params_tensor 设置为 None
+
             sensor_params_tensor = None
-            
-            # 如果原来输入是单个 tensor，返回单个 tensor；否则返回 list
+
+            # Mirror the input container type in the return value.
             if was_single_tensor and len(results_points) == 1:
                 return results_points[0], results_grid_ind[0], results_grid_ind_vox[0], results_labels[0], sensor_params_tensor
             else:
                 return results_points, results_grid_ind, results_grid_ind_vox, results_labels, sensor_params_tensor
-        
-        # --------------------------------------------------
+
         # Original sampling logic (ray-casting based)
-        # --------------------------------------------------
         points = [p.detach() for p in points] if isinstance(points, list) else points.detach()
-        
+
         LiDAR_height = self.sensor_config.get('LiDAR_height', [1, 2])
         num_of_beams = self.sensor_config.get('num_of_beams', [16, 128])
         horizontal_angular_resolution = self.sensor_config.get('horizontal_angular_resolution', [900, 3600])
@@ -1369,27 +1330,19 @@ class PointTPV_Seg(CenterPoint):
             return selected
 
         def _run_single_sampling(sensor_params_tuple=None):
-            # --------------------------------------------------
-            # 0. 采样传感器参数
-            # --------------------------------------------------
+            # 0. Draw the LiDAR configuration.
             if sensor_params_tuple is None:
                 (beams, lidar_height, horizontal_resolution,
                  vertical_lower_angle, vertical_upper_angle) = _sample_sensor_params_tuple()
             else:
                 (beams, lidar_height, horizontal_resolution,
                  vertical_lower_angle, vertical_upper_angle) = sensor_params_tuple
-            # 固定调试时可使用
-            # lidar_height = 1.73
-            # beams = 64
-            # horizontal_resolution = 1800
-            # vertical_lower_angle = -24.9
-            # vertical_upper_angle = 2
 
             results_points = []
             results_grid_ind = []
             results_grid_ind_vox = []
             results_labels = []
-        
+
             device = points[0].device
             dtype = points[0].dtype
             sensor_params = torch.tensor(
@@ -1397,77 +1350,56 @@ class PointTPV_Seg(CenterPoint):
                 vertical_lower_angle, vertical_upper_angle],
                 device=device
             )
-        
-            # --------------------------------------------------
-            # 全局超参数（集中管理）
-            # --------------------------------------------------
-            # 基础
+
+            # Sampling hyper-parameters
             MAX_RANGE = 80.0
             EPS = 1e-8
             LARGE_VAL = 1e10
-        
-            # =========================
-            # [FIX #1] 角域候选筛选
-            # =========================
-            # 0.65 -> 1.0：每个 bin 使用自己的完整 footprint。在 point->nearest-bin
-            # (round) 赋值下，bins 精确划分角度空间，1.0 是物理上正确的设置。
+
+            # Angular candidate gating. Each bin uses its full footprint: under
+            # nearest-bin (round) assignment the bins tile the angular space exactly,
+            # so a scale of 1.0 is the physically correct choice.
             ANGULAR_MARGIN_SCALE = 1.0
-        
-            # =========================
-            # 遮挡包络抑制（主遮挡参数）
-            # =========================
-            OCC_AZ_WIN = 11
-            # 含义：遮挡判断时，在 azimuth（水平方向）上查看的窗口宽度（奇数）。
-            OCC_EL_WIN = 10
-            # 含义：遮挡判断时，向"上方 beam"查看多少层。
-            OCC_SUPPORT_MIN = 3
-            # 含义：上方邻域中，至少要有多少个"接近最近前景深度"的支持点。
-            OCC_DEPTH_MARGIN = 0.5   # [FIX #3] was 0.35
-            # 含义：当前点比前景参考点至少"深多少（米）"时，才认为它被遮挡。
-            # 提到 0.6 是为了让靠墙的细物体（电线杆、行人、自行车手）不被误删。
+
+            # Occlusion-envelope suppression
+            OCC_AZ_WIN = 11          # azimuth window width when testing occlusion (odd)
+            OCC_EL_WIN = 10          # how many beams above the point to inspect
+            OCC_SUPPORT_MIN = 3      # supporting neighbours near the closest foreground depth
+            OCC_DEPTH_MARGIN = 0.5   # metres a point must lie behind the reference to count as occluded;
+                                     # kept generous so thin objects against walls (poles, pedestrians,
+                                     # cyclists) are not dropped
             OCC_NEAR_BAND = 0.25
             OCC_REL_MARGIN = 0.02
-            RING_KEEP_BAND = 0.20    # [FIX #3] was 0.12
-            # 同 ring 邻居"相近深度"判定的带宽，放宽以更容易保护细物体。
-            RING_KEEP_MIN = 6        # [FIX #3] was 3
-            # 同 ring 邻域中需要的相近邻居数。降到 2 使细物体（每条 ring 上邻居本就少）
-            # 也能触发同 ring 保护。
-            RING_KEEP_WIN = 7
-            # 同 ring 检查窗口半宽（神经元含 6 个邻居，跳过中心）。
-        
-            # =========================
-            # ring 连续化（局部中值收缩）
-            # =========================
+            RING_KEEP_BAND = 0.20    # depth bandwidth for "similar" same-ring neighbours
+            RING_KEEP_MIN = 6        # similar neighbours required to trigger same-ring protection
+            RING_KEEP_WIN = 7        # half-width of the same-ring window (centre excluded)
+
+            # Ring continuity (local median shrinkage)
             SMOOTH_WIN = 15
             SMOOTH_SUPPORT_MIN = 4
             SMOOTH_SPREAD_MAX = 1.6
-        
-            # 距离自适应 ring 连续化（收缩强度）
+
+            # Range-adaptive shrinkage strength.
             SMOOTH_REL_THRESH = 0.002
             SMOOTH_ABS_FLOOR = 0.02
             SMOOTH_BLEND_NEAR = 0.88
-            SMOOTH_BLEND_FAR = 0.8   # [FIX #4] was 0.995
-            # 远处的最大收缩比例。原 0.995 几乎是把远处 outlier 完全替换成中值，
-            # 对远处的少数类（如远处的电线杆/行人）伤害很大；降到 0.8 作为全局安全网，
-            # 加上下面的类别旁路双重保护。
+            SMOOTH_BLEND_FAR = 0.8   # maximum far-range shrinkage; a value near 1.0 would replace
+                                     # distant outliers wholesale with the median and erase far-away
+                                     # minority classes, so it is paired with the class bypass below
             SMOOTH_BLEND_REF = 8.0
-        
-            # 额外"局部主趋势贴合"门控
+
+            # Extra gate: agreement with the local depth trend.
             SMOOTH_TREND_REL_BAND = 0.010
             SMOOTH_TREND_ABS_BAND = 0.03
-        
-            # =========================
-            # [NEW] 类别感知（少数类保护）
-            # =========================
-            # 使用映射后的 compressed CL 标签：5=Living Being, 6=Movable objects
+
+            # Class-aware minority protection, on the mapped COLA taxonomy:
+            # 5 = Living Being, 6 = Movable objects.
             MINORITY_CLASSES = (5, 6)
-        
-            # --------------------------------------------------
-            # 工具函数
-            # --------------------------------------------------
+
+            # Helpers
             def wrap_to_pi(angle):
                 return (angle + torch.pi) % (2 * torch.pi) - torch.pi
-        
+
             def make_empty_outputs(curr_points, curr_labels, curr_grid_ind, curr_grid_ind_vox):
                 device = curr_points.device
                 dtype = curr_points.dtype
@@ -1477,7 +1409,7 @@ class PointTPV_Seg(CenterPoint):
                     torch.empty((0, 3), device=device, dtype=curr_grid_ind.dtype),
                     torch.empty((0, 3), device=device, dtype=curr_grid_ind_vox.dtype),
                 )
-        
+
             def circular_median_filter_2d(depth_img, hit_img, win):
                 """Batch version: process all beams at once. depth_img/hit_img: [B, H]."""
                 B, H = depth_img.shape
@@ -1504,17 +1436,15 @@ class PointTPV_Seg(CenterPoint):
                 max_vals = sorted_vals.gather(2, max_idx.unsqueeze(2)).squeeze(2)
                 spread_row = max_vals - min_vals
                 return med_row, spread_row, support
-        
-            # --------------------------------------------------
-            # 预计算：转换成标量/浮点常量，加速后续过滤判断
-            # --------------------------------------------------
+
+            # Pre-compute the ray grid shared by every frame in this batch.
             vertical_angles_rad = torch.deg2rad(
                 torch.linspace(vertical_lower_angle, vertical_upper_angle, beams, device=device, dtype=dtype)
             )
             horizontal_step = 2.0 * math.pi / horizontal_resolution
             horizontal_angles_rad = torch.arange(horizontal_resolution, device=device, dtype=dtype) * horizontal_step
             vertical_step = (vertical_angles_rad[-1] - vertical_angles_rad[0]).item() / max(1, beams - 1)
-        
+
             vv, hh = torch.meshgrid(vertical_angles_rad, horizontal_angles_rad, indexing='ij')
             ray_directions = torch.stack([
                 torch.cos(vv) * torch.cos(hh),
@@ -1522,49 +1452,41 @@ class PointTPV_Seg(CenterPoint):
                 torch.sin(vv)
             ], dim=-1).reshape(-1, 3)
             lidar_origin = torch.tensor([0.0, 0.0, float(lidar_height)], device=device, dtype=dtype)
-        
+
             az_half = 0.5 * horizontal_step
             el_half = 0.5 * vertical_step if beams > 1 else 1e6
-        
-            # 标量提取 (极大加速 Loop 内的运算)
+
+            # Hoist to Python scalars: much faster inside the per-frame loop.
             az_margin_val = az_half * ANGULAR_MARGIN_SCALE
             el_margin_val = el_half * ANGULAR_MARGIN_SCALE
             footprint_angle_val = math.sqrt(az_half ** 2 + el_half ** 2) * ANGULAR_MARGIN_SCALE
             cos_footprint = math.cos(footprint_angle_val)
             num_rays = beams * horizontal_resolution
-        
-            # --------------------------------------------------
-            # 1. 单帧采样主循环
-            # --------------------------------------------------
+
+            # 1. Per-frame sampling loop
             for idx in range(len(points)):
                 curr_points = points[idx]
                 curr_labels = labels[idx]
                 curr_grid_ind = grid_ind[idx]
                 curr_grid_ind_vox = grid_ind_vox[idx]
-        
-                # --------------------------------------------------
-                # 1. 少数类 Copy / Mixup（保留）
-                # --------------------------------------------------
+
+                # 1. Minority-class copy / mixup
                 if random.random() < mixup_prob:
                     curr_points, curr_grid_ind, curr_grid_ind_vox, curr_labels = \
                         self._mixup_minority(
                             curr_points, curr_grid_ind, curr_grid_ind_vox, curr_labels, num_add=2
                         )
-        
-                # --------------------------------------------------
-                # 2. 取 xyz（按你的存储格式）
-                # --------------------------------------------------
+
+                # 2. Gather xyz in the stored column layout
                 point_cloud_tensor = torch.cat(
                     (curr_points[:, 6:8], curr_points[:, 5].unsqueeze(1)),
                     dim=1
                 )  # [N, 3], x y z
-        
+
                 vec_all = point_cloud_tensor - lidar_origin
                 range_all = torch.norm(vec_all, dim=1)
-        
-                # --------------------------------------------------
-                # 3. 距离过滤
-                # --------------------------------------------------
+
+                # 3. Range filter
                 keep_mask = (range_all > EPS) & (range_all <= MAX_RANGE)
                 if not keep_mask.any():
                     sampled_points, sampled_labels, sampled_grid_ind, sampled_grid_ind_vox = \
@@ -1579,15 +1501,13 @@ class PointTPV_Seg(CenterPoint):
                 kept_labels = curr_labels[kept_idx]
                 kept_grid_ind = curr_grid_ind[kept_idx]
                 kept_grid_ind_vox = curr_grid_ind_vox[kept_idx]
-        
+
                 kept_xyz = point_cloud_tensor[kept_idx]   # [M, 3]
                 kept_vec = vec_all[kept_idx]              # [M, 3]
                 kept_range = range_all[kept_idx]          # [M]
                 kept_range_safe = torch.clamp(kept_range, min=EPS)
-        
-                # --------------------------------------------------
-                # 4. 每个点映射到最近 ray 中心（ray_directions 已预计算）
-                # --------------------------------------------------
+
+                # 4. Map each point to its nearest ray centre
                 point_az = torch.atan2(kept_vec[:, 1], kept_vec[:, 0]) % (2.0 * torch.pi)
                 point_el = torch.asin(
                     torch.clamp(kept_vec[:, 2] / kept_range_safe, -1.0, 1.0)
@@ -1600,23 +1520,21 @@ class PointTPV_Seg(CenterPoint):
                 el_bin.clamp_(0, beams - 1)
                 flat_bin = el_bin * horizontal_resolution + az_bin
                 ray_dir_for_points = ray_directions[flat_bin]
-        
-                # --------------------------------------------------
-                # 6. 角度一致性筛选 (砍掉昂贵的 arccos)
-                #    [FIX #1] 现在 az_margin/el_margin 是完整 az_half/el_half，
-                #    所有点都会落在自己最近 bin 的 footprint 内。
-                # --------------------------------------------------
+
+                # 6. Angular consistency gate, avoiding a costly arccos.
+                #    az_margin/el_margin are the full half-widths, so every point falls
+                #    inside the footprint of its own nearest bin.
                 unit_vec = kept_vec / kept_range.unsqueeze(1)
                 cos_sim = torch.sum(unit_vec * ray_dir_for_points, dim=1).clamp_(-1.0, 1.0)
-        
+
                 assigned_az = horizontal_angles_rad[az_bin]
                 assigned_el = vertical_angles_rad[el_bin]
-        
+
                 diff_az = torch.abs(point_az - assigned_az)
                 delta_az = torch.min(diff_az, 2.0 * math.pi - diff_az)
                 delta_el = torch.abs(point_el - assigned_el)
                 depths = torch.sum(kept_vec * ray_dir_for_points, dim=1)
-        
+
                 valid_mask = (
                     (depths > 0.0) &
                     (delta_az <= az_margin_val) &
@@ -1630,10 +1548,8 @@ class PointTPV_Seg(CenterPoint):
                     continue
                 valid_bins = flat_bin[valid_mask]
                 valid_depths = depths[valid_mask]
-        
-                # --------------------------------------------------
-                # 7. 第一层：每个 bin 只保留最近点（基础 z-buffer）
-                # --------------------------------------------------
+
+                # 7. First pass: keep only the closest point per bin (plain z-buffer)
                 num_rays = beams * horizontal_resolution
                 min_depth_flat, min_idx_in_valid = scatter_min(
                     valid_depths,
@@ -1645,21 +1561,21 @@ class PointTPV_Seg(CenterPoint):
                 K = valid_depths.shape[0]
                 idx_ok = (min_idx_in_valid >= 0) & (min_idx_in_valid < K)
                 hit_mask_flat = hit_mask_flat & idx_ok
-        
-                # 把 valid 子集索引映射回 kept 子集索引
+
+                # Map indices from the valid subset back into the kept subset.
                 valid_pos = valid_mask.nonzero(as_tuple=False).squeeze(1)
                 chosen_kept_idx_flat = torch.full(
                     (num_rays,), -1, device=device, dtype=torch.long
                 )
                 chosen_kept_idx_flat[hit_mask_flat] = valid_pos[min_idx_in_valid[hit_mask_flat]]
-        
+
                 depth_img = min_depth_flat.view(beams, horizontal_resolution)          # [B, H]
                 hit_img = hit_mask_flat.view(beams, horizontal_resolution)             # [B, H]
                 idx_img = chosen_kept_idx_flat.view(beams, horizontal_resolution)      # [B, H]
 
-                MINORITY_DEPTH_TOL = 0.4   # 米，可调
+                MINORITY_DEPTH_TOL = 0.4   # metres
 
-                # 取出所有 valid 候选中属于少数类的子集
+                # Minority-class subset of the valid candidates.
                 valid_labels_all = kept_labels[valid_pos]            # [V]，V = valid_mask.sum()
                 is_minor_valid = torch.zeros_like(valid_labels_all, dtype=torch.bool)
                 for _cls in MINORITY_CLASSES:
@@ -1668,9 +1584,9 @@ class PointTPV_Seg(CenterPoint):
                 if is_minor_valid.any():
                     minor_bins = valid_bins[is_minor_valid]
                     minor_depths = valid_depths[is_minor_valid]
-                    minor_local_pos = is_minor_valid.nonzero(as_tuple=False).squeeze(1)   # 在 valid_* 里的下标
+                    minor_local_pos = is_minor_valid.nonzero(as_tuple=False).squeeze(1)   # index into valid_*
 
-                    # 对少数类候选再做一次 scatter_min，得到"每个 bin 的最近少数类点"
+                    # Second scatter_min over minority candidates: closest minority point per bin.
                     minor_min_depth, minor_min_idx = scatter_min(
                         minor_depths, minor_bins, dim=0, dim_size=num_rays
                     )
@@ -1679,48 +1595,42 @@ class PointTPV_Seg(CenterPoint):
                     minor_ok = (minor_min_idx >= 0) & (minor_min_idx < K_minor)
                     minor_hit = minor_hit & minor_ok
 
-                    # 与该 bin 现有最近深度比较：少数类不能比原始最近点远超 TOL
+                    # Promote only if the minority point is within TOL of the bin's closest depth.
                     promote_mask = (
                         minor_hit &
                         hit_mask_flat &
                         (minor_min_depth <= min_depth_flat + MINORITY_DEPTH_TOL)
                     )
 
-                    # 也允许 "原本没人 hit、但有少数类" 的 bin（保险，理论上不会发生因为少数类也在 valid 里）
+                    # Also cover bins with no prior hit but a minority candidate.
                     promote_only_minor = minor_hit & (~hit_mask_flat)
                     promote_mask = promote_mask | promote_only_minor
 
                     if promote_mask.any():
-                        # 替换 chosen_kept_idx_flat 与 min_depth_flat
                         new_kept_idx = valid_pos[minor_local_pos[minor_min_idx[promote_mask]]]
                         chosen_kept_idx_flat[promote_mask] = new_kept_idx
                         min_depth_flat = torch.where(promote_mask, minor_min_depth, min_depth_flat)
                         hit_mask_flat = hit_mask_flat | promote_only_minor
 
-                # 重新刷新 depth_img / hit_img / idx_img
+                # Refresh the per-bin images after promotion.
                 depth_img = min_depth_flat.view(beams, horizontal_resolution)
                 hit_img   = hit_mask_flat.view(beams, horizontal_resolution)
                 idx_img   = chosen_kept_idx_flat.view(beams, horizontal_resolution)
-        
-                # --------------------------------------------------
-                # [NEW] 7.5  每个 bin 的语义类别 + 少数类掩码
-                #     用于 step 8 / step 9 中的少数类保护。
-                # --------------------------------------------------
-                safe_idx_img = torch.clamp(idx_img, min=0)        # 把 -1 暂时换成 0 以便 gather
-                labels_lookup = kept_labels[safe_idx_img]         # [B, H]，-1 处的值是 garbage
+
+                # 7.5 Per-bin semantic class and minority mask, used by steps 8 and 9.
+                safe_idx_img = torch.clamp(idx_img, min=0)        # -1 -> 0 so the gather is in range
+                labels_lookup = kept_labels[safe_idx_img]         # [B, H]; entries at -1 are garbage
                 minority_bin_mask = torch.zeros_like(hit_img)
                 for _cls in MINORITY_CLASSES:
                     minority_bin_mask = minority_bin_mask | (labels_lookup == _cls)
-                minority_bin_mask = minority_bin_mask & hit_img   # 只在真正有点的 bin 上有效
-        
-                # --------------------------------------------------
-                # 8. 第二层：改进版遮挡抑制
-                #    目标：保留远处连续地面，只删除"真正像被前景挡住"的后景点
-                #    [FIX #3] 少数类 bin 整体跳过 leak_mask
-                # --------------------------------------------------
+                minority_bin_mask = minority_bin_mask & hit_img   # valid only where a point was hit
+
+                # 8. Second pass: occlusion suppression. Preserves continuous distant ground
+                #    and drops only background points genuinely hidden by foreground.
+                #    Minority-class bins bypass leak_mask entirely.
                 depth_for_occ = torch.where(hit_img, depth_img, depth_img.new_tensor(LARGE_VAL))
-        
-                # 8.1 只从"上方 beam"收集遮挡参考，不再上下对称
+
+                # 8.1 Collect occluders from beams above only, not symmetrically.
                 az_pad = OCC_AZ_WIN // 2
                 upper_stack_list = []
                 for db in range(1, OCC_EL_WIN + 1):
@@ -1732,7 +1642,7 @@ class PointTPV_Seg(CenterPoint):
                     ).squeeze(0).squeeze(0)
                     upper_unf = upper_pad.unfold(1, OCC_AZ_WIN, 1)
                     upper_stack_list.append(upper_unf)
-        
+
                 if upper_stack_list:
                     upper_stack = torch.cat(upper_stack_list, dim=2)
                     occ_local_min = upper_stack.amin(dim=2)
@@ -1740,8 +1650,8 @@ class PointTPV_Seg(CenterPoint):
                 else:
                     occ_local_min = torch.full_like(depth_img, LARGE_VAL)
                     near_support = torch.zeros_like(depth_img, dtype=torch.long)
-        
-                # 8.2 同 ring 连续性保护（向量化 unfold，替代多次 roll）
+
+                # 8.2 Same-ring continuity protection, vectorised with unfold.
                 ring_pad = RING_KEEP_WIN
                 depth_pad = F.pad(
                     depth_img.unsqueeze(0).unsqueeze(0),
@@ -1754,37 +1664,34 @@ class PointTPV_Seg(CenterPoint):
                 win_size = 2 * RING_KEEP_WIN + 1
                 depth_unf = depth_pad.unfold(1, win_size, 1)
                 hit_unf = hit_pad.unfold(1, win_size, 1)
-                neighbor_idx = (0, 1, 2, 4, 5, 6)  # 跳过中心
+                neighbor_idx = (0, 1, 2, 4, 5, 6)  # centre excluded
                 depth_neighbors = depth_unf[:, :, neighbor_idx]
                 hit_neighbors = hit_unf[:, :, neighbor_idx]
                 depth_diff_ok = torch.abs(depth_neighbors - depth_img.unsqueeze(2)) <= RING_KEEP_BAND
                 same_ring_support = (hit_neighbors & depth_diff_ok).sum(dim=2)
                 ring_keep_mask = hit_img & (same_ring_support >= RING_KEEP_MIN)
-        
-                # 8.3 自适应深度阈值
+
+                # 8.3 Range-adaptive depth threshold.
                 adaptive_margin = OCC_DEPTH_MARGIN + OCC_REL_MARGIN * occ_local_min
-        
-                # 8.4 最终只删"真正像被前景挡住"的点
-                #     [FIX #3] 增加 (~minority_bin_mask) 让少数类点免疫遮挡抑制
+
+                # 8.4 Drop only points that genuinely look occluded; ~minority_bin_mask
+                #     makes minority classes immune to occlusion suppression.
                 leak_mask = (
                     hit_img &
                     torch.isfinite(occ_local_min) &
                     (near_support >= OCC_SUPPORT_MIN) &
                     ((depth_img - occ_local_min) > adaptive_margin) &
                     (~ring_keep_mask) &
-                    (~minority_bin_mask)   # [FIX #3] 少数类保护
+                    (~minority_bin_mask)   # minority-class protection
                 )
-                # 删除这些被判为"真正穿透到后景"的点
                 hit_img = hit_img & (~leak_mask)
                 idx_img = torch.where(hit_img, idx_img, torch.full_like(idx_img, -1))
                 depth_img = torch.where(hit_img, depth_img, depth_img.new_tensor(LARGE_VAL))
-                # minority_bin_mask 不需要更新：少数类 bin 没被 leak_mask 删除，
-                # 它们的 hit/idx/labels 都未变，标志仍然正确。
-        
-                # --------------------------------------------------
-                # 9. 第三层：距离自适应 ring 连续化（向量化）
-                #    [FIX #4] 少数类 bin 的 blend_factor 强制为 0
-                # --------------------------------------------------
+                # minority_bin_mask needs no refresh: leak_mask never removes minority bins,
+                # so their hit/idx/labels are unchanged.
+
+                # 9. Third pass: range-adaptive ring continuity (vectorised).
+                #    Minority-class bins are forced to blend_factor 0.
                 med_row, spread_row, support_row = circular_median_filter_2d(
                     depth_img, hit_img, SMOOTH_WIN
                 )
@@ -1809,17 +1716,15 @@ class PointTPV_Seg(CenterPoint):
                     outlier_mask, blend,
                     torch.where(normal_mask, 0.5 * blend, torch.zeros_like(blend))
                 )
-                # [FIX #4] 少数类 bin 不做任何 ring 平滑，避免被中值拽到背景深度
+                # Never smooth minority bins: the median would drag them to background depth.
                 blend_factor = torch.where(
                     minority_bin_mask, torch.zeros_like(blend_factor), blend_factor
                 )
                 new_row = torch.lerp(depth_img, med_row, blend_factor)
                 final_depth_img = torch.where(hit_img, new_row, depth_img)
-        
-                # --------------------------------------------------
-                # 10. 输出：仍然"在点上采样"
-                #     取被选中的真实点，但把 xyz 改成 final_depth_img 对应位置
-                # --------------------------------------------------
+
+                # 10. Emit real points: keep the selected point but move its xyz onto the
+                #     ray at the smoothed depth from final_depth_img.
                 final_hit_flat = hit_img.view(-1)
                 final_idx_flat = idx_img.view(-1)
                 final_depth_flat = final_depth_img.view(-1)
@@ -1841,7 +1746,7 @@ class PointTPV_Seg(CenterPoint):
                 sampled_grid_ind_vox = kept_grid_ind_vox[chosen_kept_idx]
                 chosen_ray_dirs = ray_directions[chosen_bins]                     # [S, 3]
                 projected_xyz = lidar_origin.unsqueeze(0) + chosen_depths * chosen_ray_dirs
-                # 按你的格式回写 xyz
+                # Write xyz back into the stored column layout.
                 sampled_points[:, 6] = projected_xyz[:, 0]  # x
                 sampled_points[:, 7] = projected_xyz[:, 1]  # y
                 sampled_points[:, 5] = projected_xyz[:, 2]  # z
@@ -1849,13 +1754,11 @@ class PointTPV_Seg(CenterPoint):
                 results_labels.append(sampled_labels)
                 results_grid_ind.append(sampled_grid_ind)
                 results_grid_ind_vox.append(sampled_grid_ind_vox)
-        
+
             return results_points, results_grid_ind, results_grid_ind_vox, results_labels, sensor_params
 
 
-        # --------------------------------------------------
-        # consistency 逻辑（保持你原实现）
-        # --------------------------------------------------
+        # CBA-CL: draw several diverse LiDAR configurations for the same scene.
         if self.consistency:
             all_points, all_grid_ind, all_grid_ind_vox, all_labels = [], [], [], []
             sensor_params_entries = []
@@ -1870,12 +1773,10 @@ class PointTPV_Seg(CenterPoint):
                 all_labels.extend(res_labels)
                 sensor_params_entries.extend([sensor_params for _ in res_points])
 
-                # 在 consistency 模式下，每轮采样后尝试释放显存
-                # 注意：这里不强制清空缓存，因为可能影响性能，只在必要时使用
+                # Release cached blocks between rounds; each round holds a full extra view.
                 if torch.cuda.is_available():
-                    # 可选：在显存紧张时取消注释下面这行
                     torch.cuda.empty_cache()
-                    
+
             #save results
             save_tensor_as_ply(all_points[0], "Consistency_1.ply")
             all_labels[0].cpu().numpy().tofile("Consistency_1.bin")
@@ -1886,11 +1787,9 @@ class PointTPV_Seg(CenterPoint):
             return all_points, all_grid_ind, all_grid_ind_vox, all_labels, sensor_params_tensor
 
         res_points, res_grid, res_grid_vox, res_labels, sensor_params = _run_single_sampling()
-        # save_tensor_as_ply(res_points[0], "hard_points.ply")
-        # res_labels[0].cpu().numpy().tofile("hard_labels.bin")
         sensor_params_tensor = torch.stack([sensor_params for _ in res_points], dim=0) if res_points else None
         return res_points, res_grid, res_grid_vox, res_labels, sensor_params_tensor
-    
+
 def train_grid_features_to_xyz_numpy(feature_2d):
     """XYZ from PointsegMapping ``train_grid`` layout (cols xy + z slot, same as legacy ply)."""
     if isinstance(feature_2d, torch.Tensor):
@@ -1935,7 +1834,7 @@ def sample_beams(lower_beams_bound, upper_beams_bound):
     beam_range, probability_density = _sample_beams_cache[key]
     return int(np.random.choice(beam_range, p=probability_density))
 
-    
+
 def get_nuScenes_label_name(label_mapping):
     with open(label_mapping, 'r') as stream:
         nuScenesyaml = yaml.safe_load(stream)

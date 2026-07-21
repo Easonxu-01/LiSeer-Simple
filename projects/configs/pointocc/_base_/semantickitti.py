@@ -1,12 +1,3 @@
-'''
-Author: EASON XU
-Date: 2025-01-06 06:14:40
-LastEditors: EASON XU
-Version: Do not edit
-LastEditTime: 2025-01-06 06:14:41
-Description: 头部注释
-FilePath: /UniLiDAR/projects/configs/pointocc/_base_/semantickitti.py
-'''
 # For SemanticKitti we usually do 19-class segmentation.
 # For labels_map we follow the uniform format of MMDetection & MMSegmentation
 # i.e. we consider the unlabeled class as the last one, which is different

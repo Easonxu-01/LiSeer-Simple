@@ -1,4 +1,3 @@
-
 dataset_params = dict(
     version = "v1.0-trainval",
     ignore_label = 0,
