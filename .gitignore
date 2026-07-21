@@ -16,7 +16,6 @@ dist/
 data/
 work_dirs/
 ckpts/
-pretrain/
 *.pth
 *.ckpt
 *.pkl
