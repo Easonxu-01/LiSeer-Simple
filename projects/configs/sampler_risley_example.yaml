@@ -1,0 +1,50 @@
+# Prototype solid-state (Risley-prism) sampling path -- EXAMPLE ONLY.
+#
+# Nothing reads this file automatically; it documents the prism parameters and
+# their provenance. The training configs in projects/configs/pointocc/ are mmcv
+# Python configs -- see sampler_risley_example.py for the same settings in the
+# form this repository actually consumes.
+#
+# LiSeer has not been trained or evaluated on solid-state data. This path exists
+# to show that the point-centric sampler is not tied to a ring-structured grid.
+
+pattern: risley          # omit, or 'spinning', for the default mechanical path
+
+risley:
+  # ---- from the manufacturer's specification (Livox Avia) ----
+  fov_deg: 70.4                        # circular field of view, full angle
+  point_rate: 240000                   # points / s, first-return spec
+  beam_divergence_deg: 0.28            # lower bound of the footprint angle
+
+  # ---- design choices of this prototype (not vendor data) ----
+  t_int: 0.1                           # integration time T, s; 0.1 / 0.2 / 0.5
+                                       # are the values used in the figures
+  f1_hz: 7294.0                        # first prism rotation frequency
+  freq_ratio: -0.6180339887498949      # f2/f1 = -1/golden ratio, i.e. counter-
+                                       # rotating at the ratio hardest to
+                                       # approximate rationally, so the pattern
+                                       # closes as late as possible.
+                                       # => f2 = -4507.94 Hz
+  # f2_hz: -4507.94                    # pin f2 directly instead of freq_ratio
+  rho_deg: null                        # null -> fov_deg/4 = 17.6, so rho1 == rho2
+                                       # and theta reaches 0 (dense centre, no hole)
+  height_m: 1.73                       # mounting height above the estimated ground
+  footprint_scale: 1.0
+  occlusion_mode: knn                  # 'knn' or 'none'
+  occ_knn_k: 48                        # visibility-graph neighbourhood size
+  minority_depth_tol: 0.4              # same value the mechanical path uses
+  seed: null                           # null -> prism phases redrawn every frame,
+                                       # which is what makes the scan non-repetitive
+  recompute_voxel_index: false         # false keeps the mechanical path's output
+                                       # stage verbatim; true rebuilds the polar
+                                       # features and voxel indices from the
+                                       # reprojected point
+
+# Optional physical-perturbation suite. It sits at model level, beside `sensor`,
+# not inside it. Disabled by default; all reported results are produced without it.
+perturb_suite:
+  enabled: false
+  angular_jitter_mrad: 0.2
+  range_noise_cm: 2.5
+  ray_dropout: 0.03
+  dropout_exempt_minority: false

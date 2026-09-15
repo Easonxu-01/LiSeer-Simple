@@ -855,6 +855,171 @@ body{
   .splitter::after{animation:none}
 }
 </style>
+
+<style id="solidstate-extras">
+/* ---------- solid-state section ---------- */
+#solid-state{background:#f8fafc}
+.ss-caveat{margin:26px 0 0;padding:15px 19px;border-left:3px solid var(--blue-2);background:rgba(79,163,227,.07);border-radius:0 10px 10px 0;font-size:13.5px;color:#48566a}
+.ss-caveat b{color:#17202c}
+.ss-ops{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:26px}
+.ss-ops>div{padding:18px 20px;border-radius:16px;border:1px solid var(--line);background:#fff;box-shadow:0 14px 38px -30px rgba(35,61,92,.4)}
+.ss-ops h4{margin:0 0 9px;font-family:var(--disp);font-size:.98rem;letter-spacing:-.01em}
+.ss-ops ul{margin:0;padding-left:18px;color:#4a5665;font-size:13.5px;line-height:1.62}
+.ss-ops .tag{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:6px;margin-bottom:11px}
+.ss-ops .swap .tag{background:rgba(224,123,57,.14);color:#c4641f}
+.ss-ops .keep .tag{background:rgba(47,111,176,.12);color:var(--blue)}
+
+/* ---------- native coverage chart ---------- */
+.cov-card{margin-top:30px;padding:16px 18px 10px;border:1px solid rgba(255,255,255,.9);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(240,246,252,.62));box-shadow:0 24px 60px -40px rgba(35,61,92,.44)}
+.cov-card svg{display:block;width:100%;height:auto;overflow:visible}
+.cov-head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:2px 4px 6px}
+.cov-head h3{margin:0;font-size:1.02rem}
+.cov-head span{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cov-grid-line{stroke:#dde5ee;stroke-width:1;stroke-dasharray:3 6}
+.cov-axis{stroke:#c4cfda;stroke-width:1.2}
+.cov-tick{font-family:var(--mono);font-size:12px;fill:#7c8899}
+.cov-atitle{font-family:var(--sans);font-size:12.5px;fill:#5c6776;font-weight:500}
+.cov-area{fill:url(#covFill)}
+.cov-line{fill:none;stroke:url(#covStroke);stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.cov-dot{fill:#fff;stroke:var(--blue);stroke-width:2.6}
+.cov-dot-hi{fill:var(--orange);stroke:#fff;stroke-width:2.8}
+.cov-val{font-family:var(--mono);font-size:12.5px;font-weight:700;fill:#2c4b71}
+.cov-guide{stroke:var(--orange);stroke-width:1.3;stroke-dasharray:4 5;opacity:.7}
+.cov-chip{fill:#fff;stroke:rgba(224,123,57,.5);stroke-width:1.3}
+.cov-chip-t{font-family:var(--mono);font-size:13.5px;font-weight:700;fill:#b4591f}
+.cov-chip-s{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;fill:#9a7a63}
+.cov-foot{margin:8px 5px 2px;font-family:var(--mono);font-size:11.5px;line-height:1.6;color:#8290a1}
+.cov-line{stroke-dasharray:1200;stroke-dashoffset:1200}
+.cov-area,.cov-dot,.cov-dot-hi,.cov-val,.cov-guide,.cov-chip,.cov-chip-t,.cov-chip-s{opacity:0}
+.reveal.in .cov-line{transition:stroke-dashoffset 1.6s cubic-bezier(.24,.72,.2,1);stroke-dashoffset:0}
+.reveal.in .cov-area{transition:opacity 1s ease .3s;opacity:1}
+.reveal.in .cov-dot,.reveal.in .cov-val{transition:opacity .7s ease .9s;opacity:1}
+.reveal.in .cov-guide{transition:opacity .7s ease 1.1s;opacity:.7}
+.reveal.in .cov-dot-hi,.reveal.in .cov-chip,.reveal.in .cov-chip-t,.reveal.in .cov-chip-s{transition:opacity .7s ease 1.25s;opacity:1}
+
+/* ---------- interactive point-cloud grid ---------- */
+#pointcloud .pc-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:22px}
+#pointcloud .pc-tools .pc-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.pc-chip{font-family:var(--mono);font-size:12px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:#fff;color:#44505f;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+.pc-chip:hover{border-color:var(--blue-2);color:var(--blue)}
+.pc-chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.pcg-panel{margin-top:22px}
+.pcg-title{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:0 4px 9px}
+.pcg-title h3{margin:0;font-size:1rem}
+.pcg-title span{font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.pcg-title em{font-family:var(--mono);font-size:11px;font-style:normal;color:#b4591f;letter-spacing:.04em}
+.pcg-grid{position:relative;display:grid;grid-template-columns:repeat(4,1fr);border-radius:20px;overflow:hidden;box-shadow:0 26px 64px -42px rgba(20,38,60,.62)}
+.pcg-canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block}
+.pcg-cell{position:relative;aspect-ratio:4/3.1;box-shadow:inset -1px 0 0 rgba(255,255,255,.1);cursor:grab;touch-action:pan-y}
+.pcg-cell:last-child{box-shadow:none}
+.pcg-cell:active{cursor:grabbing}
+.pcg-cap{position:absolute;top:9px;left:11px;right:11px;pointer-events:none;font-family:var(--mono);font-size:11px;line-height:1.45;color:#e4edf8;text-shadow:0 1px 6px rgba(0,0,0,.75)}
+.pcg-cap b{display:block;font-weight:700;letter-spacing:.02em}
+.pcg-cap u{display:block;margin-top:3px;text-decoration:none;font-size:10px;line-height:1.4;color:#ffd79a;letter-spacing:0}
+.pcg-cap i{display:block;margin-top:1px;font-style:normal;color:#9fb3cb}
+.pcg-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11.5px;color:#7f92ab;background:#0d1524;pointer-events:none}
+.pcg-hint{margin:9px 5px 0;font-family:var(--mono);font-size:11px;color:#8290a1}
+.pc-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 20px;align-items:center;margin-top:18px;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 14px 38px -32px rgba(35,61,92,.4);font-family:var(--mono);font-size:12.5px;color:#4d5b6c}
+.pc-legend span{display:inline-flex;align-items:center;gap:8px}
+.pc-legend .pc-legend-title{flex:0 0 100%;justify-content:center;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.pc-legend i{width:15px;height:15px;border-radius:4px;display:inline-block;box-shadow:inset 0 0 0 1px rgba(20,40,60,.24)}
+@media(max-width:600px){.pc-legend{font-size:11.5px;gap:8px 14px;padding:13px 14px}.pc-legend i{width:13px;height:13px}}
+.pc-pending{margin-top:26px;padding:26px;border:1px dashed rgba(47,111,176,.35);border-radius:18px;background:rgba(79,163,227,.05);color:#48566a;font-size:14px}
+.pc-pending b{color:#17202c}
+.pc-pending code{font-family:var(--mono);font-size:12.5px}
+
+/* ---------- hero action buttons: three then two, glass pills ---------- */
+/* Two columns of three: the left column leaves the page, the right column jumps
+   inside it. Equal-width cells rather than wrapping pills, so the block stays
+   symmetric at every width instead of re-grouping itself. */
+.btns{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(3,auto);
+  grid-auto-flow:column;
+  gap:10px;margin-top:26px;max-width:432px;
+}
+.btn{
+  position:relative;overflow:hidden;min-width:0;
+  display:inline-flex;align-items:center;gap:9px;
+  min-height:46px;padding:0 14px 0 9px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(180deg,rgba(255,255,255,.115),rgba(255,255,255,.035));
+  color:#dce5ef;
+  font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.03em;
+  box-shadow:0 12px 28px -20px rgba(6,14,28,.9),inset 0 1px rgba(255,255,255,.16);
+  -webkit-backdrop-filter:blur(14px) saturate(130%);
+  backdrop-filter:blur(14px) saturate(130%);
+  transition:transform .24s cubic-bezier(.2,.7,.2,1),border-color .24s,background .24s,box-shadow .24s,color .24s;
+}
+.btn .ic{
+  display:grid;place-items:center;width:26px;height:26px;flex:none;border-radius:50%;
+  background:rgba(255,255,255,.085);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
+  transition:background .24s,box-shadow .24s,color .24s,transform .24s;
+}
+.btn .ic svg{width:14px;height:14px}
+.btn .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn .tail{width:11px;height:11px;flex:none;margin-left:auto;opacity:.42;transition:opacity .24s,transform .24s}
+/* a light sweep crosses the pill on hover */
+.btn::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(104deg,transparent 34%,rgba(255,255,255,.2) 50%,transparent 64%);
+  transform:translateX(-130%);
+}
+.btn:hover::after{transform:translateX(130%);transition:transform .75s cubic-bezier(.2,.7,.2,1)}
+.btn:hover{
+  transform:translateY(-2px);color:#fff;
+  border-color:rgba(79,163,227,.46);
+  background:linear-gradient(180deg,rgba(255,255,255,.17),rgba(255,255,255,.065));
+  box-shadow:0 20px 38px -20px rgba(6,14,28,.95),0 0 0 1px rgba(79,163,227,.18),inset 0 1px rgba(255,255,255,.24);
+}
+.btn:hover .ic{background:rgba(79,163,227,.92);color:#08121f;box-shadow:inset 0 0 0 1px rgba(255,255,255,.34);transform:scale(1.05)}
+.btn:hover .tail{opacity:.95;transform:translate(2px,-2px)}
+.btn[href^="#"]:hover .tail{transform:translateY(2px)}
+.btn.primary{
+  border-color:rgba(255,255,255,.92);color:#0f1926;
+  background:linear-gradient(180deg,#ffffff,#eaf1f8);
+  box-shadow:0 16px 32px -20px rgba(6,14,28,.85),inset 0 1px rgba(255,255,255,.95);
+}
+.btn.primary .ic{background:rgba(15,25,38,.09);color:#0f1926;box-shadow:inset 0 0 0 1px rgba(15,25,38,.12)}
+.btn.primary .tail{opacity:.5}
+.btn.primary:hover{color:#fff;border-color:#2f6fb0;background:linear-gradient(180deg,#56a9e6,#2f6fb0)}
+.btn.primary:hover .ic{background:rgba(255,255,255,.24);color:#fff}
+@media(max-width:600px){
+  .btn{min-height:42px;font-size:11px;padding:0 12px 0 8px}
+  .btn .ic{width:24px;height:24px}
+}
+@media(max-width:430px){
+  .btns{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row}
+}
+
+/* ---------- lightbox: gallery navigation ---------- */
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:20px;line-height:1;cursor:pointer;transition:background .18s;z-index:3}
+.lightbox-nav:hover{background:rgba(255,255,255,.26)}
+.lightbox-prev{left:-56px}
+.lightbox-next{right:-56px}
+.lightbox-nav[hidden]{display:none!important}
+
+/* ---------- cursor trail (everywhere except the hero) ---------- */
+#cursor-trail{position:fixed;top:0;left:0;pointer-events:none;z-index:55}
+
+@media(max-width:900px){
+  .ss-ops{grid-template-columns:1fr}
+  .pcg-grid{grid-template-columns:repeat(2,1fr)}
+  .pcg-cell{box-shadow:inset -1px -1px 0 rgba(255,255,255,.1)}
+  .lightbox-prev{left:4px}
+  .lightbox-next{right:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  #cursor-trail{display:none}
+  .btn,.btn .ic,.btn .tail{transition:none}
+  .btn::after{display:none}
+  .cov-line{stroke-dashoffset:0}
+  .cov-area,.cov-dot,.cov-dot-hi,.cov-val,.cov-guide,.cov-chip,.cov-chip-t,.cov-chip-s{opacity:1}
+}
+</style>
 </head>
 <body>
 <div id="page-progress" aria-hidden="true"></div>
@@ -866,6 +1031,7 @@ body{
     <div class="nav-links">
       <a href="#idea">Idea</a>
       <a href="#method">Method</a>
+      <a href="#solid-state">Solid-state</a>
       <a href="#results">Results</a>
       <a href="#video">Video</a>
       <a href="#deploy">On-vehicle</a>
@@ -890,14 +1056,12 @@ body{
 
       <!-- EDIT ME: replace # with real links -->
       <div class="btns">
-        <a class="btn primary" href="https://github.com/Easonxu-01/LiSeer-Simple/tree/main/docs/assets/LiSeer.pdf" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5M7 3h7l5 5v13H7z"/><path d="M9 13h6M9 17h6"/></svg>Paper (PDF)</a>
-        <a class="btn" href="https://github.com/Easonxu-01/LiSeer-Simple" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-4 1.4-4-2-6-2.5M16 22v-3.6a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.5 4.6 4.6 0 0 0-.1-3.5s-1.1-.3-3.6 1.3a12 12 0 0 0-6.4 0C5.6 1.6 4.5 1.9 4.5 1.9a4.6 4.6 0 0 0-.1 3.5A5 5 0 0 0 3 8.9c0 5 3 6.3 6 6.6a3 3 0 0 0-.9 2.3V22"/></svg>Code</a>
-        <a class="btn" href="#downloads">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>Data</a>
-        <a class="btn" href="#video">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg>Video</a>
+        <a class="btn primary" href="https://github.com/Easonxu-01/LiSeer-Simple/tree/main/docs/assets/LiSeer.pdf" target="_blank" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5M7 3h7l5 5v13H7z"/><path d="M9 13h6M9 17h6"/></svg></span><span class="lb">Paper</span><svg class="tail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+        <a class="btn" href="https://github.com/Easonxu-01/LiSeer-Simple" target="_blank" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-4 1.4-4-2-6-2.5M16 22v-3.6a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.5 4.6 4.6 0 0 0-.1-3.5s-1.1-.3-3.6 1.3a12 12 0 0 0-6.4 0C5.6 1.6 4.5 1.9 4.5 1.9a4.6 4.6 0 0 0-.1 3.5A5 5 0 0 0 3 8.9c0 5 3 6.3 6 6.6a3 3 0 0 0-.9 2.3V22"/></svg></span><span class="lb">Code</span><svg class="tail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+        <a class="btn" href="https://codeocean.com/capsule/3254701/tree" target="_blank" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.6" width="18" height="14.8" rx="3.2"/><path d="M7.6 10.3 10.1 12.5 7.6 14.7"/><path d="M12.4 14.8h4.2"/></svg></span><span class="lb">Capsule</span><svg class="tail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+        <a class="btn" href="#downloads"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg></span><span class="lb">Data</span><svg class="tail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
+        <a class="btn" href="#video"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg></span><span class="lb">Video</span><svg class="tail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
+        <a class="btn" href="#pointcloud"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2 20.1 7.8v9.2L12 21.6 3.9 17V7.8z"/><path d="M12 12.4 20.1 7.8M12 12.4 3.9 7.8M12 12.4v9.2" stroke-width="1.05" opacity=".55"/><circle cx="12.4" cy="7.9" r="1.2" fill="currentColor" stroke="none"/><circle cx="8.1" cy="14.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.9" cy="15.1" r="1" fill="currentColor" stroke="none"/></svg></span><span class="lb">Visualization</span><svg class="tail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
       </div>
     </div>
 
@@ -1016,7 +1180,7 @@ body{
     <div class="mod blue reveal" style="margin-bottom:22px">
       <span class="tag">Exposure</span>
       <h3>Controllable data engine</h3>
-      <p>Densify each sparse scan, then resample it under randomized, physically grounded sensor configurations — beams, resolution, field of view, and mounting height — turning one dataset into a broad family of cross-sensor observations.</p>
+      <p>Densify each sparse scan, then resample it under randomized, physically grounded sensor configurations — beams, resolution, field of view, and mounting height — turning one dataset into a broad family of cross-sensor observations. The sampler is not tied to spinning LiDARs: it consumes only a set of ray directions, and the released code includes a prototype path for non-repetitive solid-state (Risley-prism) scanning patterns as well as an optional physical-perturbation suite for training.</p>
     </div>
 
     <figure class="fig reveal">
@@ -1040,6 +1204,126 @@ body{
         <figcaption><b>CBA-CL</b> module takes different point clouds sampled from the same scene as input, enhances boundaries and minority classes, and performs collaborative optimization on the two frames based on the prediction confidence. It steers the learning direction of the model toward &ldquo;SIG&rdquo; instead of &ldquo;SG&rdquo;.</figcaption>
       </figure>
     </div>
+  </div>
+</section>
+
+<!-- ===================== SOLID STATE ===================== -->
+<section class="section" id="solid-state">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Sampler</div>
+      <h2>Beyond spinning LiDARs: solid-state scanning patterns</h2>
+      <p class="lead">Non-repetitive solid-state scanners such as Risley-prism (Livox-type) LiDARs produce rosette patterns with no regular scan grid. LiSeer&rsquo;s point-centric sampler handles them by replacing three grid-dependent operations, while everything else in the sampler is reused unchanged.</p>
+    </div>
+
+    <div class="ss-ops reveal">
+      <div class="swap">
+        <span class="tag">Replaced</span>
+        <h4>Three grid-dependent operations</h4>
+        <ul>
+          <li><b>Ray construction</b> &mdash; the two-prism Risley trajectory replaces the regular ring grid.</li>
+          <li><b>Point-to-ray assignment</b> &mdash; an exact k-d tree query replaces analytic angular binning.</li>
+          <li><b>Visibility neighbourhood</b> &mdash; a ray k-NN graph replaces the range-image window.</li>
+        </ul>
+      </div>
+      <div class="keep">
+        <span class="tag">Reused unchanged</span>
+        <h4>Everything else in the sampler</h4>
+        <ul>
+          <li>The nearest-hit reduction &mdash; both paths call the same function.</li>
+          <li>Minority-class promotion and its occlusion exemption.</li>
+          <li>The noise and dropout models, and the output stage.</li>
+          <li>Scanline regularisation is switched off: there are no scan lines.</li>
+        </ul>
+      </div>
+    </div>
+
+    <figure class="fig cov-card reveal" style="margin-top:30px">
+      <div class="cov-head">
+        <h3>Field-of-view coverage grows with integration time</h3>
+        <span>Risley prototype &middot; 240 &times; 240 angular grid</span>
+      </div>
+      <svg viewBox="0 0 760 356" role="img" aria-label="Line chart: field-of-view coverage of the Risley-prism prototype against cumulative integration time. Coverage is 50.9% at 0.1 seconds, 68.3% at 0.3 seconds, 91.3% at 0.5 seconds, 98.8% at 0.8 seconds and 99.4% at 1.0 second.">
+        <defs>
+          <linearGradient id="covFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#4fa3e3" stop-opacity=".34" />
+            <stop offset=".55" stop-color="#4fa3e3" stop-opacity=".12" />
+            <stop offset="1" stop-color="#4fa3e3" stop-opacity="0" />
+          </linearGradient>
+          <linearGradient id="covStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#4fa3e3" />
+            <stop offset=".72" stop-color="#2f6fb0" />
+            <stop offset="1" stop-color="#25578b" />
+          </linearGradient>
+        </defs>
+
+        <!-- horizontal grid + y labels -->
+        <g class="cov-grid-line">
+          <line x1="76" y1="261.4" x2="726" y2="261.4" /><line x1="76" y1="216.8" x2="726" y2="216.8" />
+          <line x1="76" y1="172.2" x2="726" y2="172.2" /><line x1="76" y1="127.6" x2="726" y2="127.6" />
+          <line x1="76" y1="83.0" x2="726" y2="83.0" /><line x1="76" y1="38.5" x2="726" y2="38.5" />
+        </g>
+        <g class="cov-tick" text-anchor="end">
+          <text x="64" y="265.4">50</text><text x="64" y="220.8">60</text>
+          <text x="64" y="176.2">70</text><text x="64" y="131.6">80</text>
+          <text x="64" y="87.0">90</text><text x="64" y="42.5">100</text>
+        </g>
+
+        <!-- series -->
+        <path class="cov-area" d="M 137.3 257.4 C 178.2 231.5 219.1 209.3 260.0 179.8 C 300.8 150.4 341.7 90.0 382.6 77.3 C 443.9 58.1 505.2 46.1 566.6 43.8 C 607.4 42.3 648.3 42.0 689.2 41.1 L 689.2 306.0 L 137.3 306.0 Z" />
+        <path class="cov-line" d="M 137.3 257.4 C 178.2 231.5 219.1 209.3 260.0 179.8 C 300.8 150.4 341.7 90.0 382.6 77.3 C 443.9 58.1 505.2 46.1 566.6 43.8 C 607.4 42.3 648.3 42.0 689.2 41.1" />
+
+        <!-- axes -->
+        <line class="cov-axis" x1="76" y1="306" x2="726" y2="306" />
+        <g class="cov-tick" text-anchor="middle">
+          <text x="198.6" y="326">0.2</text><text x="321.3" y="326">0.4</text>
+          <text x="443.9" y="326">0.6</text><text x="566.6" y="326">0.8</text>
+          <text x="689.2" y="326">1.0</text>
+        </g>
+        <text class="cov-atitle" x="401" y="348" text-anchor="middle">cumulative integration time (s)</text>
+        <text class="cov-atitle" x="20" y="170" text-anchor="middle" transform="rotate(-90 20 170)">FoV coverage (%)</text>
+
+        <!-- manufacturer's integration time -->
+        <line class="cov-guide" x1="566.6" y1="50" x2="566.6" y2="306" />
+
+        <!-- markers + values -->
+        <g>
+          <circle class="cov-dot" cx="137.3" cy="257.4" r="4.6" />
+          <circle class="cov-dot" cx="260.0" cy="179.8" r="4.6" />
+          <circle class="cov-dot" cx="382.6" cy="77.3" r="4.6" />
+          <circle class="cov-dot" cx="689.2" cy="41.1" r="4.6" />
+          <circle class="cov-dot-hi" cx="566.6" cy="43.8" r="6.2" />
+        </g>
+        <g class="cov-val" text-anchor="end">
+          <text x="126" y="246">50.9</text>
+          <text x="248" y="167">68.3</text>
+          <text x="372" y="65">91.3</text>
+        </g>
+        <text class="cov-val" x="689.2" y="30" text-anchor="middle">99.4</text>
+
+        <!-- highlight chip -->
+        <g>
+          <rect class="cov-chip" x="497" y="150" width="175" height="46" rx="12" />
+          <text class="cov-chip-t" x="584.5" y="171" text-anchor="middle">98.8% at 0.8 s</text>
+          <text class="cov-chip-s" x="584.5" y="187" text-anchor="middle">MANUFACTURER&rsquo;S SPEC</text>
+        </g>
+      </svg>
+      <p class="cov-foot">Coverage is the fraction of the <b>circular</b> field of view the accumulated ray set lands in, on the prototype&rsquo;s own 240 &times; 240 angular grid &mdash; the denominator is the cone itself, not its square bounding box. This is a property of the prism parameterisation, so it is the same for every dataset.</p>
+    </figure>
+
+    <p class="ss-caveat reveal"><b>The prototype is a demonstration of architectural compatibility; LiSeer has not been trained or evaluated on solid-state data.</b> Select the path with <code>pattern: risley</code> in the sensor config &mdash; a config without a <code>pattern</code> key is a spinning LiDAR and is unaffected.</p>
+  </div>
+</section>
+
+<!-- ===================== INTERACTIVE POINT CLOUDS ===================== -->
+<section class="section tint" id="pointcloud">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Explore</div>
+      <h2>One scene, four ways of seeing it</h2>
+      <p class="lead">Each row is one scene from one dataset: the real scan, the dense reconstruction built from it, and that same reconstruction re-observed by a spinning LiDAR and by the prism prototype. Drag to orbit, scroll to zoom &mdash; the four views in a row are locked to one camera, so any difference you see is the sensor, not the viewpoint.</p>
+    </div>
+    <div id="pc-app" class="reveal"></div>
   </div>
 </section>
 
@@ -1215,6 +1499,8 @@ body{
   <div class="lightbox-backdrop" data-lightbox-close></div>
   <div class="lightbox-inner">
     <button type="button" class="lightbox-close" data-lightbox-close aria-label="Close">&times;</button>
+    <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous image" hidden>&#8249;</button>
+    <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next image" hidden>&#8250;</button>
     <img id="lightbox-img" src="" alt="" />
     <p class="lightbox-cap" id="lightbox-cap"></p>
   </div>
@@ -1483,21 +1769,513 @@ document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
     lbImg.src='';
   }
 
-  document.querySelectorAll('#deploy [data-lightbox]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var img=btn.querySelector('img');
-      if(!img||!img.src||btn.querySelector('.fig-ph')) return;
-      var cap=btn.closest('.card').querySelector('h3');
-      openLightbox(btn.getAttribute('data-lightbox')||img.src, img.alt, cap?cap.textContent:'');
+  var prevBtn=document.getElementById('lightbox-prev');
+  var nextBtn=document.getElementById('lightbox-next');
+  var group=null,index=0;
+
+  function captionFor(btn){
+    var card=btn.closest('.card');
+    if(card){var h=card.querySelector('h3');return h?h.textContent:'';}
+    var fig=btn.closest('figure');
+    if(fig){var fc=fig.querySelector('figcaption');return fc?fc.textContent.trim():'';}
+    return '';
+  }
+  function show(items,i){
+    index=(i+items.length)%items.length;
+    group=items;
+    var btn=items[index];
+    var img=btn.querySelector('img');
+    if(!img||!img.src||btn.querySelector('.fig-ph')) return;
+    openLightbox(btn.getAttribute('data-lightbox')||img.src,img.alt,captionFor(btn));
+    var many=items.length>1;
+    if(prevBtn) prevBtn.hidden=!many;
+    if(nextBtn) nextBtn.hidden=!many;
+  }
+  function step(d){ if(group) show(group,index+d); }
+
+  ['#deploy','#solid-state'].forEach(function(sel){
+    var items=[].slice.call(document.querySelectorAll(sel+' [data-lightbox]'));
+    items.forEach(function(btn,i){
+      btn.addEventListener('click',function(){ show(items,i); });
     });
   });
+  if(prevBtn) prevBtn.addEventListener('click',function(){ step(-1); });
+  if(nextBtn) nextBtn.addEventListener('click',function(){ step(1); });
   lb.querySelectorAll('[data-lightbox-close]').forEach(function(el){
     el.addEventListener('click',closeLightbox);
   });
   addEventListener('keydown',function(e){
-    if(e.key==='Escape'&&lb.classList.contains('open')) closeLightbox();
+    if(!lb.classList.contains('open')) return;
+    if(e.key==='Escape') closeLightbox();
+    else if(e.key==='ArrowLeft') step(-1);
+    else if(e.key==='ArrowRight') step(1);
   });
 })();
+/* pointer trail: point-cloud dots and soft splats. The hero keeps its own glow,
+   so the trail skips it, and it stays off the 3D viewer to leave orbiting alone. */
+(function(){
+  if(matchMedia('(pointer: coarse)').matches||matchMedia('(max-width:768px)').matches) return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var canvas=document.createElement('canvas');
+  canvas.id='cursor-trail';
+  canvas.setAttribute('aria-hidden','true');
+  document.body.appendChild(canvas);
+  var ctx=canvas.getContext('2d');
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+
+  function resize(){
+    canvas.width=innerWidth*dpr; canvas.height=innerHeight*dpr;
+    canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  addEventListener('resize',resize);
+
+  var parts=[],px=0,py=0,raf=0;
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  addEventListener('mousemove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('.hero,.lightbox,#pc-app')){
+      px=e.clientX; py=e.clientY; return;
+    }
+    var speed=Math.hypot(e.clientX-px,e.clientY-py);
+    px=e.clientX; py=e.clientY;
+    var count=Math.min(2+Math.floor(speed*0.08),5);
+    for(var i=0;i<count;i++){
+      var angle=Math.random()*Math.PI*2,
+          r=Math.random()*8,
+          splat=Math.random()<0.15;
+      parts.push({
+        x:e.clientX+Math.cos(angle)*r,
+        y:e.clientY+Math.sin(angle)*r,
+        z:Math.random(),
+        vx:(Math.random()-0.5)*(0.2+speed*0.01),
+        vy:(Math.random()-0.5)*(0.2+speed*0.01),
+        vz:(Math.random()-0.5)*0.01,
+        life:1,
+        decay:0.02+Math.random()*0.015,
+        size:splat?2.5+Math.random()*3:0.5+Math.random()*1,
+        splat:splat
+      });
+    }
+    if(!raf) raf=requestAnimationFrame(render);
+  },{passive:true});
+
+  function render(){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    for(var i=parts.length-1;i>=0;i--){
+      var p=parts[i];
+      p.x+=p.vx; p.y+=p.vy;
+      p.z=Math.max(0,Math.min(1,p.z+p.vz));
+      p.life-=p.decay;
+      if(p.life<=0){ parts.splice(i,1); continue; }
+      /* depth: far = pale sky blue and small, close = deep site blue and larger */
+      var d=p.z,
+          cr=Math.round(lerp(126,36,d)),
+          cg=Math.round(lerp(188,101,d)),
+          cb=Math.round(lerp(233,166,d)),
+          alpha=p.life*lerp(0.3,0.82,d),
+          size=p.size*lerp(0.5,1.4,d);
+      if(p.splat){
+        var grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*2);
+        grad.addColorStop(0,'rgba('+cr+','+cg+','+cb+','+(alpha*0.6)+')');
+        grad.addColorStop(0.4,'rgba('+cr+','+cg+','+cb+','+(alpha*0.2)+')');
+        grad.addColorStop(1,'rgba('+cr+','+cg+','+cb+',0)');
+        ctx.fillStyle=grad;
+        ctx.beginPath(); ctx.arc(p.x,p.y,size*2,0,Math.PI*2); ctx.fill();
+      }else{
+        ctx.fillStyle='rgba('+cr+','+cg+','+cb+','+alpha+')';
+        ctx.beginPath(); ctx.arc(p.x,p.y,size,0,Math.PI*2); ctx.fill();
+      }
+    }
+    if(parts.length){ raf=requestAnimationFrame(render); }
+    else { raf=0; ctx.clearRect(0,0,innerWidth,innerHeight); }
+  }
+})();
+</script>
+<!-- ============ interactive point clouds: three.js + OrbitControls ============
+     One renderer per dataset row. Each row draws its four views into a single
+     canvas with the scissor test, and the four cameras are kept in lock-step, so
+     the only difference between cells is the sensor that observed the scene.
+     Rendering is on demand: a row is redrawn when its camera moves, when it
+     finishes loading, or while it auto-rotates -- never when the page sits still.
+     ========================================================================== -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const MANIFEST = 'assets/pointcloud/manifest.json';
+const app = document.getElementById('pc-app');
+const CLEAR = new THREE.Color('#0d1524');
+
+/* COLA-8 taxonomy, in the project's own colour map (color_map_dg). Those values
+   are BGR triples reversed to RGB, which is what the renderer receives; class 0
+   'Other' really is black, and at ~3% of the points it simply recedes into the
+   background, which is what an ignore class should do. */
+const CLASSES = [
+  { id: 0, name: 'Other',            color: '#000000' },
+  { id: 1, name: 'Driveable ground', color: '#d5d9fa' },
+  { id: 2, name: 'Structure',        color: '#f0a675' },
+  { id: 3, name: 'Vehicle',          color: '#9de9a1' },
+  { id: 4, name: 'Nature',           color: '#a0cefa' },
+  { id: 5, name: 'Living being',     color: '#ccf2ff' },
+  { id: 6, name: 'Movable object',   color: '#d3c8ba' },
+  { id: 7, name: 'Other ground',     color: '#e7d5e1' }
+];
+/* Height ramp for the dark canvas: cool and dim low down, warm and bright high up. */
+const HEIGHT_COLD = new THREE.Color('#2f6fb0');
+const HEIGHT_WARM = new THREE.Color('#ffd79a');
+
+const panels = [];
+let colourMode = 'class';
+let rafId = 0;
+let activeUntil = 0;
+
+function wake(ms) {
+  activeUntil = Math.max(activeUntil, performance.now() + (ms || 750));
+  if (!rafId) rafId = requestAnimationFrame(loop);
+}
+function invalidate(panel) {
+  panel.dirty = true;
+  if (!rafId) rafId = requestAnimationFrame(loop);
+}
+
+function loop() {
+  rafId = 0;
+  const active = performance.now() < activeUntil;
+  for (const p of panels) {
+    if (!p.ready) continue;
+    if (active) p.cells.forEach(c => c.controls.update());
+    if (p.dirty) { render(p); p.dirty = false; }
+  }
+  if (active) rafId = requestAnimationFrame(loop);
+}
+
+function render(panel) {
+  const { renderer, grid, cells } = panel;
+  const w = grid.clientWidth, h = grid.clientHeight;
+  if (!w || !h) return;
+  if (panel.w !== w || panel.h !== h) {
+    renderer.setSize(w, h, false);
+    panel.w = w; panel.h = h;
+    cells.forEach(c => {
+      const cw = c.el.clientWidth, ch = c.el.clientHeight;
+      if (cw && ch) { c.camera.aspect = cw / ch; c.camera.updateProjectionMatrix(); }
+    });
+  }
+  renderer.setScissorTest(true);
+  for (const c of cells) {
+    const x = c.el.offsetLeft, y = c.el.offsetTop;
+    const cw = c.el.clientWidth, ch = c.el.clientHeight;
+    if (!cw || !ch) continue;
+    const bottom = h - (y + ch);
+    renderer.setViewport(x, bottom, cw, ch);
+    renderer.setScissor(x, bottom, cw, ch);
+    renderer.setClearColor(CLEAR, 1);
+    renderer.clear(true, true, false);
+    if (c.points) renderer.render(c.scene, c.camera);
+  }
+  renderer.setScissorTest(false);
+}
+
+/* ---- binary loading: interleaved int16 x4 (x, y, z, label), no header ---- */
+async function loadCloud(view) {
+  /* The content hash in the URL is what makes caching safe here: a re-exported
+     cloud keeps its path but gets a new URL, so no stale copy can be served. */
+  const url = view.file + (view.version ? '?v=' + view.version : '');
+  const resp = await fetch(url, { cache: 'default' });
+  if (!resp.ok) throw new Error(view.file + ': HTTP ' + resp.status);
+  const raw = new Int16Array(await resp.arrayBuffer());
+  const count = Math.floor(raw.length / 4);
+  const sc = Array.isArray(view.scale) ? view.scale
+    : [view.scale || 0.01, view.scale || 0.01, view.scale || 0.01];
+  const of = view.offset || [0, 0, 0];
+  const positions = new Float32Array(count * 3);
+  const labels = new Uint8Array(count);
+  let zlo = Infinity, zhi = -Infinity;
+  for (let i = 0; i < count; i++) {
+    const x = raw[i * 4] * sc[0] + of[0];
+    const y = raw[i * 4 + 1] * sc[1] + of[1];
+    const z = raw[i * 4 + 2] * sc[2] + of[2];
+    positions[i * 3] = x; positions[i * 3 + 1] = y; positions[i * 3 + 2] = z;
+    labels[i] = raw[i * 4 + 3];
+    if (z < zlo) zlo = z;
+    if (z > zhi) zhi = z;
+  }
+  return { positions, labels, count, zlo, zhi };
+}
+
+function paint(panel, cell) {
+  const data = cell.data;
+  if (!data) return;
+  const useClass = colourMode === 'class' && panel.hasLabels;
+  const colors = cell.colors || (cell.colors = new Float32Array(data.count * 3));
+  if (useClass) {
+    for (let i = 0; i < data.count; i++) {
+      const c = panel.palette[data.labels[i]] || panel.palette[0];
+      colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+    }
+  } else {
+    const lo = panel.zlo, span = Math.max(panel.zhi - panel.zlo, 1e-6);
+    const tmp = new THREE.Color();
+    for (let i = 0; i < data.count; i++) {
+      const t = Math.min(Math.max((data.positions[i * 3 + 2] - lo) / span, 0), 1);
+      tmp.copy(HEIGHT_COLD).lerp(HEIGHT_WARM, t);
+      colors[i * 3] = tmp.r; colors[i * 3 + 1] = tmp.g; colors[i * 3 + 2] = tmp.b;
+    }
+  }
+  cell.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+}
+
+/* A sparse cloud needs fatter points than a 600k dense one to read as a surface.
+   These are world units under size attenuation, so points stay at the driver's
+   one-pixel floor until the camera is close, then grow as you approach. */
+function pointSize(count) {
+  return Math.min(Math.max(Math.pow(150000 / Math.max(count, 1), 0.3), 0.55), 2.1);
+}
+
+function fit(panel) {
+  const ref = panel.cells.find(c => c.view.id === 'dense') || panel.cells[0];
+  if (!ref || !ref.geometry.boundingSphere) return;
+  const s = ref.geometry.boundingSphere;
+  const r = Math.max(s.radius, 1);
+  panel.cells.forEach(c => {
+    c.controls.target.copy(s.center);
+    c.camera.position.set(s.center.x - r * 0.62, s.center.y - r * 0.82, s.center.z + r * 0.72);
+    c.camera.near = r / 400;
+    c.camera.far = r * 14;
+    c.camera.updateProjectionMatrix();
+    c.controls.update();
+  });
+  panel.home = {
+    position: panel.cells[0].camera.position.clone(),
+    target: panel.cells[0].controls.target.clone()
+  };
+  invalidate(panel);
+}
+
+function sync(panel, source) {
+  if (panel.syncing) return;
+  panel.syncing = true;
+  for (const c of panel.cells) {
+    if (c === source) continue;
+    c.camera.position.copy(source.camera.position);
+    c.camera.up.copy(source.camera.up);
+    c.camera.zoom = source.camera.zoom;
+    c.camera.updateProjectionMatrix();
+    c.controls.target.copy(source.controls.target);
+    c.controls.update();
+  }
+  panel.syncing = false;
+}
+
+function chip(text, pressed) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pc-chip';
+  b.textContent = text;
+  b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+  return b;
+}
+
+function buildPanel(scene) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pcg-panel';
+  const noLabels = !scene.labels_available;
+  wrap.innerHTML =
+    '<div class="pcg-title"><h3>' + scene.dataset + '</h3><span>' +
+    (scene.label || '') + '</span>' +
+    (noLabels ? '<em>no semantic labels in this dataset &mdash; coloured by height</em>' : '') +
+    '</div><div class="pcg-grid"><canvas class="pcg-canvas"></canvas></div>';
+  app.appendChild(wrap);
+
+  const grid = wrap.querySelector('.pcg-grid');
+  const canvas = wrap.querySelector('.pcg-canvas');
+  grid.addEventListener('pointerdown', () => {
+    if (panel.zoomArmed) return;
+    panel.zoomArmed = true;
+    panel.cells.forEach(c => { c.controls.enableZoom = true; });
+    grid.classList.add('armed');
+  }, { passive: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.autoClear = false;
+
+  const panel = {
+    scene, grid, renderer, cells: [], dirty: false, ready: false,
+    hasLabels: !noLabels, syncing: false,
+    zlo: 0, zhi: 1, w: 0, h: 0,
+    palette: CLASSES.map(c => new THREE.Color(c.color))
+  };
+
+  scene.views.forEach(view => {
+    const el = document.createElement('div');
+    el.className = 'pcg-cell';
+    el.innerHTML =
+      '<div class="pcg-cap"' +
+      (view.config_full ? ' title="' + view.config_full + '"' : '') + '>' +
+      '<b>' + view.label + '</b>' +
+      (view.config ? '<u>' + view.config + '</u>' : '') +
+      '<i>' + (view.meta || '') + '</i></div>' +
+      '<div class="pcg-state">loading&hellip;</div>';
+    grid.appendChild(el);
+
+    const s3 = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(46, 4 / 3, 0.1, 1200);
+    camera.up.set(0, 0, 1);
+    const controls = new OrbitControls(camera, el);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.085;
+    controls.rotateSpeed = 0.72;
+    controls.zoomSpeed = 0.85;
+    /* The wheel stays with the page until the row is grabbed once, otherwise
+       scrolling past three stacked grids would be impossible. */
+    controls.enableZoom = false;
+    controls.addEventListener('start', () => wake(1200));
+    controls.addEventListener('change', () => {
+      const cell = panel.cells.find(c => c.controls === controls);
+      sync(panel, cell);
+      invalidate(panel);
+      wake();
+    });
+
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.PointsMaterial({ size: 0.06, vertexColors: true, sizeAttenuation: true });
+    panel.cells.push({ view, el, scene: s3, camera, controls, geometry, material, points: null, data: null });
+  });
+
+  return panel;
+}
+
+async function hydrate(panel) {
+  if (panel.loading) return;
+  panel.loading = true;
+  const results = await Promise.allSettled(panel.cells.map(c => loadCloud(c.view)));
+  let zlo = Infinity, zhi = -Infinity;
+  results.forEach((res, i) => {
+    const cell = panel.cells[i];
+    const state = cell.el.querySelector('.pcg-state');
+    if (res.status !== 'fulfilled') {
+      if (state) state.textContent = 'unavailable';
+      console.warn(res.reason);
+      return;
+    }
+    cell.data = res.value;
+    zlo = Math.min(zlo, res.value.zlo);
+    zhi = Math.max(zhi, res.value.zhi);
+    cell.geometry.setAttribute('position', new THREE.BufferAttribute(res.value.positions, 3));
+    cell.geometry.computeBoundingSphere();
+    cell.material.size = 0.06 * pointSize(res.value.count);
+    cell.points = new THREE.Points(cell.geometry, cell.material);
+    cell.scene.add(cell.points);
+    if (state) state.remove();
+  });
+  panel.zlo = zlo; panel.zhi = zhi;
+  /* Guard against a manifest that claims labels the data does not carry: an
+     all-zero label column would paint the whole row black, so fall back to the
+     height ramp rather than render an invisible panel. */
+  if (panel.hasLabels) {
+    const labelled = panel.cells.some(c => {
+      if (!c.data) return false;
+      for (let i = 0; i < c.data.count; i++) if (c.data.labels[i] > 0) return true;
+      return false;
+    });
+    if (!labelled) {
+      panel.hasLabels = false;
+      console.warn(panel.scene.id + ': labels claimed but all zero; colouring by height');
+    }
+  }
+  panel.cells.forEach(c => paint(panel, c));
+  panel.ready = true;
+  fit(panel);
+}
+
+function build(manifest) {
+  app.innerHTML = '';
+
+  const tools = document.createElement('div');
+  tools.className = 'pc-tools';
+  tools.innerHTML = '<span class="pc-label">View</span>';
+  app.appendChild(tools);
+
+  const colourChip = chip('Colour: class', true);
+  const resetChip = chip('Reset cameras', false);
+  tools.append(colourChip, resetChip);
+
+  const legend = document.createElement('div');
+  legend.className = 'pc-legend';
+  const legendLabel = document.createElement('span');
+  legendLabel.className = 'pc-legend-title';
+  legendLabel.textContent = 'COLA-8 classes';
+  legend.appendChild(legendLabel);
+  CLASSES.forEach(c => {
+    const span = document.createElement('span');
+    span.innerHTML = '<i style="background:' + c.color + '"></i>' + c.name;
+    legend.appendChild(span);
+  });
+  app.appendChild(legend);
+
+  manifest.scenes.forEach(sc => panels.push(buildPanel(sc)));
+
+  const hint = document.createElement('p');
+  hint.className = 'pcg-hint';
+  hint.innerHTML = 'The four cameras in a row move together; rows are independent. '
+    + 'Drag a view to orbit &mdash; once a row has been grabbed, the wheel zooms it. '
+    + 'Point clouds load as you scroll to them.';
+  app.appendChild(hint);
+
+  colourChip.addEventListener('click', () => {
+    colourMode = colourMode === 'class' ? 'height' : 'class';
+    colourChip.textContent = 'Colour: ' + colourMode;
+    legend.style.display = colourMode === 'class' ? '' : 'none';
+    panels.forEach(p => {
+      if (!p.ready) return;
+      p.cells.forEach(c => paint(p, c));
+      invalidate(p);
+    });
+  });
+  resetChip.addEventListener('click', () => panels.forEach(p => { if (p.ready) fit(p); }));
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const panel = panels.find(p => p.grid.parentElement === entry.target);
+      if (!panel) return;
+      if (entry.isIntersecting) { hydrate(panel); invalidate(panel); }
+    });
+  }, { rootMargin: '300px' });
+  panels.forEach(p => io.observe(p.grid.parentElement));
+
+  const ro = new ResizeObserver(() => panels.forEach(invalidate));
+  panels.forEach(p => ro.observe(p.grid));
+}
+
+function pending(reason) {
+  app.innerHTML =
+    '<div class="pc-pending"><b>Interactive point clouds are on the way.</b> ' +
+    'The viewer is waiting for the sampled clouds at ' +
+    '<code>docs/assets/pointcloud/manifest.json</code>.' +
+    (reason ? '<br /><span style="font-size:12px;opacity:.7">' + reason + '</span>' : '') +
+    '</div>';
+}
+
+if (app) {
+  fetch(MANIFEST, { cache: 'no-cache' })
+    .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+    .then(m => {
+      if (!m || !Array.isArray(m.scenes) || !m.scenes.length) throw new Error('empty manifest');
+      build(m);
+    })
+    .catch(err => pending(String(err.message || err)));
+}
 </script>
 </body>
 </html>

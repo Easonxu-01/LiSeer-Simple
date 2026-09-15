@@ -1,0 +1,357 @@
+{
+  "format": "int16x4",
+  "source": "Response Fig. R4 (appendix B.7); exported by S3",
+  "scenes": [
+    {
+      "id": "sk_09_000771",
+      "dataset": "SemanticKITTI",
+      "label": "seq 09 / 000771",
+      "ground_z": -2.218670701980591,
+      "labels_available": true,
+      "views": [
+        {
+          "id": "real",
+          "label": "Real scan",
+          "file": "assets/pointcloud/sk_09_000771/real.bin",
+          "version": "37028db6d3",
+          "points": 82684,
+          "format": "int16x4",
+          "scale": [
+            0.002420809,
+            0.001423905,
+            0.000151542
+          ],
+          "offset": [
+            0.283195,
+            6.663372,
+            -2.058294
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "meta": "82,684 points \u00b7 measured",
+          "config": null,
+          "config_full": null
+        },
+        {
+          "id": "dense",
+          "label": "Dense reconstruction",
+          "file": "assets/pointcloud/sk_09_000771/dense.bin",
+          "version": "f3f582228c",
+          "points": 593794,
+          "format": "int16x4",
+          "scale": [
+            0.001548483,
+            0.001521715,
+            8.2328e-05
+          ],
+          "offset": [
+            0.20266,
+            -0.833111,
+            -0.386193
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            -0.4886707019805909
+          ],
+          "meta": "593,794 points \u00b7 reconstructed",
+          "config": null,
+          "config_full": null
+        },
+        {
+          "id": "spinning",
+          "label": "Spinning LiDAR",
+          "file": "assets/pointcloud/sk_09_000771/spinning.bin",
+          "version": "04045643aa",
+          "points": 56780,
+          "format": "int16x4",
+          "scale": [
+            0.001539694,
+            0.001255031,
+            8.0147e-05
+          ],
+          "offset": [
+            0.598366,
+            5.301357,
+            -0.197495
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            -0.4886707019805909
+          ],
+          "meta": "56,780 points \u00b7 simulated",
+          "config": "64\u00d72048 \u00b7 FoV \u221225\u2026+15\u00b0 \u00b7 h 1.73 m",
+          "config_full": "64 beams \u00d7 2048 azimuth steps, vertical field of view \u221225\u00b0 to +15\u00b0, mounting height 1.73 m, beam concentration 2.6"
+        },
+        {
+          "id": "risley_0.8",
+          "label": "Prism prototype, T=0.8 s",
+          "file": "assets/pointcloud/sk_09_000771/risley_0.8.bin",
+          "version": "68e0a1541c",
+          "points": 45636,
+          "format": "int16x4",
+          "scale": [
+            0.000738055,
+            0.000799778,
+            6.02e-05
+          ],
+          "offset": [
+            26.816612,
+            -1.656805,
+            0.112721
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            -0.4886707019805909
+          ],
+          "meta": "45,636 points \u00b7 simulated",
+          "config": "T=0.8 s \u00b7 192,000 rays \u00b7 FoV 70.4\u00b0 \u00b7 h 1.73 m",
+          "config_full": "integration time 0.8 s, 192,000 rays, circular field of view 70.4\u00b0, mounting height 1.73 m, f1 = 7294 Hz, f2/f1 = \u22120.618034, rho = 17.5\u00b0"
+        }
+      ]
+    },
+    {
+      "id": "nu_1533582538648258",
+      "dataset": "nuScenes",
+      "label": "_TOP__1533582538648258",
+      "ground_z": -3.3178661823272706,
+      "labels_available": true,
+      "views": [
+        {
+          "id": "real",
+          "label": "Real scan",
+          "file": "assets/pointcloud/nu_1533582538648258/real.bin",
+          "version": "acd6840a4e",
+          "points": 22414,
+          "format": "int16x4",
+          "scale": [
+            0.002409303,
+            0.002594194,
+            0.000368693
+          ],
+          "offset": [
+            -0.922386,
+            -9.339577,
+            2.203858
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "meta": "22,414 points \u00b7 measured",
+          "config": null,
+          "config_full": null
+        },
+        {
+          "id": "dense",
+          "label": "Dense reconstruction",
+          "file": "assets/pointcloud/nu_1533582538648258/dense.bin",
+          "version": "13252d9551",
+          "points": 430362,
+          "format": "int16x4",
+          "scale": [
+            0.001363584,
+            0.001514988,
+            0.000219991
+          ],
+          "offset": [
+            2.20496,
+            0.495907,
+            2.033706
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            -1.5878661823272706
+          ],
+          "meta": "430,362 points \u00b7 reconstructed",
+          "config": null,
+          "config_full": null
+        },
+        {
+          "id": "spinning",
+          "label": "Spinning LiDAR",
+          "file": "assets/pointcloud/nu_1533582538648258/spinning.bin",
+          "version": "5a3de86943",
+          "points": 54986,
+          "format": "int16x4",
+          "scale": [
+            0.001251616,
+            0.001515621,
+            0.000214144
+          ],
+          "offset": [
+            3.929874,
+            0.507114,
+            2.301198
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            -1.5878661823272706
+          ],
+          "meta": "54,986 points \u00b7 simulated",
+          "config": "64\u00d72048 \u00b7 FoV \u221225\u2026+15\u00b0 \u00b7 h 1.73 m",
+          "config_full": "64 beams \u00d7 2048 azimuth steps, vertical field of view \u221225\u00b0 to +15\u00b0, mounting height 1.73 m, beam concentration 2.6"
+        },
+        {
+          "id": "risley_0.8",
+          "label": "Prism prototype, T=0.8 s",
+          "file": "assets/pointcloud/nu_1533582538648258/risley_0.8.bin",
+          "version": "28bee9c273",
+          "points": 32959,
+          "format": "int16x4",
+          "scale": [
+            0.000680594,
+            0.000607592,
+            0.000165859
+          ],
+          "offset": [
+            24.649231,
+            -3.917221,
+            3.457981
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            -1.5878661823272706
+          ],
+          "meta": "32,959 points \u00b7 simulated",
+          "config": "T=0.8 s \u00b7 192,000 rays \u00b7 FoV 70.4\u00b0 \u00b7 h 1.73 m",
+          "config_full": "integration time 0.8 s, 192,000 rays, circular field of view 70.4\u00b0, mounting height 1.73 m, f1 = 7294 Hz, f2/f1 = \u22120.618034, rho = 17.5\u00b0"
+        }
+      ]
+    },
+    {
+      "id": "waymo_0114124",
+      "dataset": "Waymo",
+      "label": "frame 0114124",
+      "ground_z": -0.25693624377250673,
+      "labels_available": true,
+      "views": [
+        {
+          "id": "real",
+          "label": "Real scan",
+          "file": "assets/pointcloud/waymo_0114124/real.bin",
+          "version": "fb8def23e6",
+          "points": 156124,
+          "format": "int16x4",
+          "scale": [
+            0.002150616,
+            0.001993344,
+            0.000144553
+          ],
+          "offset": [
+            0.662598,
+            -3.478149,
+            1.227663
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "meta": "156,124 points \u00b7 measured",
+          "config": null,
+          "config_full": null
+        },
+        {
+          "id": "dense",
+          "label": "Dense reconstruction",
+          "file": "assets/pointcloud/waymo_0114124/dense.bin",
+          "version": "33beb902c1",
+          "points": 798971,
+          "format": "int16x4",
+          "scale": [
+            0.001542493,
+            0.001522633,
+            0.000121245
+          ],
+          "offset": [
+            -0.311115,
+            0.438534,
+            2.284306
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            1.4730637562274933
+          ],
+          "meta": "798,971 points \u00b7 reconstructed",
+          "config": null,
+          "config_full": null
+        },
+        {
+          "id": "spinning",
+          "label": "Spinning LiDAR",
+          "file": "assets/pointcloud/waymo_0114124/spinning.bin",
+          "version": "4ea316b2fd",
+          "points": 69967,
+          "format": "int16x4",
+          "scale": [
+            0.001485328,
+            0.001456081,
+            0.000110311
+          ],
+          "offset": [
+            0.467072,
+            1.506756,
+            2.489252
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            1.4730637562274933
+          ],
+          "meta": "69,967 points \u00b7 simulated",
+          "config": "64\u00d72048 \u00b7 FoV \u221225\u2026+15\u00b0 \u00b7 h 1.73 m",
+          "config_full": "64 beams \u00d7 2048 azimuth steps, vertical field of view \u221225\u00b0 to +15\u00b0, mounting height 1.73 m, beam concentration 2.6"
+        },
+        {
+          "id": "risley_0.8",
+          "label": "Prism prototype, T=0.8 s",
+          "file": "assets/pointcloud/waymo_0114124/risley_0.8.bin",
+          "version": "246fc719b2",
+          "points": 43818,
+          "format": "int16x4",
+          "scale": [
+            0.000725262,
+            0.000832567,
+            8.7946e-05
+          ],
+          "offset": [
+            26.23546,
+            0.411749,
+            2.811089
+          ],
+          "has_labels": true,
+          "origin": [
+            0.0,
+            0.0,
+            1.4730637562274933
+          ],
+          "meta": "43,818 points \u00b7 simulated",
+          "config": "T=0.8 s \u00b7 192,000 rays \u00b7 FoV 70.4\u00b0 \u00b7 h 1.73 m",
+          "config_full": "integration time 0.8 s, 192,000 rays, circular field of view 70.4\u00b0, mounting height 1.73 m, f1 = 7294 Hz, f2/f1 = \u22120.618034, rho = 17.5\u00b0"
+        }
+      ]
+    }
+  ]
+}

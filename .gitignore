@@ -24,3 +24,6 @@ ckpts/
 *.mp4
 *.mov
 *.mkv
+
+# Demo script outputs
+out/

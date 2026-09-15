@@ -17,6 +17,86 @@ LiDAR perception is typically locked into a single-dataset, single-sensor traini
 
 All four switches live at the top of `projects/configs/pointocc/pointtpv_seg.py` and default to `True`.
 
+## Optional sampler extensions
+
+Two optional, default-off features of the physics-based controllable sampler. Neither
+changes the default training or inference path: with no new option enabled the
+sampler's output is bit-identical to the release without them
+(`tests/test_perturb_suite.py` asserts this against a committed baseline).
+
+**Optional physical-perturbation suite.** In addition to the randomization the
+sampler already performs (a LiDAR configuration redrawn every iteration -- beams,
+angular resolution, field of view, mounting height -- plus minority-class mixup), an
+explicit perturbation suite can be enabled for training: per-ray angular jitter
+(sigma = 0.2 mrad), Gaussian range noise (sigma = 2.5 cm) and random ray dropout
+(p = 3%). The three terms are layered on top of the existing randomization, not
+substituted for it. It applies during training only -- evaluation and inference are
+never perturbed -- and it is disabled by default; all reported results are produced
+without it. While disabled the suite draws no random numbers, so it cannot shift the
+sampling stream. See `projects/configs/pointocc/sampler_risley_example.py` for the
+switch, or pass `perturb_suite=dict(enabled=True, ...)` to the model.
+
+**Solid-state scanning (prototype).** The point-centric sampler requires only a set
+of ray directions. A prototype path for non-repetitive Risley-prism scanning
+(Livox-type rosette patterns) is provided in
+`projects/unilidar_plugin/pointocc_model/solidstate_sampler.py`: ray construction,
+point-to-ray assignment and the visibility neighbourhood are replaced, while the
+nearest-hit reduction, minority-class protection, noise models and output stage are
+reused unchanged -- both paths call the same
+`sampling_common.nearest_hit_reduce`. The scanline regularisation is disabled, as a
+non-repetitive pattern has no scan lines. Select the path with `pattern: risley` in
+the sensor config (see `projects/configs/sampler_risley_example.yaml`); a config
+without a `pattern` key is `spinning` and unaffected. **LiSeer has not been trained
+or evaluated on solid-state data; the prototype demonstrates architectural
+compatibility.**
+
+Prism parameter provenance:
+
+| Parameter | Value | Source |
+| --- | --- | --- |
+| `fov_deg` | 70.4 (circular, full angle) | Livox Avia specification |
+| `point_rate` | 240 000 points/s | Livox Avia first-return specification |
+| `beam_divergence_deg` | 0.28 | Livox Avia specification |
+| `t_int` | 0.1 / 0.2 / 0.5 s | design choice (figure panels) |
+| `f1_hz` | 7294.0 | design choice |
+| `freq_ratio` (`f2`/`f1`) | -1/golden = -0.618034, i.e. f2 = -4507.94 Hz | design choice: counter-rotating at the ratio hardest to approximate rationally, so the pattern closes as late as possible |
+| `rho_deg` | `None` -> `fov_deg`/4 = 17.6 | design choice: rho1 == rho2 so the off-axis angle reaches 0 and the pattern has no centre hole |
+| prism initial phases | drawn per frame | design choice: this is what makes the scan non-repetitive across frames |
+| `height_m` | 1.73 | design choice, matching the mechanical path's mounting range |
+
+Two demo scripts reproduce the appendix figures' behaviour without any dataset
+(they fall back to a synthetic dense frame):
+
+```shell
+python scripts/demo_solidstate.py      --out out/solidstate   # spinning + T = 0.1/0.2/0.5 s
+python scripts/plot_fov_coverage.py    --out out/solidstate   # coverage vs integration time
+```
+
+`scripts/plot_fov_coverage.py` measures field-of-view coverage on the prototype's
+own 240x240 angular grid -- the denominator is the circular field of view itself,
+not its square bounding box. With the prism parameters fixed before any coverage was
+computed, the prototype reaches **50.9% coverage at 0.1 s and 98.8% at 0.8 s**,
+consistent with the manufacturer's published behaviour.
+
+The [project page](https://easonxu-01.github.io/LiSeer-Simple/) carries the same
+comparison as interactive point clouds: one scene per dataset, re-observed four ways
+(real scan, dense reconstruction, spinning LiDAR, prism prototype at T = 0.8 s), with
+the four cameras in a row locked together. Points are coloured by the project's
+COLA-8 colour map, with a legend, and the two simulated views carry the sensor
+configuration they were sampled with. `scripts/pack_pointcloud.py` converts the
+exported clouds into the binary the viewer reads:
+
+```shell
+python scripts/pack_pointcloud.py --src <exported clouds>   # -> docs/assets/pointcloud/
+python scripts/pack_pointcloud.py --demo                    # from the synthetic fixture
+```
+
+Tests for both features:
+
+```shell
+python -m pytest tests -q
+```
+
 ## Datasets & evaluation
 
 LiSeer is trained and evaluated on three public benchmarks plus custom on-vehicle data:

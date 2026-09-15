@@ -15,6 +15,7 @@ from mmcv.parallel import DataContainer
 from torch_scatter import scatter_min
 from .Spectraldistiller import TPVLowFreqSpectralDistiller
 from .tpv_aggregator import _cb_adc_consistency_loss
+from . import sampling_common
 import torch.nn.functional as F
 
 @DETECTORS.register_module()
@@ -29,6 +30,12 @@ class PointTPV_Seg(CenterPoint):
                  random = False,
                  reset_random_prob = 0.0,
                  sensor=None,
+                 # Optional physical-perturbation suite, layered on top of the
+                 # sampler's own stochastic terms rather than replacing any of them.
+                 # None / omitted = everything off, which is bit-identical to the
+                 # sampler without it. ``sampler_perturb`` is an accepted alias.
+                 perturb_suite=None,
+                 sampler_perturb=None,
                  consistency = False,
                  dense_train = False,
                  d2skd = False,
@@ -52,6 +59,11 @@ class PointTPV_Seg(CenterPoint):
         self.random = random
         self.reset_random_prob = float(reset_random_prob)
         self.sensor_config = sensor
+        # Off by default. While off, every operator below is skipped by its own
+        # ``if``, so the suite draws no random numbers and the sampling stream is
+        # unchanged; an unknown field raises instead of being silently dropped.
+        self.perturb_cfg = sampling_common.resolve_perturb_cfg(
+            perturb_suite if perturb_suite is not None else sampler_perturb)
         self.consistency = consistency
         self.dense_train = dense_train
         self.d2skd = d2skd
@@ -1262,6 +1274,22 @@ class PointTPV_Seg(CenterPoint):
             else:
                 return results_points, results_grid_ind, results_grid_ind_vox, results_labels, sensor_params_tensor
 
+        # Scan-pattern dispatch. A sensor config without a ``pattern`` key -- which
+        # is every config in this repository -- means 'spinning' and falls through to
+        # the mechanical path below, unchanged.
+        _pattern = str((self.sensor_config or {}).get('pattern', 'spinning')).lower()
+        if _pattern in ('risley', 'solidstate', 'solid_state'):
+            from .solidstate_sampler import sample_solidstate
+            return sample_solidstate(
+                points, grid_ind, grid_ind_vox, labels,
+                cfg=self.sensor_config,
+                grid=dict(min_bound=self.min_bound, max_bound=self.max_bound,
+                          grid_size=self.grid_size, grid_size_vox=self.grid_size_vox),
+            )
+        if _pattern != 'spinning':
+            raise ValueError(
+                f"unknown sampler pattern {_pattern!r}; expected 'spinning' or 'risley'")
+
         # Original sampling logic (ray-casting based)
         points = [p.detach() for p in points] if isinstance(points, list) else points.detach()
 
@@ -1330,6 +1358,11 @@ class PointTPV_Seg(CenterPoint):
             return selected
 
         def _run_single_sampling(sensor_params_tuple=None):
+            # Perturbation suite: read once outside the frame loop. Training-time
+            # only, so evaluation and inference are never perturbed.
+            pcfg = self.perturb_cfg
+            _pt_on = bool(pcfg['enabled']) and self.training
+
             # 0. Draw the LiDAR configuration.
             if sensor_params_tuple is None:
                 (beams, lidar_height, horizontal_resolution,
@@ -1549,18 +1582,13 @@ class PointTPV_Seg(CenterPoint):
                 valid_bins = flat_bin[valid_mask]
                 valid_depths = depths[valid_mask]
 
-                # 7. First pass: keep only the closest point per bin (plain z-buffer)
+                # 7. First pass: keep only the closest point per bin (plain z-buffer).
+                #    Lives in sampling_common so the solid-state path reduces hits
+                #    with the very same function.
                 num_rays = beams * horizontal_resolution
-                min_depth_flat, min_idx_in_valid = scatter_min(
-                    valid_depths,
-                    valid_bins,
-                    dim=0,
-                    dim_size=num_rays
-                )
-                hit_mask_flat = torch.isfinite(min_depth_flat)
-                K = valid_depths.shape[0]
-                idx_ok = (min_idx_in_valid >= 0) & (min_idx_in_valid < K)
-                hit_mask_flat = hit_mask_flat & idx_ok
+                min_depth_flat, min_idx_in_valid, hit_mask_flat = \
+                    sampling_common.nearest_hit_reduce(
+                        valid_depths, valid_bins, num_rays)
 
                 # Map indices from the valid subset back into the kept subset.
                 valid_pos = valid_mask.nonzero(as_tuple=False).squeeze(1)
@@ -1740,11 +1768,43 @@ class PointTPV_Seg(CenterPoint):
                 chosen_kept_idx = final_idx_flat[valid_out_mask]                  # index into kept_*
                 chosen_bins = valid_out_mask.nonzero(as_tuple=False).squeeze(1)   # flat bin ids
                 chosen_depths = final_depth_flat[valid_out_mask].unsqueeze(1)     # [S, 1]
+
+                # Perturbation suite, part 1: per-ray dropout. Models detection
+                # failure, so it is class-agnostic unless asked otherwise.
+                if _pt_on and pcfg['ray_dropout'] > 0 and chosen_kept_idx.numel() > 16:
+                    keep_pt = sampling_common.ray_dropout_mask(
+                        chosen_kept_idx.shape[0], pcfg['ray_dropout'], device,
+                        labels=kept_labels[chosen_kept_idx],
+                        exempt_minority=pcfg['dropout_exempt_minority'])
+                    chosen_kept_idx = chosen_kept_idx[keep_pt]
+                    chosen_bins = chosen_bins[keep_pt]
+                    chosen_depths = chosen_depths[keep_pt]
+                    if chosen_kept_idx.numel() == 0:
+                        sp, sl, sgi, sgiv = make_empty_outputs(
+                            curr_points, curr_labels, curr_grid_ind, curr_grid_ind_vox)
+                        results_points.append(sp); results_labels.append(sl)
+                        results_grid_ind.append(sgi); results_grid_ind_vox.append(sgiv)
+                        continue
+
+                # Perturbation suite, part 2: extra range noise on the winning depth,
+                # before the coordinates are recomputed below.
+                if _pt_on and pcfg['range_noise_cm'] > 0:
+                    chosen_depths = sampling_common.apply_range_noise(
+                        chosen_depths, pcfg['range_noise_cm'])
+
                 sampled_points = kept_points_raw[chosen_kept_idx].clone()
                 sampled_labels = kept_labels[chosen_kept_idx]
                 sampled_grid_ind = kept_grid_ind[chosen_kept_idx]
                 sampled_grid_ind_vox = kept_grid_ind_vox[chosen_kept_idx]
                 chosen_ray_dirs = ray_directions[chosen_bins]                     # [S, 3]
+
+                # Perturbation suite, part 3: per-ray angular jitter, applied on the
+                # output side only -- see sampling_common.apply_angular_jitter for why
+                # the global ray grid is deliberately left alone.
+                if _pt_on and pcfg['angular_jitter_mrad'] > 0:
+                    chosen_ray_dirs = sampling_common.apply_angular_jitter(
+                        chosen_ray_dirs, pcfg['angular_jitter_mrad'])
+
                 projected_xyz = lidar_origin.unsqueeze(0) + chosen_depths * chosen_ray_dirs
                 # Write xyz back into the stored column layout.
                 sampled_points[:, 6] = projected_xyz[:, 0]  # x
