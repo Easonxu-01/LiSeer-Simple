@@ -1,0 +1,2970 @@
+{
+ "frame_id": "semantickitti/seq08/000100",
+ "dataset": "semantickitti",
+ "n_configs": 50,
+ "min_obs": 10,
+ "seed": 0,
+ "device": "cuda:0",
+ "dense_points": 1016760,
+ "sensor_ranges": {
+  "beams": [
+   16,
+   128
+  ],
+  "hres": [
+   600,
+   1800
+  ],
+  "vlow": [
+   -28,
+   -22
+  ],
+  "vup": [
+   2,
+   15
+  ],
+  "height": [
+   1.5,
+   1.85
+  ]
+ },
+ "class_names": [
+  "Other",
+  "Driveable Ground",
+  "Structure",
+  "Vehicle",
+  "Nature",
+  "Living Being",
+  "Movable objects",
+  "Other Ground"
+ ],
+ "ignore_label": 0,
+ "configs": [
+  {
+   "beams": 124,
+   "hres": 1388,
+   "vlow": -23.5,
+   "vup": 7.5,
+   "height": 1.59
+  },
+  {
+   "beams": 81,
+   "hres": 1595,
+   "vlow": -25.6,
+   "vup": 12.2,
+   "height": 1.61
+  },
+  {
+   "beams": 77,
+   "hres": 1333,
+   "vlow": -24.5,
+   "vup": 13.8,
+   "height": 1.68
+  },
+  {
+   "beams": 52,
+   "hres": 886,
+   "vlow": -23.5,
+   "vup": 10.0,
+   "height": 1.59
+  },
+  {
+   "beams": 84,
+   "hres": 900,
+   "vlow": -26.1,
+   "vup": 11.5,
+   "height": 1.81
+  },
+  {
+   "beams": 103,
+   "hres": 1276,
+   "vlow": -25.2,
+   "vup": 3.3,
+   "height": 1.65
+  },
+  {
+   "beams": 94,
+   "hres": 1018,
+   "vlow": -22.2,
+   "vup": 8.2,
+   "height": 1.8
+  },
+  {
+   "beams": 49,
+   "hres": 727,
+   "vlow": -23.2,
+   "vup": 9.1,
+   "height": 1.5
+  },
+  {
+   "beams": 108,
+   "hres": 1416,
+   "vlow": -23.7,
+   "vup": 12.2,
+   "height": 1.72
+  },
+  {
+   "beams": 94,
+   "hres": 1610,
+   "vlow": -23.0,
+   "vup": 6.3,
+   "height": 1.76
+  },
+  {
+   "beams": 106,
+   "hres": 728,
+   "vlow": -26.9,
+   "vup": 9.4,
+   "height": 1.58
+  },
+  {
+   "beams": 34,
+   "hres": 1712,
+   "vlow": -25.3,
+   "vup": 3.0,
+   "height": 1.61
+  },
+  {
+   "beams": 81,
+   "hres": 1602,
+   "vlow": -27.3,
+   "vup": 9.2,
+   "height": 1.75
+  },
+  {
+   "beams": 86,
+   "hres": 1281,
+   "vlow": -23.1,
+   "vup": 9.0,
+   "height": 1.84
+  },
+  {
+   "beams": 93,
+   "hres": 1720,
+   "vlow": -24.5,
+   "vup": 7.8,
+   "height": 1.71
+  },
+  {
+   "beams": 65,
+   "hres": 1249,
+   "vlow": -24.5,
+   "vup": 5.8,
+   "height": 1.57
+  },
+  {
+   "beams": 39,
+   "hres": 667,
+   "vlow": -24.3,
+   "vup": 10.5,
+   "height": 1.67
+  },
+  {
+   "beams": 27,
+   "hres": 866,
+   "vlow": -22.7,
+   "vup": 14.0,
+   "height": 1.79
+  },
+  {
+   "beams": 105,
+   "hres": 1707,
+   "vlow": -23.9,
+   "vup": 12.9,
+   "height": 1.68
+  },
+  {
+   "beams": 82,
+   "hres": 1082,
+   "vlow": -22.9,
+   "vup": 13.6,
+   "height": 1.71
+  },
+  {
+   "beams": 69,
+   "hres": 1787,
+   "vlow": -26.3,
+   "vup": 8.4,
+   "height": 1.72
+  },
+  {
+   "beams": 105,
+   "hres": 1331,
+   "vlow": -27.5,
+   "vup": 10.0,
+   "height": 1.67
+  },
+  {
+   "beams": 96,
+   "hres": 1286,
+   "vlow": -22.9,
+   "vup": 5.2,
+   "height": 1.76
+  },
+  {
+   "beams": 30,
+   "hres": 1051,
+   "vlow": -25.8,
+   "vup": 4.2,
+   "height": 1.65
+  },
+  {
+   "beams": 23,
+   "hres": 806,
+   "vlow": -23.3,
+   "vup": 13.1,
+   "height": 1.58
+  },
+  {
+   "beams": 120,
+   "hres": 1775,
+   "vlow": -24.2,
+   "vup": 14.2,
+   "height": 1.71
+  },
+  {
+   "beams": 25,
+   "hres": 654,
+   "vlow": -27.3,
+   "vup": 4.5,
+   "height": 1.79
+  },
+  {
+   "beams": 31,
+   "hres": 1401,
+   "vlow": -27.5,
+   "vup": 12.8,
+   "height": 1.54
+  },
+  {
+   "beams": 93,
+   "hres": 644,
+   "vlow": -26.8,
+   "vup": 14.6,
+   "height": 1.75
+  },
+  {
+   "beams": 77,
+   "hres": 1031,
+   "vlow": -23.6,
+   "vup": 2.8,
+   "height": 1.74
+  },
+  {
+   "beams": 85,
+   "hres": 1471,
+   "vlow": -24.3,
+   "vup": 12.9,
+   "height": 1.52
+  },
+  {
+   "beams": 25,
+   "hres": 1216,
+   "vlow": -25.9,
+   "vup": 4.3,
+   "height": 1.68
+  },
+  {
+   "beams": 21,
+   "hres": 806,
+   "vlow": -23.8,
+   "vup": 7.1,
+   "height": 1.59
+  },
+  {
+   "beams": 109,
+   "hres": 1563,
+   "vlow": -23.0,
+   "vup": 13.9,
+   "height": 1.56
+  },
+  {
+   "beams": 102,
+   "hres": 1016,
+   "vlow": -22.2,
+   "vup": 2.8,
+   "height": 1.74
+  },
+  {
+   "beams": 124,
+   "hres": 931,
+   "vlow": -25.9,
+   "vup": 5.3,
+   "height": 1.71
+  },
+  {
+   "beams": 72,
+   "hres": 958,
+   "vlow": -27.9,
+   "vup": 10.9,
+   "height": 1.82
+  },
+  {
+   "beams": 127,
+   "hres": 1641,
+   "vlow": -22.5,
+   "vup": 10.4,
+   "height": 1.64
+  },
+  {
+   "beams": 100,
+   "hres": 1113,
+   "vlow": -27.1,
+   "vup": 11.0,
+   "height": 1.66
+  },
+  {
+   "beams": 26,
+   "hres": 1287,
+   "vlow": -23.6,
+   "vup": 9.1,
+   "height": 1.55
+  },
+  {
+   "beams": 113,
+   "hres": 1586,
+   "vlow": -25.9,
+   "vup": 5.7,
+   "height": 1.63
+  },
+  {
+   "beams": 97,
+   "hres": 871,
+   "vlow": -23.7,
+   "vup": 7.0,
+   "height": 1.65
+  },
+  {
+   "beams": 99,
+   "hres": 765,
+   "vlow": -28.0,
+   "vup": 4.5,
+   "height": 1.62
+  },
+  {
+   "beams": 46,
+   "hres": 1056,
+   "vlow": -24.2,
+   "vup": 6.9,
+   "height": 1.81
+  },
+  {
+   "beams": 88,
+   "hres": 1448,
+   "vlow": -27.8,
+   "vup": 13.3,
+   "height": 1.7
+  },
+  {
+   "beams": 114,
+   "hres": 695,
+   "vlow": -27.0,
+   "vup": 2.8,
+   "height": 1.75
+  },
+  {
+   "beams": 73,
+   "hres": 1680,
+   "vlow": -22.7,
+   "vup": 13.8,
+   "height": 1.71
+  },
+  {
+   "beams": 16,
+   "hres": 679,
+   "vlow": -25.0,
+   "vup": 6.1,
+   "height": 1.66
+  },
+  {
+   "beams": 119,
+   "hres": 1450,
+   "vlow": -26.9,
+   "vup": 15.0,
+   "height": 1.72
+  },
+  {
+   "beams": 26,
+   "hres": 867,
+   "vlow": -22.1,
+   "vup": 7.2,
+   "height": 1.74
+  }
+ ],
+ "checkpoints": {
+  "LiSeer_SK": {
+   "qualifying_points": 94847,
+   "agreement_pct": 67.6689826773646,
+   "majority_vote_acc_pct": 76.16765708616123,
+   "per_config_acc_mean": 73.50746928185329,
+   "per_config_acc_sd": 2.5831340068059627,
+   "per_config_acc_min": 65.6384280470106,
+   "per_config_acc_max": 79.42172073342736,
+   "qualifying_points_labeled": 94741,
+   "agreement_pct_labeled": 67.67819634582705,
+   "mean_modal_vote_share_pct": 92.43481615134377,
+   "median_modal_vote_share_pct": 100.0,
+   "agreement_pct_where_majority_correct": 77.71680385798619,
+   "agreement_pct_where_majority_wrong": 35.59502192302582,
+   "majority_acc_matched_mean": 74.20194188966546,
+   "ensemble_gain_pp": 0.6944726078121732,
+   "mean_observations_qualifying": 21.86213586091284,
+   "dense_points": 1016760,
+   "observed_at_least_once": 277114,
+   "mean_observations": 9.774403314159516,
+   "per_config_acc": [
+    75.87460872767447,
+    70.9780897019655,
+    71.92140043355633,
+    71.45599874617977,
+    70.14393204519833,
+    75.02773761893555,
+    75.81591922986617,
+    73.72266236538735,
+    76.8003133941954,
+    72.52895446612723,
+    71.78225983732689,
+    65.6384280470106,
+    72.6314852718697,
+    76.52865860954888,
+    74.73248132567699,
+    70.40293908509125,
+    73.10837118754056,
+    75.73806138663545,
+    75.86803267887731,
+    73.94222945484134,
+    74.94475190299,
+    79.42172073342736,
+    75.33985254438277,
+    70.05310229178312,
+    71.11613194758247,
+    76.28895682935027,
+    70.24893257069202,
+    75.17376581714488,
+    72.76800869033879,
+    73.83366688903713,
+    74.0106701061148,
+    70.86675887505763,
+    71.25416204217537,
+    77.42813079415689,
+    76.07860898332119,
+    75.06245093141104,
+    70.50353408493487,
+    74.88027662601937,
+    71.89520388759772,
+    70.63327405651057,
+    74.6364558674332,
+    75.34626038781164,
+    74.10060936743072,
+    72.27354783901455,
+    70.68290390790195,
+    76.78575344869179,
+    71.2088807414197,
+    73.48446255731024,
+    73.4744446577207,
+    76.93562110039706
+   ],
+   "per_config_consensus_agreement": [
+    89.07131469217562,
+    93.9858238663948,
+    92.88474970896391,
+    92.28059187348313,
+    90.5823487805517,
+    88.89616715375055,
+    93.4034294488995,
+    91.5229340409401,
+    90.26000544514021,
+    87.16481774960381,
+    91.4735281195079,
+    88.94385216773276,
+    94.64682560847689,
+    94.3599960155394,
+    94.34429635311791,
+    93.77589431567982,
+    91.77904564315352,
+    88.86475649486259,
+    93.3454006911305,
+    95.21257682734799,
+    93.44958387589877,
+    92.55469052735407,
+    91.93091489690455,
+    90.69626733687052,
+    86.99693196173975,
+    91.27716391895999,
+    89.28686413393432,
+    90.14868233618233,
+    91.99565866232533,
+    94.57519390181568,
+    94.78810829803432,
+    90.75413461095499,
+    90.36411699496888,
+    92.39011892603042,
+    88.4386807304786,
+    91.034076927192,
+    91.53947176419086,
+    89.01999144097329,
+    94.39203022436101,
+    90.50979618022997,
+    93.68070272428514,
+    94.13148788927336,
+    94.18569099062373,
+    91.05886512285663,
+    92.47501124738376,
+    89.2130005040654,
+    94.11764705882352,
+    86.60646146018824,
+    96.15706514158181,
+    87.98951915586714
+   ],
+   "per_config_consensus_agreement_mean": 91.65112567881603,
+   "per_config_consensus_agreement_min": 86.60646146018824,
+   "per_config_eval_points": [
+    65172,
+    51437,
+    42901,
+    25522,
+    38143,
+    59486,
+    46849,
+    21079,
+    58712,
+    63030,
+    36392,
+    35141,
+    56185,
+    50142,
+    62519,
+    42190,
+    15410,
+    11957,
+    60712,
+    39328,
+    52943,
+    56720,
+    58187,
+    21468,
+    11065,
+    62473,
+    12413,
+    22444,
+    29458,
+    44970,
+    51171,
+    21690,
+    11713,
+    57709,
+    50783,
+    56044,
+    34238,
+    65359,
+    47330,
+    20244,
+    65054,
+    43320,
+    39221,
+    28251,
+    51076,
+    45597,
+    49095,
+    7852,
+    57307,
+    14104
+   ],
+   "per_class": {
+    "Other": {
+     "n": 106,
+     "agreement_pct": 59.43396226415094,
+     "majority_acc_pct": 0.0
+    },
+    "Driveable Ground": {
+     "n": 20723,
+     "agreement_pct": 94.86560826135212,
+     "majority_acc_pct": 98.36896202287313
+    },
+    "Structure": {
+     "n": 1790,
+     "agreement_pct": 78.8826815642458,
+     "majority_acc_pct": 81.1173184357542
+    },
+    "Vehicle": {
+     "n": 644,
+     "agreement_pct": 89.44099378881988,
+     "majority_acc_pct": 94.40993788819875
+    },
+    "Nature": {
+     "n": 47139,
+     "agreement_pct": 59.901567704024274,
+     "majority_acc_pct": 73.42115870086342
+    },
+    "Living Being": {
+     "n": 1081,
+     "agreement_pct": 45.79093432007401,
+     "majority_acc_pct": 79.55596669750231
+    },
+    "Movable objects": {
+     "n": 3189,
+     "agreement_pct": 93.13264346190027,
+     "majority_acc_pct": 93.50893697083725
+    },
+    "Other Ground": {
+     "n": 20175,
+     "agreement_pct": 53.38289962825279,
+     "majority_acc_pct": 55.836431226765804
+    }
+   },
+   "threshold_sweep": [
+    {
+     "k": 1,
+     "n": 277114,
+     "agreement_pct": 81.29686699336736,
+     "majority_acc_pct": 78.73177220772273
+    },
+    {
+     "k": 2,
+     "n": 225085,
+     "agreement_pct": 76.97358775573672,
+     "majority_acc_pct": 78.71571715877337
+    },
+    {
+     "k": 3,
+     "n": 193103,
+     "agreement_pct": 74.70210198702247,
+     "majority_acc_pct": 78.52093867496434
+    },
+    {
+     "k": 4,
+     "n": 169366,
+     "agreement_pct": 73.0689748827982,
+     "majority_acc_pct": 78.35097262460829
+    },
+    {
+     "k": 5,
+     "n": 150782,
+     "agreement_pct": 71.81493812258758,
+     "majority_acc_pct": 78.04591365788548
+    },
+    {
+     "k": 6,
+     "n": 135593,
+     "agreement_pct": 70.80306505498072,
+     "majority_acc_pct": 77.79935609640832
+    },
+    {
+     "k": 7,
+     "n": 122683,
+     "agreement_pct": 69.89395433760178,
+     "majority_acc_pct": 77.40385007711579
+    },
+    {
+     "k": 8,
+     "n": 112013,
+     "agreement_pct": 69.12322676832153,
+     "majority_acc_pct": 77.02929767799367
+    },
+    {
+     "k": 9,
+     "n": 102950,
+     "agreement_pct": 68.34871296745993,
+     "majority_acc_pct": 76.57801332231244
+    },
+    {
+     "k": 10,
+     "n": 94847,
+     "agreement_pct": 67.6689826773646,
+     "majority_acc_pct": 76.16765708616123
+    },
+    {
+     "k": 11,
+     "n": 87755,
+     "agreement_pct": 67.07538032020967,
+     "majority_acc_pct": 75.71125459149917
+    },
+    {
+     "k": 12,
+     "n": 81385,
+     "agreement_pct": 66.55034711556183,
+     "majority_acc_pct": 75.33823674111974
+    },
+    {
+     "k": 13,
+     "n": 75583,
+     "agreement_pct": 65.93149253138934,
+     "majority_acc_pct": 74.94007495596668
+    },
+    {
+     "k": 14,
+     "n": 70346,
+     "agreement_pct": 65.42660563500412,
+     "majority_acc_pct": 74.58275827725055
+    },
+    {
+     "k": 15,
+     "n": 65592,
+     "agreement_pct": 64.84327356994756,
+     "majority_acc_pct": 74.18326085297933
+    },
+    {
+     "k": 16,
+     "n": 61273,
+     "agreement_pct": 64.40357090398707,
+     "majority_acc_pct": 73.88520466498971
+    },
+    {
+     "k": 17,
+     "n": 57207,
+     "agreement_pct": 63.96769626094708,
+     "majority_acc_pct": 73.56902945910014
+    },
+    {
+     "k": 18,
+     "n": 53424,
+     "agreement_pct": 63.63619347109913,
+     "majority_acc_pct": 73.29125067900425
+    },
+    {
+     "k": 19,
+     "n": 49973,
+     "agreement_pct": 63.23814860024414,
+     "majority_acc_pct": 72.90002202599068
+    },
+    {
+     "k": 20,
+     "n": 46656,
+     "agreement_pct": 62.87079903978052,
+     "majority_acc_pct": 72.51592424989812
+    },
+    {
+     "k": 21,
+     "n": 43665,
+     "agreement_pct": 62.65200961868773,
+     "majority_acc_pct": 72.34062056006233
+    },
+    {
+     "k": 22,
+     "n": 40833,
+     "agreement_pct": 62.363774398158355,
+     "majority_acc_pct": 72.03558038667941
+    },
+    {
+     "k": 23,
+     "n": 38131,
+     "agreement_pct": 62.00204557971205,
+     "majority_acc_pct": 71.84318253385116
+    },
+    {
+     "k": 24,
+     "n": 35541,
+     "agreement_pct": 61.7568442080977,
+     "majority_acc_pct": 71.56089869925108
+    },
+    {
+     "k": 25,
+     "n": 33076,
+     "agreement_pct": 61.521949449752086,
+     "majority_acc_pct": 71.52105517909003
+    },
+    {
+     "k": 26,
+     "n": 30729,
+     "agreement_pct": 61.15395880113248,
+     "majority_acc_pct": 71.20481927710843
+    },
+    {
+     "k": 27,
+     "n": 28512,
+     "agreement_pct": 60.84806397306397,
+     "majority_acc_pct": 70.92970203207805
+    },
+    {
+     "k": 28,
+     "n": 26374,
+     "agreement_pct": 60.715098202775465,
+     "majority_acc_pct": 70.79065179452158
+    },
+    {
+     "k": 29,
+     "n": 24383,
+     "agreement_pct": 60.632407825124055,
+     "majority_acc_pct": 70.60078791858174
+    },
+    {
+     "k": 30,
+     "n": 22433,
+     "agreement_pct": 60.522444612847146,
+     "majority_acc_pct": 70.47725245316681
+    },
+    {
+     "k": 31,
+     "n": 20567,
+     "agreement_pct": 60.33451645840424,
+     "majority_acc_pct": 70.39019169018196
+    },
+    {
+     "k": 32,
+     "n": 18753,
+     "agreement_pct": 60.09171865834799,
+     "majority_acc_pct": 70.38044928232218
+    },
+    {
+     "k": 33,
+     "n": 17015,
+     "agreement_pct": 59.98824566558919,
+     "majority_acc_pct": 70.32876551196847
+    },
+    {
+     "k": 34,
+     "n": 15291,
+     "agreement_pct": 59.68870577463867,
+     "majority_acc_pct": 70.14397905759162
+    },
+    {
+     "k": 35,
+     "n": 13620,
+     "agreement_pct": 60.06607929515418,
+     "majority_acc_pct": 70.29171871555589
+    },
+    {
+     "k": 36,
+     "n": 12001,
+     "agreement_pct": 60.21164902924756,
+     "majority_acc_pct": 70.47198132088059
+    },
+    {
+     "k": 37,
+     "n": 10489,
+     "agreement_pct": 60.511011535894745,
+     "majority_acc_pct": 70.88341919481014
+    },
+    {
+     "k": 38,
+     "n": 9070,
+     "agreement_pct": 60.80485115766262,
+     "majority_acc_pct": 71.22683142100618
+    },
+    {
+     "k": 39,
+     "n": 7760,
+     "agreement_pct": 61.27577319587629,
+     "majority_acc_pct": 71.78230590662884
+    },
+    {
+     "k": 40,
+     "n": 6491,
+     "agreement_pct": 61.62378678169773,
+     "majority_acc_pct": 72.5674633770239
+    },
+    {
+     "k": 41,
+     "n": 5325,
+     "agreement_pct": 62.51643192488263,
+     "majority_acc_pct": 73.34085354389923
+    },
+    {
+     "k": 42,
+     "n": 4268,
+     "agreement_pct": 63.706654170571696,
+     "majority_acc_pct": 74.82402627874237
+    },
+    {
+     "k": 43,
+     "n": 3342,
+     "agreement_pct": 64.72172351885098,
+     "majority_acc_pct": 75.89928057553958
+    },
+    {
+     "k": 44,
+     "n": 2576,
+     "agreement_pct": 65.6832298136646,
+     "majority_acc_pct": 77.20731232983275
+    },
+    {
+     "k": 45,
+     "n": 1941,
+     "agreement_pct": 68.26378155589902,
+     "majority_acc_pct": 79.80371900826447
+    },
+    {
+     "k": 46,
+     "n": 1430,
+     "agreement_pct": 69.58041958041959,
+     "majority_acc_pct": 82.03508771929825
+    },
+    {
+     "k": 47,
+     "n": 1002,
+     "agreement_pct": 71.9560878243513,
+     "majority_acc_pct": 84.45336008024073
+    },
+    {
+     "k": 48,
+     "n": 681,
+     "agreement_pct": 74.44933920704845,
+     "majority_acc_pct": 87.16814159292035
+    },
+    {
+     "k": 49,
+     "n": 385,
+     "agreement_pct": 74.02597402597402,
+     "majority_acc_pct": 88.80208333333334
+    },
+    {
+     "k": 50,
+     "n": 210,
+     "agreement_pct": 73.33333333333333,
+     "majority_acc_pct": 93.33333333333333
+    }
+   ],
+   "majority_class_distribution": {
+    "Other": 0.0,
+    "Driveable Ground": 31.557139392917016,
+    "Structure": 1.9874113045220199,
+    "Vehicle": 0.7011291870064419,
+    "Nature": 37.93688782987337,
+    "Living Being": 0.9088321190970722,
+    "Movable objects": 4.358598585089671,
+    "Other Ground": 22.550001581494406
+   },
+   "majority_pred_entropy_norm": 0.6537664464694529,
+   "gt_entropy_norm": 0.6206135564357936,
+   "n_classes_predicted": 7,
+   "configs": [
+    {
+     "index": 0,
+     "seed": 0,
+     "beams": 124,
+     "hres": 1388,
+     "vlow": -23.5,
+     "vup": 7.5,
+     "height": 1.59,
+     "n_points": 91596,
+     "sensor_params_used": [
+      124.0,
+      1.590000033378601,
+      1388.0,
+      -23.5,
+      7.5
+     ]
+    },
+    {
+     "index": 1,
+     "seed": 1,
+     "beams": 81,
+     "hres": 1595,
+     "vlow": -25.6,
+     "vup": 12.2,
+     "height": 1.61,
+     "n_points": 67020,
+     "sensor_params_used": [
+      81.0,
+      1.6100000143051147,
+      1595.0,
+      -25.600000381469727,
+      12.199999809265137
+     ]
+    },
+    {
+     "index": 2,
+     "seed": 2,
+     "beams": 77,
+     "hres": 1333,
+     "vlow": -24.5,
+     "vup": 13.8,
+     "height": 1.68,
+     "n_points": 52954,
+     "sensor_params_used": [
+      77.0,
+      1.6799999475479126,
+      1333.0,
+      -24.5,
+      13.800000190734863
+     ]
+    },
+    {
+     "index": 3,
+     "seed": 3,
+     "beams": 52,
+     "hres": 886,
+     "vlow": -23.5,
+     "vup": 10.0,
+     "height": 1.59,
+     "n_points": 29296,
+     "sensor_params_used": [
+      52.0,
+      1.590000033378601,
+      886.0,
+      -23.5,
+      10.0
+     ]
+    },
+    {
+     "index": 4,
+     "seed": 4,
+     "beams": 84,
+     "hres": 900,
+     "vlow": -26.1,
+     "vup": 11.5,
+     "height": 1.81,
+     "n_points": 45455,
+     "sensor_params_used": [
+      84.0,
+      1.809999942779541,
+      900.0,
+      -26.100000381469727,
+      11.5
+     ]
+    },
+    {
+     "index": 5,
+     "seed": 5,
+     "beams": 103,
+     "hres": 1276,
+     "vlow": -25.2,
+     "vup": 3.3,
+     "height": 1.65,
+     "n_points": 79402,
+     "sensor_params_used": [
+      103.0,
+      1.649999976158142,
+      1276.0,
+      -25.200000762939453,
+      3.299999952316284
+     ]
+    },
+    {
+     "index": 6,
+     "seed": 6,
+     "beams": 94,
+     "hres": 1018,
+     "vlow": -22.2,
+     "vup": 8.2,
+     "height": 1.8,
+     "n_points": 60463,
+     "sensor_params_used": [
+      94.0,
+      1.7999999523162842,
+      1018.0,
+      -22.200000762939453,
+      8.199999809265137
+     ]
+    },
+    {
+     "index": 7,
+     "seed": 7,
+     "beams": 49,
+     "hres": 727,
+     "vlow": -23.2,
+     "vup": 9.1,
+     "height": 1.5,
+     "n_points": 23648,
+     "sensor_params_used": [
+      49.0,
+      1.5,
+      727.0,
+      -23.200000762939453,
+      9.100000381469727
+     ]
+    },
+    {
+     "index": 8,
+     "seed": 8,
+     "beams": 108,
+     "hres": 1416,
+     "vlow": -23.7,
+     "vup": 12.2,
+     "height": 1.72,
+     "n_points": 79841,
+     "sensor_params_used": [
+      108.0,
+      1.7200000286102295,
+      1416.0,
+      -23.700000762939453,
+      12.199999809265137
+     ]
+    },
+    {
+     "index": 9,
+     "seed": 9,
+     "beams": 94,
+     "hres": 1610,
+     "vlow": -23.0,
+     "vup": 6.3,
+     "height": 1.76,
+     "n_points": 92826,
+     "sensor_params_used": [
+      94.0,
+      1.7599999904632568,
+      1610.0,
+      -23.0,
+      6.300000190734863
+     ]
+    },
+    {
+     "index": 10,
+     "seed": 10,
+     "beams": 106,
+     "hres": 728,
+     "vlow": -26.9,
+     "vup": 9.4,
+     "height": 1.58,
+     "n_points": 43611,
+     "sensor_params_used": [
+      106.0,
+      1.5800000429153442,
+      728.0,
+      -26.899999618530273,
+      9.399999618530273
+     ]
+    },
+    {
+     "index": 11,
+     "seed": 11,
+     "beams": 34,
+     "hres": 1712,
+     "vlow": -25.3,
+     "vup": 3.0,
+     "height": 1.61,
+     "n_points": 43657,
+     "sensor_params_used": [
+      34.0,
+      1.6100000143051147,
+      1712.0,
+      -25.299999237060547,
+      3.0
+     ]
+    },
+    {
+     "index": 12,
+     "seed": 12,
+     "beams": 81,
+     "hres": 1602,
+     "vlow": -27.3,
+     "vup": 9.2,
+     "height": 1.75,
+     "n_points": 74896,
+     "sensor_params_used": [
+      81.0,
+      1.75,
+      1602.0,
+      -27.299999237060547,
+      9.199999809265137
+     ]
+    },
+    {
+     "index": 13,
+     "seed": 13,
+     "beams": 86,
+     "hres": 1281,
+     "vlow": -23.1,
+     "vup": 9.0,
+     "height": 1.84,
+     "n_points": 66664,
+     "sensor_params_used": [
+      86.0,
+      1.840000033378601,
+      1281.0,
+      -23.100000381469727,
+      9.0
+     ]
+    },
+    {
+     "index": 14,
+     "seed": 14,
+     "beams": 93,
+     "hres": 1720,
+     "vlow": -24.5,
+     "vup": 7.8,
+     "height": 1.71,
+     "n_points": 90075,
+     "sensor_params_used": [
+      93.0,
+      1.7100000381469727,
+      1720.0,
+      -24.5,
+      7.800000190734863
+     ]
+    },
+    {
+     "index": 15,
+     "seed": 15,
+     "beams": 65,
+     "hres": 1249,
+     "vlow": -24.5,
+     "vup": 5.8,
+     "height": 1.57,
+     "n_points": 51342,
+     "sensor_params_used": [
+      65.0,
+      1.5700000524520874,
+      1249.0,
+      -24.5,
+      5.800000190734863
+     ]
+    },
+    {
+     "index": 16,
+     "seed": 16,
+     "beams": 39,
+     "hres": 667,
+     "vlow": -24.3,
+     "vup": 10.5,
+     "height": 1.67,
+     "n_points": 17412,
+     "sensor_params_used": [
+      39.0,
+      1.6699999570846558,
+      667.0,
+      -24.299999237060547,
+      10.5
+     ]
+    },
+    {
+     "index": 17,
+     "seed": 17,
+     "beams": 27,
+     "hres": 866,
+     "vlow": -22.7,
+     "vup": 14.0,
+     "height": 1.79,
+     "n_points": 14140,
+     "sensor_params_used": [
+      27.0,
+      1.7899999618530273,
+      866.0,
+      -22.700000762939453,
+      14.0
+     ]
+    },
+    {
+     "index": 18,
+     "seed": 18,
+     "beams": 105,
+     "hres": 1707,
+     "vlow": -23.9,
+     "vup": 12.9,
+     "height": 1.68,
+     "n_points": 86364,
+     "sensor_params_used": [
+      105.0,
+      1.6799999475479126,
+      1707.0,
+      -23.899999618530273,
+      12.899999618530273
+     ]
+    },
+    {
+     "index": 19,
+     "seed": 19,
+     "beams": 82,
+     "hres": 1082,
+     "vlow": -22.9,
+     "vup": 13.6,
+     "height": 1.71,
+     "n_points": 48437,
+     "sensor_params_used": [
+      82.0,
+      1.7100000381469727,
+      1082.0,
+      -22.899999618530273,
+      13.600000381469727
+     ]
+    },
+    {
+     "index": 20,
+     "seed": 20,
+     "beams": 69,
+     "hres": 1787,
+     "vlow": -26.3,
+     "vup": 8.4,
+     "height": 1.72,
+     "n_points": 72787,
+     "sensor_params_used": [
+      69.0,
+      1.7200000286102295,
+      1787.0,
+      -26.299999237060547,
+      8.399999618530273
+     ]
+    },
+    {
+     "index": 21,
+     "seed": 21,
+     "beams": 105,
+     "hres": 1331,
+     "vlow": -27.5,
+     "vup": 10.0,
+     "height": 1.67,
+     "n_points": 74730,
+     "sensor_params_used": [
+      105.0,
+      1.6699999570846558,
+      1331.0,
+      -27.5,
+      10.0
+     ]
+    },
+    {
+     "index": 22,
+     "seed": 22,
+     "beams": 96,
+     "hres": 1286,
+     "vlow": -22.9,
+     "vup": 5.2,
+     "height": 1.76,
+     "n_points": 79801,
+     "sensor_params_used": [
+      96.0,
+      1.7599999904632568,
+      1286.0,
+      -22.899999618530273,
+      5.199999809265137
+     ]
+    },
+    {
+     "index": 23,
+     "seed": 23,
+     "beams": 30,
+     "hres": 1051,
+     "vlow": -25.8,
+     "vup": 4.2,
+     "height": 1.65,
+     "n_points": 24809,
+     "sensor_params_used": [
+      30.0,
+      1.649999976158142,
+      1051.0,
+      -25.799999237060547,
+      4.199999809265137
+     ]
+    },
+    {
+     "index": 24,
+     "seed": 24,
+     "beams": 23,
+     "hres": 806,
+     "vlow": -23.3,
+     "vup": 13.1,
+     "height": 1.58,
+     "n_points": 12462,
+     "sensor_params_used": [
+      23.0,
+      1.5800000429153442,
+      806.0,
+      -23.299999237060547,
+      13.100000381469727
+     ]
+    },
+    {
+     "index": 25,
+     "seed": 25,
+     "beams": 120,
+     "hres": 1775,
+     "vlow": -24.2,
+     "vup": 14.2,
+     "height": 1.71,
+     "n_points": 93331,
+     "sensor_params_used": [
+      120.0,
+      1.7100000381469727,
+      1775.0,
+      -24.200000762939453,
+      14.199999809265137
+     ]
+    },
+    {
+     "index": 26,
+     "seed": 26,
+     "beams": 25,
+     "hres": 654,
+     "vlow": -27.3,
+     "vup": 4.5,
+     "height": 1.79,
+     "n_points": 13812,
+     "sensor_params_used": [
+      25.0,
+      1.7899999618530273,
+      654.0,
+      -27.299999237060547,
+      4.5
+     ]
+    },
+    {
+     "index": 27,
+     "seed": 27,
+     "beams": 31,
+     "hres": 1401,
+     "vlow": -27.5,
+     "vup": 12.8,
+     "height": 1.54,
+     "n_points": 28327,
+     "sensor_params_used": [
+      31.0,
+      1.5399999618530273,
+      1401.0,
+      -27.5,
+      12.800000190734863
+     ]
+    },
+    {
+     "index": 28,
+     "seed": 28,
+     "beams": 93,
+     "hres": 644,
+     "vlow": -26.8,
+     "vup": 14.6,
+     "height": 1.75,
+     "n_points": 33975,
+     "sensor_params_used": [
+      93.0,
+      1.75,
+      644.0,
+      -26.799999237060547,
+      14.600000381469727
+     ]
+    },
+    {
+     "index": 29,
+     "seed": 29,
+     "beams": 77,
+     "hres": 1031,
+     "vlow": -23.6,
+     "vup": 2.8,
+     "height": 1.74,
+     "n_points": 56263,
+     "sensor_params_used": [
+      77.0,
+      1.7400000095367432,
+      1031.0,
+      -23.600000381469727,
+      2.799999952316284
+     ]
+    },
+    {
+     "index": 30,
+     "seed": 30,
+     "beams": 85,
+     "hres": 1471,
+     "vlow": -24.3,
+     "vup": 12.9,
+     "height": 1.52,
+     "n_points": 65224,
+     "sensor_params_used": [
+      85.0,
+      1.5199999809265137,
+      1471.0,
+      -24.299999237060547,
+      12.899999618530273
+     ]
+    },
+    {
+     "index": 31,
+     "seed": 31,
+     "beams": 25,
+     "hres": 1216,
+     "vlow": -25.9,
+     "vup": 4.3,
+     "height": 1.68,
+     "n_points": 25179,
+     "sensor_params_used": [
+      25.0,
+      1.6799999475479126,
+      1216.0,
+      -25.899999618530273,
+      4.300000190734863
+     ]
+    },
+    {
+     "index": 32,
+     "seed": 32,
+     "beams": 21,
+     "hres": 806,
+     "vlow": -23.8,
+     "vup": 7.1,
+     "height": 1.59,
+     "n_points": 13081,
+     "sensor_params_used": [
+      21.0,
+      1.590000033378601,
+      806.0,
+      -23.799999237060547,
+      7.099999904632568
+     ]
+    },
+    {
+     "index": 33,
+     "seed": 33,
+     "beams": 109,
+     "hres": 1563,
+     "vlow": -23.0,
+     "vup": 13.9,
+     "height": 1.56,
+     "n_points": 78998,
+     "sensor_params_used": [
+      109.0,
+      1.559999942779541,
+      1563.0,
+      -23.0,
+      13.899999618530273
+     ]
+    },
+    {
+     "index": 34,
+     "seed": 34,
+     "beams": 102,
+     "hres": 1016,
+     "vlow": -22.2,
+     "vup": 2.8,
+     "height": 1.74,
+     "n_points": 68123,
+     "sensor_params_used": [
+      102.0,
+      1.7400000095367432,
+      1016.0,
+      -22.200000762939453,
+      2.799999952316284
+     ]
+    },
+    {
+     "index": 35,
+     "seed": 35,
+     "beams": 124,
+     "hres": 931,
+     "vlow": -25.9,
+     "vup": 5.3,
+     "height": 1.71,
+     "n_points": 70879,
+     "sensor_params_used": [
+      124.0,
+      1.7100000381469727,
+      931.0,
+      -25.899999618530273,
+      5.300000190734863
+     ]
+    },
+    {
+     "index": 36,
+     "seed": 36,
+     "beams": 72,
+     "hres": 958,
+     "vlow": -27.9,
+     "vup": 10.9,
+     "height": 1.82,
+     "n_points": 40593,
+     "sensor_params_used": [
+      72.0,
+      1.8200000524520874,
+      958.0,
+      -27.899999618530273,
+      10.899999618530273
+     ]
+    },
+    {
+     "index": 37,
+     "seed": 37,
+     "beams": 127,
+     "hres": 1641,
+     "vlow": -22.5,
+     "vup": 10.4,
+     "height": 1.64,
+     "n_points": 98757,
+     "sensor_params_used": [
+      127.0,
+      1.6399999856948853,
+      1641.0,
+      -22.5,
+      10.399999618530273
+     ]
+    },
+    {
+     "index": 38,
+     "seed": 38,
+     "beams": 100,
+     "hres": 1113,
+     "vlow": -27.1,
+     "vup": 11.0,
+     "height": 1.66,
+     "n_points": 58954,
+     "sensor_params_used": [
+      100.0,
+      1.659999966621399,
+      1113.0,
+      -27.100000381469727,
+      11.0
+     ]
+    },
+    {
+     "index": 39,
+     "seed": 39,
+     "beams": 26,
+     "hres": 1287,
+     "vlow": -23.6,
+     "vup": 9.1,
+     "height": 1.55,
+     "n_points": 23547,
+     "sensor_params_used": [
+      26.0,
+      1.5499999523162842,
+      1287.0,
+      -23.600000381469727,
+      9.100000381469727
+     ]
+    },
+    {
+     "index": 40,
+     "seed": 40,
+     "beams": 113,
+     "hres": 1586,
+     "vlow": -25.9,
+     "vup": 5.7,
+     "height": 1.63,
+     "n_points": 93517,
+     "sensor_params_used": [
+      113.0,
+      1.6299999952316284,
+      1586.0,
+      -25.899999618530273,
+      5.699999809265137
+     ]
+    },
+    {
+     "index": 41,
+     "seed": 41,
+     "beams": 97,
+     "hres": 871,
+     "vlow": -23.7,
+     "vup": 7.0,
+     "height": 1.65,
+     "n_points": 52404,
+     "sensor_params_used": [
+      97.0,
+      1.649999976158142,
+      871.0,
+      -23.700000762939453,
+      7.0
+     ]
+    },
+    {
+     "index": 42,
+     "seed": 42,
+     "beams": 99,
+     "hres": 765,
+     "vlow": -28.0,
+     "vup": 4.5,
+     "height": 1.62,
+     "n_points": 48077,
+     "sensor_params_used": [
+      99.0,
+      1.6200000047683716,
+      765.0,
+      -28.0,
+      4.5
+     ]
+    },
+    {
+     "index": 43,
+     "seed": 43,
+     "beams": 46,
+     "hres": 1056,
+     "vlow": -24.2,
+     "vup": 6.9,
+     "height": 1.81,
+     "n_points": 33814,
+     "sensor_params_used": [
+      46.0,
+      1.809999942779541,
+      1056.0,
+      -24.200000762939453,
+      6.900000095367432
+     ]
+    },
+    {
+     "index": 44,
+     "seed": 44,
+     "beams": 88,
+     "hres": 1448,
+     "vlow": -27.8,
+     "vup": 13.3,
+     "height": 1.7,
+     "n_points": 66107,
+     "sensor_params_used": [
+      88.0,
+      1.7000000476837158,
+      1448.0,
+      -27.799999237060547,
+      13.300000190734863
+     ]
+    },
+    {
+     "index": 45,
+     "seed": 45,
+     "beams": 114,
+     "hres": 695,
+     "vlow": -27.0,
+     "vup": 2.8,
+     "height": 1.75,
+     "n_points": 54742,
+     "sensor_params_used": [
+      114.0,
+      1.75,
+      695.0,
+      -27.0,
+      2.799999952316284
+     ]
+    },
+    {
+     "index": 46,
+     "seed": 46,
+     "beams": 73,
+     "hres": 1680,
+     "vlow": -22.7,
+     "vup": 13.8,
+     "height": 1.71,
+     "n_points": 65363,
+     "sensor_params_used": [
+      73.0,
+      1.7100000381469727,
+      1680.0,
+      -22.700000762939453,
+      13.800000190734863
+     ]
+    },
+    {
+     "index": 47,
+     "seed": 47,
+     "beams": 16,
+     "hres": 679,
+     "vlow": -25.0,
+     "vup": 6.1,
+     "height": 1.66,
+     "n_points": 8787,
+     "sensor_params_used": [
+      16.0,
+      1.659999966621399,
+      679.0,
+      -25.0,
+      6.099999904632568
+     ]
+    },
+    {
+     "index": 48,
+     "seed": 48,
+     "beams": 119,
+     "hres": 1450,
+     "vlow": -26.9,
+     "vup": 15.0,
+     "height": 1.72,
+     "n_points": 76407,
+     "sensor_params_used": [
+      119.0,
+      1.7200000286102295,
+      1450.0,
+      -26.899999618530273,
+      15.0
+     ]
+    },
+    {
+     "index": 49,
+     "seed": 49,
+     "beams": 26,
+     "hres": 867,
+     "vlow": -22.1,
+     "vup": 7.2,
+     "height": 1.74,
+     "n_points": 16675,
+     "sensor_params_used": [
+      26.0,
+      1.7400000095367432,
+      867.0,
+      -22.100000381469727,
+      7.199999809265137
+     ]
+    }
+   ],
+   "load_report": {
+    "checkpoint": "ckpts/LiSeer_SK.pth",
+    "sha256_head": "5e7a6bd3aefcdf99",
+    "epoch": 20,
+    "iter": 19140,
+    "n_tensors_in_ckpt": 510,
+    "n_tensors_in_model": 263,
+    "strict_load_ok": false,
+    "missing_keys": [],
+    "unexpected_keys": [
+     "_balance_base_weights",
+     "_balance_call_count",
+     "_balance_initial_losses",
+     "_balance_l0_count",
+     "_balance_l0_sum",
+     "_balance_loss_ema",
+     "_balance_task_max_weights",
+     "_balance_task_min_weights",
+     "_balance_weights",
+     "_consistency_flip",
+     "_distill_rho",
+     "_distill_weights",
+     "ema_lidar_backbone_norm1_bias",
+     "ema_lidar_backbone_norm1_weight",
+     "ema_lidar_backbone_norm2_bias",
+     "ema_lidar_backbone_norm2_weight",
+     "ema_lidar_backbone_norm3_bias",
+     "ema_lidar_backbone_norm3_weight",
+     "ema_lidar_backbone_patch_embed_lidar_norm_bias",
+     "ema_lidar_backbone_patch_embed_lidar_norm_weight",
+     "ema_lidar_backbone_patch_embed_lidar_projection_bias",
+     "ema_lidar_backbone_patch_embed_lidar_projection_weight",
+     "ema_lidar_backbone_stages_0_blocks_0_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_0_blocks_0_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_0_blocks_0_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_0_blocks_0_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_0_blocks_0_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_0_blocks_0_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_0_blocks_0_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_0_blocks_0_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_0_blocks_0_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_0_blocks_0_norm1_bias",
+     "ema_lidar_backbone_stages_0_blocks_0_norm1_weight",
+     "ema_lidar_backbone_stages_0_blocks_0_norm2_bias",
+     "ema_lidar_backbone_stages_0_blocks_0_norm2_weight",
+     "ema_lidar_backbone_stages_0_blocks_1_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_0_blocks_1_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_0_blocks_1_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_0_blocks_1_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_0_blocks_1_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_0_blocks_1_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_0_blocks_1_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_0_blocks_1_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_0_blocks_1_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_0_blocks_1_norm1_bias",
+     "ema_lidar_backbone_stages_0_blocks_1_norm1_weight",
+     "ema_lidar_backbone_stages_0_blocks_1_norm2_bias",
+     "ema_lidar_backbone_stages_0_blocks_1_norm2_weight",
+     "ema_lidar_backbone_stages_0_downsample_norm_bias",
+     "ema_lidar_backbone_stages_0_downsample_norm_weight",
+     "ema_lidar_backbone_stages_0_downsample_reduction_weight",
+     "ema_lidar_backbone_stages_1_blocks_0_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_1_blocks_0_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_1_blocks_0_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_1_blocks_0_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_1_blocks_0_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_1_blocks_0_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_1_blocks_0_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_1_blocks_0_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_1_blocks_0_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_1_blocks_0_norm1_bias",
+     "ema_lidar_backbone_stages_1_blocks_0_norm1_weight",
+     "ema_lidar_backbone_stages_1_blocks_0_norm2_bias",
+     "ema_lidar_backbone_stages_1_blocks_0_norm2_weight",
+     "ema_lidar_backbone_stages_1_blocks_1_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_1_blocks_1_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_1_blocks_1_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_1_blocks_1_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_1_blocks_1_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_1_blocks_1_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_1_blocks_1_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_1_blocks_1_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_1_blocks_1_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_1_blocks_1_norm1_bias",
+     "ema_lidar_backbone_stages_1_blocks_1_norm1_weight",
+     "ema_lidar_backbone_stages_1_blocks_1_norm2_bias",
+     "ema_lidar_backbone_stages_1_blocks_1_norm2_weight",
+     "ema_lidar_backbone_stages_1_downsample_norm_bias",
+     "ema_lidar_backbone_stages_1_downsample_norm_weight",
+     "ema_lidar_backbone_stages_1_downsample_reduction_weight",
+     "ema_lidar_backbone_stages_2_blocks_0_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_2_blocks_0_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_2_blocks_0_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_2_blocks_0_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_2_blocks_0_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_2_blocks_0_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_2_blocks_0_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_2_blocks_0_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_2_blocks_0_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_2_blocks_0_norm1_bias",
+     "ema_lidar_backbone_stages_2_blocks_0_norm1_weight",
+     "ema_lidar_backbone_stages_2_blocks_0_norm2_bias",
+     "ema_lidar_backbone_stages_2_blocks_0_norm2_weight",
+     "ema_lidar_backbone_stages_2_blocks_1_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_2_blocks_1_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_2_blocks_1_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_2_blocks_1_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_2_blocks_1_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_2_blocks_1_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_2_blocks_1_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_2_blocks_1_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_2_blocks_1_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_2_blocks_1_norm1_bias",
+     "ema_lidar_backbone_stages_2_blocks_1_norm1_weight",
+     "ema_lidar_backbone_stages_2_blocks_1_norm2_bias",
+     "ema_lidar_backbone_stages_2_blocks_1_norm2_weight",
+     "ema_lidar_backbone_stages_2_blocks_2_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_2_blocks_2_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_2_blocks_2_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_2_blocks_2_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_2_blocks_2_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_2_blocks_2_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_2_blocks_2_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_2_blocks_2_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_2_blocks_2_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_2_blocks_2_norm1_bias",
+     "ema_lidar_backbone_stages_2_blocks_2_norm1_weight",
+     "ema_lidar_backbone_stages_2_blocks_2_norm2_bias",
+     "ema_lidar_backbone_stages_2_blocks_2_norm2_weight",
+     "ema_lidar_backbone_stages_2_blocks_3_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_2_blocks_3_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_2_blocks_3_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_2_blocks_3_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_2_blocks_3_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_2_blocks_3_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_2_blocks_3_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_2_blocks_3_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_2_blocks_3_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_2_blocks_3_norm1_bias",
+     "ema_lidar_backbone_stages_2_blocks_3_norm1_weight",
+     "ema_lidar_backbone_stages_2_blocks_3_norm2_bias",
+     "ema_lidar_backbone_stages_2_blocks_3_norm2_weight",
+     "ema_lidar_backbone_stages_2_blocks_4_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_2_blocks_4_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_2_blocks_4_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_2_blocks_4_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_2_blocks_4_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_2_blocks_4_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_2_blocks_4_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_2_blocks_4_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_2_blocks_4_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_2_blocks_4_norm1_bias",
+     "ema_lidar_backbone_stages_2_blocks_4_norm1_weight",
+     "ema_lidar_backbone_stages_2_blocks_4_norm2_bias",
+     "ema_lidar_backbone_stages_2_blocks_4_norm2_weight",
+     "ema_lidar_backbone_stages_2_blocks_5_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_2_blocks_5_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_2_blocks_5_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_2_blocks_5_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_2_blocks_5_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_2_blocks_5_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_2_blocks_5_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_2_blocks_5_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_2_blocks_5_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_2_blocks_5_norm1_bias",
+     "ema_lidar_backbone_stages_2_blocks_5_norm1_weight",
+     "ema_lidar_backbone_stages_2_blocks_5_norm2_bias",
+     "ema_lidar_backbone_stages_2_blocks_5_norm2_weight",
+     "ema_lidar_backbone_stages_2_downsample_norm_bias",
+     "ema_lidar_backbone_stages_2_downsample_norm_weight",
+     "ema_lidar_backbone_stages_2_downsample_reduction_weight",
+     "ema_lidar_backbone_stages_3_blocks_0_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_3_blocks_0_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_3_blocks_0_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_3_blocks_0_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_3_blocks_0_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_3_blocks_0_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_3_blocks_0_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_3_blocks_0_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_3_blocks_0_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_3_blocks_0_norm1_bias",
+     "ema_lidar_backbone_stages_3_blocks_0_norm1_weight",
+     "ema_lidar_backbone_stages_3_blocks_0_norm2_bias",
+     "ema_lidar_backbone_stages_3_blocks_0_norm2_weight",
+     "ema_lidar_backbone_stages_3_blocks_1_attn_w_msa_proj_bias",
+     "ema_lidar_backbone_stages_3_blocks_1_attn_w_msa_proj_weight",
+     "ema_lidar_backbone_stages_3_blocks_1_attn_w_msa_qkv_bias",
+     "ema_lidar_backbone_stages_3_blocks_1_attn_w_msa_qkv_weight",
+     "ema_lidar_backbone_stages_3_blocks_1_attn_w_msa_relative_position_bias_table",
+     "ema_lidar_backbone_stages_3_blocks_1_ffn_layers_0_0_bias",
+     "ema_lidar_backbone_stages_3_blocks_1_ffn_layers_0_0_weight",
+     "ema_lidar_backbone_stages_3_blocks_1_ffn_layers_1_bias",
+     "ema_lidar_backbone_stages_3_blocks_1_ffn_layers_1_weight",
+     "ema_lidar_backbone_stages_3_blocks_1_norm1_bias",
+     "ema_lidar_backbone_stages_3_blocks_1_norm1_weight",
+     "ema_lidar_backbone_stages_3_blocks_1_norm2_bias",
+     "ema_lidar_backbone_stages_3_blocks_1_norm2_weight",
+     "ema_lidar_neck_fpn_convs_0_bn_bias",
+     "ema_lidar_neck_fpn_convs_0_bn_weight",
+     "ema_lidar_neck_fpn_convs_0_conv_weight",
+     "ema_lidar_neck_fpn_convs_1_bn_bias",
+     "ema_lidar_neck_fpn_convs_1_bn_weight",
+     "ema_lidar_neck_fpn_convs_1_conv_weight",
+     "ema_lidar_neck_lateral_convs_0_bn_bias",
+     "ema_lidar_neck_lateral_convs_0_bn_weight",
+     "ema_lidar_neck_lateral_convs_0_conv_weight",
+     "ema_lidar_neck_lateral_convs_1_bn_bias",
+     "ema_lidar_neck_lateral_convs_1_bn_weight",
+     "ema_lidar_neck_lateral_convs_1_conv_weight",
+     "ema_lidar_tokenizer_mlp_xy_0_bias",
+     "ema_lidar_tokenizer_mlp_xy_0_weight",
+     "ema_lidar_tokenizer_mlp_xy_2_bias",
+     "ema_lidar_tokenizer_mlp_xy_2_weight",
+     "ema_lidar_tokenizer_mlp_yz_0_bias",
+     "ema_lidar_tokenizer_mlp_yz_0_weight",
+     "ema_lidar_tokenizer_mlp_yz_2_bias",
+     "ema_lidar_tokenizer_mlp_yz_2_weight",
+     "ema_lidar_tokenizer_mlp_zx_0_bias",
+     "ema_lidar_tokenizer_mlp_zx_0_weight",
+     "ema_lidar_tokenizer_mlp_zx_2_bias",
+     "ema_lidar_tokenizer_mlp_zx_2_weight",
+     "ema_lidar_tokenizer_point_mlp_0_bias",
+     "ema_lidar_tokenizer_point_mlp_0_weight",
+     "ema_lidar_tokenizer_point_mlp_10_bias",
+     "ema_lidar_tokenizer_point_mlp_10_weight",
+     "ema_lidar_tokenizer_point_mlp_1_bias",
+     "ema_lidar_tokenizer_point_mlp_1_weight",
+     "ema_lidar_tokenizer_point_mlp_2_bias",
+     "ema_lidar_tokenizer_point_mlp_2_weight",
+     "ema_lidar_tokenizer_point_mlp_4_bias",
+     "ema_lidar_tokenizer_point_mlp_4_weight",
+     "ema_lidar_tokenizer_point_mlp_5_bias",
+     "ema_lidar_tokenizer_point_mlp_5_weight",
+     "ema_lidar_tokenizer_point_mlp_7_bias",
+     "ema_lidar_tokenizer_point_mlp_7_weight",
+     "ema_lidar_tokenizer_point_mlp_8_bias",
+     "ema_lidar_tokenizer_point_mlp_8_weight",
+     "ema_tpv_aggregator_classifier_bias",
+     "ema_tpv_aggregator_classifier_weight",
+     "ema_tpv_aggregator_decoder_0_bias",
+     "ema_tpv_aggregator_decoder_0_weight",
+     "ema_tpv_aggregator_decoder_2_bias",
+     "ema_tpv_aggregator_decoder_2_weight",
+     "ema_tpv_aggregator_film_layer_fc_0_bias",
+     "ema_tpv_aggregator_film_layer_fc_0_weight",
+     "ema_tpv_aggregator_film_layer_fc_2_bias",
+     "ema_tpv_aggregator_film_layer_fc_2_weight",
+     "ema_tpv_aggregator_sensor_encoder_mlp_0_bias",
+     "ema_tpv_aggregator_sensor_encoder_mlp_0_weight",
+     "ema_tpv_aggregator_sensor_encoder_mlp_2_bias",
+     "ema_tpv_aggregator_sensor_encoder_mlp_2_weight",
+     "ema_tpv_aggregator_sensor_head_mlp_0_bias",
+     "ema_tpv_aggregator_sensor_head_mlp_0_weight",
+     "ema_tpv_aggregator_sensor_head_mlp_2_bias",
+     "ema_tpv_aggregator_sensor_head_mlp_2_weight",
+     "ema_tpv_aggregator_sensor_head_mlp_4_bias",
+     "ema_tpv_aggregator_sensor_head_mlp_4_weight"
+    ],
+    "shape_mismatch_keys": [],
+    "unexpected_by_family": {
+     "ema_ shadow weights": {
+      "n": 235,
+      "examples": [
+       "ema_lidar_backbone_norm1_bias",
+       "ema_lidar_backbone_norm1_weight",
+       "ema_lidar_backbone_norm2_bias"
+      ]
+     },
+     "_balance_* buffers": {
+      "n": 9,
+      "examples": [
+       "_balance_base_weights",
+       "_balance_call_count",
+       "_balance_initial_losses"
+      ]
+     },
+     "_distill_* buffers": {
+      "n": 2,
+      "examples": [
+       "_distill_rho",
+       "_distill_weights"
+      ]
+     },
+     "_consistency_flip buffer": {
+      "n": 1,
+      "examples": [
+       "_consistency_flip"
+      ]
+     }
+    },
+    "weights_loaded": 263,
+    "load_verdict": "OK",
+    "load_reason": "0 missing weights; 247 unexpected keys are all training-only state (235x ema_ shadow weights, 9x _balance_* buffers, 2x _distill_* buffers, 1x _consistency_flip buffer), none reachable from simple_test"
+   },
+   "control_same_config": {
+    "config": {
+     "beams": 124,
+     "hres": 1388,
+     "vlow": -23.5,
+     "vup": 7.5,
+     "height": 1.59
+    },
+    "config_index": 0,
+    "qualifying_points": 125886,
+    "agreement_pct": 79.15494971641009,
+    "mean_modal_vote_share_pct": 95.60954735693214,
+    "majority_vote_acc_pct": 77.61937341882927,
+    "per_config_acc_mean": 76.43640642059951,
+    "per_config_acc_sd": 1.1996814464938699,
+    "mean_observations_qualifying": 35.17824857410673,
+    "matched_support_qualifying_points": 79360,
+    "matched_support_agreement_pct": 76.10761088709678,
+    "matched_support_modal_vote_share_pct": 94.9330473528338,
+    "matched_support_majority_acc_pct": 75.7388463527542,
+    "varying_on_matched_support_agreement_pct": 67.11819556451613,
+    "varying_on_matched_support_modal_vote_share_pct": 92.33804756889566,
+    "varying_on_matched_support_majority_acc_pct": 75.69469846996051,
+    "configs": [
+     {
+      "index": 0,
+      "seed": 0,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91596,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 1,
+      "seed": 1,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91719,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 2,
+      "seed": 2,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89121,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 3,
+      "seed": 3,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 90862,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 4,
+      "seed": 4,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94785,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 5,
+      "seed": 5,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89879,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 6,
+      "seed": 6,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 95291,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 7,
+      "seed": 7,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91451,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 8,
+      "seed": 8,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94587,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 9,
+      "seed": 9,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 95277,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 10,
+      "seed": 10,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89302,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 11,
+      "seed": 11,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91620,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 12,
+      "seed": 12,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 95239,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 13,
+      "seed": 13,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93863,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 14,
+      "seed": 14,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93363,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 15,
+      "seed": 15,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 88105,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 16,
+      "seed": 16,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 92253,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 17,
+      "seed": 17,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89649,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 18,
+      "seed": 18,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91643,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 19,
+      "seed": 19,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 92460,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 20,
+      "seed": 20,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93377,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 21,
+      "seed": 21,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93691,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 22,
+      "seed": 22,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93982,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 23,
+      "seed": 23,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91072,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 24,
+      "seed": 24,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93900,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 25,
+      "seed": 25,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89015,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 26,
+      "seed": 26,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94898,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 27,
+      "seed": 27,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94829,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 28,
+      "seed": 28,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94431,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 29,
+      "seed": 29,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91567,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 30,
+      "seed": 30,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93761,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 31,
+      "seed": 31,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94278,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 32,
+      "seed": 32,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91558,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 33,
+      "seed": 33,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 90657,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 34,
+      "seed": 34,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 88834,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 35,
+      "seed": 35,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93176,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 36,
+      "seed": 36,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89653,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 37,
+      "seed": 37,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89328,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 38,
+      "seed": 38,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 90230,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 39,
+      "seed": 39,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91258,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 40,
+      "seed": 40,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 88297,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 41,
+      "seed": 41,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91128,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 42,
+      "seed": 42,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 89920,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 43,
+      "seed": 43,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 90305,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 44,
+      "seed": 44,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93596,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 45,
+      "seed": 45,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 94727,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 46,
+      "seed": 46,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 93626,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 47,
+      "seed": 47,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91522,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 48,
+      "seed": 48,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 88503,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     },
+     {
+      "index": 49,
+      "seed": 49,
+      "beams": 124,
+      "hres": 1388,
+      "vlow": -23.5,
+      "vup": 7.5,
+      "height": 1.59,
+      "n_points": 91631,
+      "sensor_params_used": [
+       124.0,
+       1.590000033378601,
+       1388.0,
+       -23.5,
+       7.5
+      ]
+     }
+    ]
+   },
+   "sensor_attributable_disagreement_pp": 8.989415322580655,
+   "sensor_attributable_vote_share_pp": 2.5949997839381354,
+   "wall_seconds": 45.9,
+   "sanity_ok": true,
+   "sanity_notes": [
+    "[ok] mean in [min, max]: 65.638 <= 73.507 <= 79.422",
+    "[ok] mean/sd recomputed from the 50 per-config accuracies match",
+    "[ok] |majority - per-config mean| = 2.660 <= disagreement rate 32.322",
+    "[ok] majority vote (76.168) >= per-config mean (73.507)",
+    "[ok] qualifying_points decreases monotonically with k: k=1 -> 277,114, k=10 -> 94,847, k=50 -> 210",
+    "[ok] sweep at k=10 reproduces qualifying_points (94,847)",
+    "[ok] percentages in [0, 100]",
+    "[ok] 50 per-config accuracies for 50 configurations",
+    "[ok] predictions non-degenerate: 7/8 classes predicted, normalised entropy 0.654 (GT 0.621), largest class 37.9%"
+   ]
+  }
+ },
+ "generated": "2026-09-03 07:38:19"
+}

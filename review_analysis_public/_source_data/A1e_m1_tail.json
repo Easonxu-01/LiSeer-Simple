@@ -1,0 +1,41 @@
+{
+ "task": "A1d-supplement (boundary displacement, tail statistics)",
+ "status": "DONE",
+ "script": "review_analysis/A1e_m1_tail.py",
+ "frames": 200,
+ "seq": "08",
+ "voxel_size_m": 0.2,
+ "n_sparse_boundary_voxels": 293329,
+ "M1_mean_d_m": 0.0671,
+ "M1_p99_d_m": 0.8246,
+ "M1_max_d_m": 18.67,
+ "M1_frac_d_gt_1m": 0.008632,
+ "M1_frac_d_gt_2m": 0.005703,
+ "recheck": {
+  "frac_d_eq_0": 0.8318,
+  "frac_d_le_1vox": 0.9648,
+  "frac_d_le_2vox": 0.9831,
+  "median_d_m": 0.0,
+  "p95_d_m": 0.2
+ },
+ "tail_origin": {
+  "all_boundary": {
+   "n": 293329,
+   "range_median_m": 14.72,
+   "range_p90_m": 32.71,
+   "moving_frac": 0.0193
+  },
+  "d_gt_0p4m": {
+   "n": 4944,
+   "range_median_m": 35.19,
+   "range_p90_m": 48.06,
+   "moving_frac": 0.0063
+  },
+  "d_gt_1m": {
+   "n": 2532,
+   "range_median_m": 39.51,
+   "range_p90_m": 48.86,
+   "moving_frac": 0.0051
+  }
+ }
+}

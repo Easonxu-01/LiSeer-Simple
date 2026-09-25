@@ -1,0 +1,23 @@
+{
+  "note": "dense nuScenes scenes, ~7 MB each",
+  "hdd_read": {
+    "label": "HDD /data (sdd, rotational)",
+    "n_files": 200,
+    "workers": 4,
+    "total_MB": 2177.2,
+    "wall_s": 11.303,
+    "MB_per_s": 192.6,
+    "ms_per_file": 56.52
+  },
+  "ssd_read": {
+    "label": "SSD / (sdc3, non-rotational)",
+    "n_files": 200,
+    "workers": 4,
+    "total_MB": 2177.2,
+    "wall_s": 6.654,
+    "MB_per_s": 327.2,
+    "ms_per_file": 33.27
+  },
+  "speedup_ssd_over_hdd": 1.7,
+  "decode_ms_per_file": 1.116
+}

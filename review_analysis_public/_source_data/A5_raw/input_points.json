@@ -1,0 +1,12 @@
+{
+  "E3_baseline": {
+    "train_grid": 33127,
+    "grid_ind": 33127,
+    "grid_ind_vox": 33127
+  },
+  "E4_liseer": {
+    "train_grid": 559097,
+    "grid_ind": 559097,
+    "grid_ind_vox": 559097
+  }
+}

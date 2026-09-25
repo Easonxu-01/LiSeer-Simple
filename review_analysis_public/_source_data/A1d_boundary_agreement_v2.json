@@ -1,0 +1,65 @@
+{
+ "task": "A1-supplement-v2 (boundary agreement, corrected metrics)",
+ "status": "DONE",
+ "script": "review_analysis/A1d_boundary_agreement_v2.py",
+ "frames": 200,
+ "seq": "08",
+ "holdout": 0.2,
+ "seed": 0,
+ "voxel_size_m": 0.2,
+ "M4_accuracy_by_boundary_distance": {
+  "band_0_20cm": {
+   "acc": 0.8105,
+   "n": 274215
+  },
+  "band_20_40cm": {
+   "acc": 0.9785,
+   "n": 398891
+  },
+  "band_40_100cm": {
+   "acc": 0.9985,
+   "n": 1180982
+  },
+  "band_gt_100cm": {
+   "acc": 0.9998,
+   "n": 2819132
+  }
+ },
+ "M4_overall_boundary_band_accuracy": 0.8105,
+ "M4_interior_accuracy": 0.9998,
+ "M4_gap": 0.1893,
+ "M3": {
+  "r0.2": {
+   "containment": 0.8622,
+   "reverse": 0.6,
+   "n_bnd_sparse": 1371721,
+   "n_bnd_dense": 1971118
+  },
+  "r0.3": {
+   "containment": 0.9268,
+   "reverse": 0.6876,
+   "n_bnd_sparse": 2352926,
+   "n_bnd_dense": 3171587
+  },
+  "r0.5": {
+   "containment": 0.9565,
+   "reverse": 0.7773,
+   "n_bnd_sparse": 4384622,
+   "n_bnd_dense": 5395616
+  }
+ },
+ "M2_containment_common_support": 0.9678,
+ "M2_n_voxels_common": 5821760,
+ "M2_common_frac_of_sparse_occupied": 0.8345,
+ "M1_frac_d_eq_0": 0.8318,
+ "M1_frac_d_le_1vox": 0.9648,
+ "M1_frac_d_le_2vox": 0.9831,
+ "M1_median_d_m": 0.0,
+ "M1_p95_d_m": 0.2,
+ "M5_lost_boundary_point_count": {
+  "lost_median": 2.0,
+  "kept_median": 3.0,
+  "n_lost": 49335,
+  "n_kept": 243994
+ }
+}

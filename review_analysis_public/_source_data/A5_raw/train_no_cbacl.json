@@ -1,0 +1,12 @@
+{
+  "tag": "no_cbacl",
+  "config": "projects/configs/pointocc/A5_no_cbacl.py",
+  "n_measured": 200,
+  "iter_ms_mean": 408.3501142915338,
+  "iter_ms_median": 396.5337183326483,
+  "iter_ms_p95": 435.3957240935415,
+  "points_mean": null,
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "torch": "1.10.1+cu113",
+  "cuda": "11.3"
+}

@@ -1,0 +1,26 @@
+{
+ "task": "A1-supplement (boundary containment)",
+ "status": "DONE",
+ "script": "review_analysis/A1b_boundary_containment.py",
+ "frames": 200,
+ "seq": "08",
+ "voxel_size_m": 0.2,
+ "boundary_definition": "6-connected; voxel-level majority vote then compare neighbour voxel labels; neighbour must be OCCUPIED; identical rule on sparse and dense sides",
+ "E1_containment_pooled": 0.8318,
+ "E2_containment_perframe_mean": 0.8293,
+ "E2_containment_perframe_median": 0.8335,
+ "E2_containment_perframe_p05": 0.7852,
+ "E3_new_boundary_frac": 0.8758,
+ "E4_dist_new_to_sparse_median_m": 0.7211,
+ "E4_dist_new_to_sparse_p95_m": 5.2038,
+ "E4_frac_within_one_voxel": 0.1893,
+ "E5_sparse_boundary_voxels_mean": 1466.6,
+ "E6_dense_boundary_voxels_mean": 9822.4,
+ "D6_is_pooled_ratio": true,
+ "asymmetry": {
+  "sparse_voxels_with_empty_neighbour_frac": 0.9946,
+  "dense_voxels_with_empty_neighbour_frac": 0.9391,
+  "sparse_occupied_voxels_mean": 34882.6,
+  "dense_occupied_voxels_mean": 168541.6
+ }
+}

@@ -1,0 +1,264 @@
+{
+ "frame_id": "semantickitti/seq08/000100",
+ "dataset": "semantickitti",
+ "checkpoint": "LiSeer_SK.pth",
+ "control_config": {
+  "beams": 124,
+  "hres": 1388,
+  "vlow": -23.5,
+  "vup": 7.5,
+  "height": 1.59
+ },
+ "n_repeats": 50,
+ "seeds": "0..49",
+ "dense_points": 1016760,
+ "observed_at_least_once": 162234,
+ "mean_observations_over_observed": 28.34680153358729,
+ "mean_observations_over_all_dense": 4.523009363074865,
+ "observed_by_all_repeats": 10764,
+ "observed_by_all_repeats_pct_of_observed": 6.634860756684788,
+ "observed_by_all_repeats_pct_of_dense": 1.0586569101852945,
+ "threshold_sweep": [
+  {
+   "k": 1,
+   "n_points_k": 162234
+  },
+  {
+   "k": 2,
+   "n_points_k": 157332
+  },
+  {
+   "k": 3,
+   "n_points_k": 152966
+  },
+  {
+   "k": 4,
+   "n_points_k": 148879
+  },
+  {
+   "k": 5,
+   "n_points_k": 144369
+  },
+  {
+   "k": 6,
+   "n_points_k": 139990
+  },
+  {
+   "k": 7,
+   "n_points_k": 135989
+  },
+  {
+   "k": 8,
+   "n_points_k": 132364
+  },
+  {
+   "k": 9,
+   "n_points_k": 129217
+  },
+  {
+   "k": 10,
+   "n_points_k": 125886
+  },
+  {
+   "k": 11,
+   "n_points_k": 122379
+  },
+  {
+   "k": 12,
+   "n_points_k": 119179
+  },
+  {
+   "k": 13,
+   "n_points_k": 116463
+  },
+  {
+   "k": 14,
+   "n_points_k": 113705
+  },
+  {
+   "k": 15,
+   "n_points_k": 110890
+  },
+  {
+   "k": 16,
+   "n_points_k": 108240
+  },
+  {
+   "k": 17,
+   "n_points_k": 105928
+  },
+  {
+   "k": 18,
+   "n_points_k": 103396
+  },
+  {
+   "k": 19,
+   "n_points_k": 100908
+  },
+  {
+   "k": 20,
+   "n_points_k": 98416
+  },
+  {
+   "k": 21,
+   "n_points_k": 96044
+  },
+  {
+   "k": 22,
+   "n_points_k": 93733
+  },
+  {
+   "k": 23,
+   "n_points_k": 91785
+  },
+  {
+   "k": 24,
+   "n_points_k": 89775
+  },
+  {
+   "k": 25,
+   "n_points_k": 87571
+  },
+  {
+   "k": 26,
+   "n_points_k": 85441
+  },
+  {
+   "k": 27,
+   "n_points_k": 83722
+  },
+  {
+   "k": 28,
+   "n_points_k": 82041
+  },
+  {
+   "k": 29,
+   "n_points_k": 80286
+  },
+  {
+   "k": 30,
+   "n_points_k": 78536
+  },
+  {
+   "k": 31,
+   "n_points_k": 76934
+  },
+  {
+   "k": 32,
+   "n_points_k": 75384
+  },
+  {
+   "k": 33,
+   "n_points_k": 73978
+  },
+  {
+   "k": 34,
+   "n_points_k": 72668
+  },
+  {
+   "k": 35,
+   "n_points_k": 71293
+  },
+  {
+   "k": 36,
+   "n_points_k": 69995
+  },
+  {
+   "k": 37,
+   "n_points_k": 68690
+  },
+  {
+   "k": 38,
+   "n_points_k": 67396
+  },
+  {
+   "k": 39,
+   "n_points_k": 66094
+  },
+  {
+   "k": 40,
+   "n_points_k": 64845
+  },
+  {
+   "k": 41,
+   "n_points_k": 63687
+  },
+  {
+   "k": 42,
+   "n_points_k": 62561
+  },
+  {
+   "k": 43,
+   "n_points_k": 61415
+  },
+  {
+   "k": 44,
+   "n_points_k": 60168
+  },
+  {
+   "k": 45,
+   "n_points_k": 58640
+  },
+  {
+   "k": 46,
+   "n_points_k": 56305
+  },
+  {
+   "k": 47,
+   "n_points_k": 51509
+  },
+  {
+   "k": 48,
+   "n_points_k": 42053
+  },
+  {
+   "k": 49,
+   "n_points_k": 26772
+  },
+  {
+   "k": 50,
+   "n_points_k": 10764
+  }
+ ],
+ "main_run_for_comparison": {
+  "observed_at_least_once": 277114,
+  "mean_observations_over_observed": 9.774403314159516,
+  "observed_by_all_configs": 210
+ },
+ "coord_spread_all_repeats": {
+  "n_points": 10764,
+  "rms_m": {
+   "mean": 0.03029642598761676,
+   "median": 0.024206036502864972,
+   "p90": 0.05072766967255038,
+   "p99": 0.10618811671030913,
+   "max": 0.5009739924068469
+  },
+  "frac_within": {
+   "0.1cm": 0.0,
+   "1cm": 0.0,
+   "3cm": 0.7185061315496098,
+   "10cm": 0.9879227053140096
+  },
+  "exactly_identical_frac": 0.0,
+  "note": "rms_m = per-point RMS displacement about that point's own mean returned position, over the repeats that observed it. Range noise is sigma(r)=1cm+0.1%*r, so a nonzero spread is expected and \"exactly identical\" is ~0 by construction."
+ },
+ "coord_spread_at_least_45": {
+  "n_points": 58640,
+  "rms_m": {
+   "mean": 0.032068172356661935,
+   "median": 0.02446975259577338,
+   "p90": 0.056676825219987584,
+   "p99": 0.13294532154511118,
+   "max": 0.5824576196309338
+  },
+  "frac_within": {
+   "0.1cm": 0.0,
+   "1cm": 0.0,
+   "3cm": 0.6730900409276944,
+   "10cm": 0.9822817189631651
+  },
+  "exactly_identical_frac": 0.0,
+  "note": "rms_m = per-point RMS displacement about that point's own mean returned position, over the repeats that observed it. Range noise is sigma(r)=1cm+0.1%*r, so a nonzero spread is expected and \"exactly identical\" is ~0 by construction."
+ }
+}

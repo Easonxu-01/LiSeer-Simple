@@ -1,0 +1,26 @@
+item,value,unit,n_samples,mean,median,p95,notes
+sampler_per_iter,12.928,ms,200,22.463,12.928,44.89,D31; timed inside the model with cuda.synchronize around _sampling; 1 call per iteration
+sampler_pct_of_iter,1.659,percent,200,,1.659,,"D31; denominator is one compute iteration (fwd+bwd+step), which excludes data loading"
+sfilm_per_iter,5.944,ms,200,,5.944,,"D32; A/B on the sensor_film flag; per-run estimates +8.61, +3.28 ms; within-run 95% CI of the first +7.08..+10.36 ms; run-to-run spread EXCEEDS the within-run CI, so read the range, not one CI"
+sfilm_pct_of_iter,0.42-1.10,percent,200,,,,"D32; range across the two replicate runs, not a CI"
+sfilm_added_params,0.3645,M,-,,,,D32; exact count 364549 = film_layer + sensor_head + sensor_encoder; cross-check: LiSeer total 32278624 minus baseline 31914141 = 364483 (the 66 difference is use_dim 3 vs 5 in the first layer)
+cbacl_per_iter,369.037,ms,200,,369.037,,"D33; A/B on the consistency flag; per-run estimates +359.64, +378.43 ms; within-run 95% CI of the first +357.69..+361.77 ms; run-to-run spread EXCEEDS the within-run CI, so read the range, not one CI; 47.4% of an iteration -- CBA-CL runs a second view, so the iteration roughly doubles"
+cbacl_pct_of_iter,46.2-48.6,percent,200,,,,D33; range across replicates; training only -- CBA-CL does not exist at inference
+fps_baseline,4.694,FPS,200,4.713,4.694,4.6,"D34; eval() + no_grad, batch 1, single GPU, real scans, 50 warm-up frames; latency median 213.04 ms; randomly initialised weights (timing is set by the architecture)"
+fps_liseer,4.707,FPS,200,4.728,4.707,4.59,"D35; eval() + no_grad, batch 1, single GPU, real scans, 50 warm-up frames; latency median 212.46 ms; randomly initialised weights (timing is set by the architecture)"
+inference_overhead,-0.577,ms,200,,-0.577,,D34 vs D35; -0.27% -- within noise. CBA-CL does not exist at inference and the sampler is not on the inference path; S-Film does run and costs nothing measurable
+gpu_model,NVIDIA GeForce RTX 4090,-,-,,,,NOT the A800 used for the submitted training runs
+torch_cuda,torch 1.10.1+cu113 / CUDA 11.3,-,-,,,,
+voxel_grid,480x360x32,-,-,,,,point_cloud_range +-51.2 m; TPV planes 180x240x16
+input_points_baseline,33127,points,8,,33127,,points entering the network for P-baseline: the real nuScenes scan
+input_points_liseer,559097,points,8,,559097,,"points entering the pipeline for LiSeer-P: the densified scene, from which Phi_samp draws the simulated scan inside the model"
+train_spg,1,-,-,,,,samples_per_gpu
+train_num_gpus,7,-,-,,,,E3/E4/E8 recipe; the timing above is single-GPU
+train_accum,3,-,-,,,,
+train_effective_batch,21,-,-,,,,
+timing_batch,1,-,-,,,,"component timings were taken single-GPU, spg=1, no accumulation, so one timed iteration is one forward+backward+step over one sample"
+data_time_pct_E3,0.857,percent,3083,,0.857,,"observed in the real E3 training run (7 GPUs, 4 loader workers): data_time 6.0 ms of a 700 ms wall-clock iteration -- prefetching hides the disk almost entirely"
+data_time_pct_E4,0.619,percent,1920,,0.619,,"observed in the real E4 training run (7 GPUs, 4 loader workers): data_time 8.0 ms of a 1293 ms wall-clock iteration -- prefetching hides the disk almost entirely"
+data_time_pct_E8,0.641,percent,1980,,0.641,,"observed in the real E8 training run (7 GPUs, 4 loader workers): data_time 10.0 ms of a 1559 ms wall-clock iteration -- prefetching hides the disk almost entirely"
+dense_read_hdd,56.52,ms/file,200,,56.52,,"data phase only; 192.6 MB/s from /data (sdd, rotational), cold cache, 4 readers"
+dense_read_ssd,33.27,ms/file,200,,33.27,,"same files staged on / (sdc3, SSD); 327.2 MB/s; 1.7x faster than the HDD"

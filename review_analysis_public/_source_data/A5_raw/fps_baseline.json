@@ -1,0 +1,15 @@
+{
+  "tag": "baseline",
+  "config": "projects/configs/pointocc/E3_nusc_Pbaseline_fine17.py",
+  "n_measured": 200,
+  "latency_ms_mean": 212.18999333679676,
+  "latency_ms_median": 213.0388538353145,
+  "latency_ms_p95": 217.39869276061654,
+  "fps_mean": 4.7127575823651515,
+  "fps_median": 4.693979440825523,
+  "fps_p95": 4.5998436664986135,
+  "points_mean": null,
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "torch": "1.10.1+cu113",
+  "cuda": "11.3"
+}
