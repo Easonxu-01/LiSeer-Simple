@@ -51,7 +51,7 @@ NUSCENES_TO_CL =  {
         11: 1,  # driveable_surface -> Driveable Ground
         12: 7,  # other_flat -> Other Ground
         13: 7,  # sidewalk -> Other Ground
-        14: 4,  # terrain -> Nature
+        14: 7,  # terrain -> Other Ground
         15: 2,  # manmade -> Structure
         16: 4,  # vegetation -> Nature
 }

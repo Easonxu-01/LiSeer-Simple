@@ -65,7 +65,7 @@ SEMANTICKITTI_TO_CL ={
     10: 3,   # car -> Vehicle
     11: 6,   # bicycle -> Movable objects
     13: 3,   # bus -> Vehicle
-    15: 3,   # motorcycle -> Vehicle
+    15: 6,   # motorcycle -> Movable objects
     16: 3,   # on-rails -> Vehicle
     18: 3,   # truck -> Vehicle
     20: 3,   # other-vehicle -> Vehicle
@@ -78,14 +78,14 @@ SEMANTICKITTI_TO_CL ={
     49: 7,   # other-ground -> Other Ground
     50: 2,   # building -> Structure
     51: 2,   # fence -> Structure
-    52: 2,   # other-structure -> Structure
+    52: 0,   # other-structure -> Other
     60: 1,   # lane-marking -> Driveable Ground
     70: 4,   # vegetation -> Nature
     71: 4,   # trunk -> Nature
-    72: 4,   # terrain -> Nature
+    72: 7,   # terrain -> Other Ground
     80: 6,   # pole ->Movable objects
     81: 6,   # traffic-sign -> Movable objects
-    99: 6,   # other-object -> Movable objects
+    99: 0,   # other-object -> Other
     252: 3,  # moving-car -> Vehicle
     253: 5,  # moving-bicyclist -> Living Being
     254: 5,  # moving-person -> Living Being

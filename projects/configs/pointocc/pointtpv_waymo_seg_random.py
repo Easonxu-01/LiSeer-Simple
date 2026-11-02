@@ -112,10 +112,10 @@ WAYMO_TO_CL = {
     14: 2,  # TYPE_BUILDING -> Structure
     15: 4,  # TYPE_VEGETATION -> Nature
     16: 4,  # TYPE_TREE_TRUNK -> Nature
-    17: 1,  # TYPE_CURB -> Driveable Ground
+    17: 7,  # TYPE_CURB -> Other Ground
     18: 1,  # TYPE_ROAD -> Driveable Ground
     19: 1,  # TYPE_LANE_MARKER -> Driveable Ground
-    20: 7,  # TYPE_OTHER_GROUND -> Other Ground
+    20: 1,  # TYPE_OTHER_GROUND -> Driveable Ground
     21: 7,  # TYPE_WALKABLE -> Other Ground
     22: 7,  # TYPE_SIDEWALK -> Other Ground
 }
