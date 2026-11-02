@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""A1 标签传播语义保真（→ Fig R1, D1-D7）。
+"""A1 semantic fidelity of label propagation (-> Fig R1, D1-D7).
 
-方法（严格复刻 tools/generate_dense_points_labels_sk.py 的传播算法）：
-  1. 取 N 帧真实稀疏扫描的标注点；随机留出 20%，只用剩余 80% 做传播；
-  2. 在留出的 20% 点上评传播标签 vs 真值 → 语义保真度（准确率、逐类 IoU）；
-  3. 边界体素膨胀比：稠密标签在类别边界处的体素数 / 稀疏标签的对应量。
+Method (reproduces the propagation algorithm of tools/generate_dense_points_labels_sk.py exactly):
+  1. take the annotated points of N real sparse scans; withhold 20% at random and propagate from the remaining 80%;
+  2. score the propagated labels against the ground truth on the withheld 20% -> semantic fidelity (accuracy, per-class IoU);
+  3. boundary-voxel dilation ratio: boundary voxels of the dense labels divided by the same count for the sparse labels.
 
-留出点必须用"传播到它所在体素的标签"来评——与稠密点走的是同一条路径，
-所以这测的正是传播算法本身的误差，不掺别的因素。
+A withheld point must be scored with the label propagated into its own voxel, which is the same path a dense point takes,
+so this measures the error of the propagation algorithm itself and nothing else.
 """
 import argparse, json, os, sys
 from collections import Counter
 import numpy as np
 from scipy.spatial import cKDTree
 
-LEARNING_MAP = None  # 见 --map，用配置里的 labels_map
+LEARNING_MAP = None  # see --map; uses labels_map from the config
 VOXEL = 0.2
 
 
@@ -23,18 +23,18 @@ def voxelize(p, v=VOXEL):
 
 
 def build_voxel_labels(pts, lab, v=VOXEL):
-    """稀疏点 -> 体素多数投票标签（与 generate_dense_labels 一致，向量化实现）。
+    """Sparse points -> per-voxel majority-vote label (as in generate_dense_labels, vectorized).
 
-    源码用 dict + Counter 逐点循环；这里用 (voxel,label) 联合唯一化 + 计数取最大，
-    结果等价但快两个数量级（200 帧 × 12 万点的规模下逐点 Python 循环不可行）。
-    并列时取标签值较小者——Counter.most_common 在并列时依插入序，
-    对本分析（准确率/IoU 统计）无影响。
+    The original loops over points with a dict and Counter; here a joint unique over (voxel, label) plus an argmax over counts
+    gives the same result two orders of magnitude faster (a per-point Python loop is not feasible at 200 frames x 120k points).
+    Ties are broken by the smaller label value; Counter.most_common breaks ties by insertion order,
+    which makes no difference to the accuracy and IoU statistics computed here.
     """
     vi = voxelize(pts, v)
     keys, inv = np.unique(vi, axis=0, return_inverse=True)
     pair = np.stack([inv, lab.astype(np.int64)], 1)
     upair, cnt = np.unique(pair, axis=0, return_counts=True)
-    # 按 (voxel, count) 排序后取每个 voxel 的最后一条 = 计数最大者
+    # sort by (voxel, count) and take the last entry of each voxel = the largest count
     order = np.lexsort((upair[:, 1], cnt, upair[:, 0]))
     up, cn = upair[order], cnt[order]
     last = np.ones(up.shape[0], bool)
@@ -46,16 +46,16 @@ def build_voxel_labels(pts, lab, v=VOXEL):
 
 
 def propagate(vox_keys, vox_lab, query_pts, v=VOXEL):
-    """查询点 -> 传播标签：本体素有标签就用，否则最近已填体素（与源码一致）。"""
+    """Query point -> propagated label: the voxel's own label if it has one, otherwise the nearest filled voxel (as in the original)."""
     qi = voxelize(query_pts, v)
     tree = cKDTree(vox_keys)
-    # 精确命中：距离为 0
+    # exact hit: distance zero
     dist, idx = tree.query(qi, k=1)
     return vox_lab[idx], dist > 0
 
 
 def boundary_voxels(pts, lab, v=VOXEL):
-    """边界体素数：6-邻域内存在不同标签的体素。"""
+    """Number of boundary voxels: voxels with a differently labelled voxel in their 6-neighbourhood."""
     keys, vlab = build_voxel_labels(pts, lab, v)
     lut = {tuple(k): l for k, l in zip(keys, vlab)}
     nb = [(1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)]
@@ -98,13 +98,13 @@ def main():
         lab = np.fromfile(os.path.join(ldir, stem + '.label'), np.uint32) & 0xFFFF
         if pts.shape[0] != lab.shape[0]:
             continue
-        # 只用有标注的点
+        # annotated points only
         m = lab > 0
         pts, lab = pts[m], lab[m]
         if pts.shape[0] < 100:
             continue
 
-        # --- 80/20 留出 ---
+        # --- 80/20 hold-out ---
         idx = rng.permutation(pts.shape[0])
         nho = int(round(a.holdout * pts.shape[0]))
         ho, keep = idx[:nho], idx[nho:]
@@ -118,7 +118,7 @@ def main():
             e[1] += int((pred == c).sum())
             e[2] += int((gt == c).sum())
 
-        # --- 边界体素膨胀比：稠密 vs 稀疏 ---
+        # --- boundary-voxel dilation ratio: dense vs sparse ---
         dp = os.path.join(ddir, stem + '.npy')
         dl = os.path.join(dldir, stem + '.label')
         if os.path.isfile(dp) and os.path.isfile(dl):
@@ -131,7 +131,7 @@ def main():
                 dil_num += bd; dil_den += bs
                 n_dense += int(md.sum()); n_sparse += pts.shape[0]
         if (fi + 1) % 25 == 0:
-            print(f'  {fi+1}/{len(files)} 帧  当前准确率 {cor/max(tot,1):.4f}', flush=True)
+            print(f'  {fi+1}/{len(files)} frames  running accuracy {cor/max(tot,1):.4f}', flush=True)
 
     acc = cor / max(tot, 1)
     ious = {c: (v[0] / max(v[1] + v[2] - v[0], 1)) for c, v in per_cls.items() if v[2] > 0}
@@ -151,7 +151,7 @@ def main():
     json.dump(res, open(a.out, 'w'), indent=2, ensure_ascii=False)
     print(json.dumps({k: v for k, v in res.items() if k != 'D4_per_class_IoU'},
                      indent=2, ensure_ascii=False))
-    print(f'\n写入 {a.out}')
+    print(f'\nwritten to {a.out}')
 
 
 if __name__ == '__main__':

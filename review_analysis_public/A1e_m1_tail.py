@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""A1d/M1 追加：边界位移距离的均值与尾部统计。
+"""A1d/M1 addendum: mean and tail statistics of the boundary displacement distance.
 
-与 A1d 的 M1 用**完全相同**的定义与同一批 200 帧：
-  d = 每个稀疏边界体素 -> 最近致密边界体素的欧氏距离（体素单位 × 0.2 m）。
-只重算 M1（跳过 M3/M4），因此比 A1d 快很多。
-一并把距离数组落盘，并溯源尾部来自什么区域（到传感器的距离 / 是否动态物体）。
+Uses exactly the definition of M1 in A1d, over the same 200 frames:
+  d = Euclidean distance from each sparse boundary voxel to the nearest dense one (voxel units x 0.2 m).
+Only M1 is recomputed (M3 and M4 are skipped), which makes this much faster than A1d.
+The distance array is also written out, and the tail is traced to its origin (range from the sensor, and whether the class is dynamic).
 """
 import argparse, json, os, sys
 import numpy as np
@@ -15,7 +15,7 @@ from A1_label_propagation_fidelity import build_voxel_labels
 
 VOXEL = 0.2
 NB6 = [(1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)]
-# SemanticKITTI 动态类（moving-*）
+# SemanticKITTI dynamic classes (moving-*)
 MOVING = {252, 253, 254, 255, 256, 257, 258, 259}
 
 
@@ -47,7 +47,7 @@ def main():
     dldir = os.path.join(a.root, a.seq, 'dense_labels')
     files = sorted(f for f in os.listdir(vdir) if f.endswith('.bin'))[:a.frames]
 
-    D, RNG, MOV = [], [], []      # 距离 / 该体素到传感器的距离 / 是否动态类
+    D, RNG, MOV = [], [], []      # distance / range of the voxel from the sensor / dynamic-class flag
     nf = 0
     for fi, f in enumerate(files):
         stem = f[:-4]
@@ -76,7 +76,7 @@ def main():
         arr_d = np.array([k for k, _ in Bd], np.float64)
         dd, _ = cKDTree(arr_d).query(arr_s, k=1)
         D.append(dd * VOXEL)
-        # 溯源：体素中心到传感器原点(0,0,0)的水平距离
+        # provenance: horizontal distance from the voxel centre to the sensor origin (0,0,0)
         ctr = (arr_s + 0.5) * VOXEL
         RNG.append(np.sqrt(ctr[:, 0] ** 2 + ctr[:, 1] ** 2))
         MOV.append(np.isin(lab_s, list(MOVING)))
@@ -87,7 +87,7 @@ def main():
     d = np.concatenate(D); rg = np.concatenate(RNG); mv = np.concatenate(MOV)
     np.savez_compressed('review_analysis/_source_data/A1e_m1_distances.npz', d=d, rng=rg, moving=mv)
 
-    tail = d > 0.4                      # 已有分位数未覆盖的那 1.69%
+    tail = d > 0.4                      # the 1.69% not covered by the quantiles already reported
     far = d > 1.0
     def rstat(mask):
         if mask.sum() == 0:
@@ -106,7 +106,7 @@ def main():
         M1_max_d_m=round(float(d.max()), 2),
         M1_frac_d_gt_1m=round(float((d > 1.0).mean()), 6),
         M1_frac_d_gt_2m=round(float((d > 2.0).mean()), 6),
-        # 复算已有分位数以核对与 A1d 一致
+        # recompute the published quantiles to check they agree with A1d
         recheck=dict(
             frac_d_eq_0=round(float((d == 0).mean()), 4),
             frac_d_le_1vox=round(float((d <= VOXEL + 1e-9).mean()), 4),

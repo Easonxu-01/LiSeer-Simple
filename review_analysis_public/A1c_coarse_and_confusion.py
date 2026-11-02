@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""A1 追加项 E7-E11：coarse-8 传播精度 + 逐类点数 + 混淆矩阵。
+"""A1 addendum E7-E11: coarse-8 propagation accuracy, per-class point counts and confusion matrices.
 
-与 A1 主脚本用**完全相同**的留出实验（同 200 帧、同 seed、同 20% 留出、
-同传播算法），因此这里的 fine 结果可与 A1 的 D2/D3/D4 直接对照。
+Uses exactly the same hold-out experiment as the main A1 script (same 200 frames, same seed, same 20% hold-out,
+same propagation algorithm), so the fine-class results here are directly comparable with D2/D3/D4 of A1.
 
-E7-E9 必须在 coarse 空间**重算混淆矩阵**，不能由 fine 的逐类 IoU 平均而来——
-IoU 是非线性的，且合并类别会把 car<->truck 这类 fine 级混淆变成 coarse 级的
-**正确**预测。映射表直接从 seg 训练配置里 import，不另抄一份。
+E7-E9 require the confusion matrix to be recomputed in the coarse space; averaging the fine per-class IoUs is not equivalent,
+because IoU is non-linear and merging classes turns a fine-level confusion such as car<->truck into a correct
+prediction at the coarse level. The mapping table is imported from the segmentation training config rather than copied.
 """
 import argparse, json, os, sys
 import numpy as np
@@ -15,7 +15,7 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from A1_label_propagation_fidelity import (VOXEL, build_voxel_labels, propagate)
 
-# ---- COLA 8 类映射：从 seg 训练配置直接取，避免抄错 ----
+# ---- the unified 8-class mapping, taken from the segmentation training config to avoid a transcription error ----
 _CFG = 'projects/configs/pointocc/pointtpv_semantickitti_seg_random.py'
 _ns = {}
 exec(compile(open(_CFG).read().split('DG = True')[0], _CFG, 'exec'), _ns)
@@ -79,13 +79,13 @@ def main():
 
     gt = np.concatenate(GT); pr = np.concatenate(PR)
 
-    # ---- E10 逐类点数（fine） ----
+    # ---- E10 per-class point counts (fine classes) ----
     uf, cf = np.unique(gt, return_counts=True)
     E10 = {f'{int(k)}:{SK_NAMES.get(int(k), "?")}': int(v)
            for k, v in sorted(zip(uf, cf), key=lambda x: -x[1])}
     tot = int(gt.size)
 
-    # ---- E11 混淆矩阵行（重点四类 + 全部行的 top-5） ----
+    # ---- E11 confusion-matrix rows (the four classes of interest, plus the top-5 of every row) ----
     focus = [49, 11, 30, 80]
     E11 = {}
     for c in sorted(set(uf.tolist())):
@@ -109,13 +109,13 @@ def main():
     E11_focus = {k: v for k, v in E11.items()
                  if int(k.split(':')[0]) in focus}
 
-    # ---- E7-E9 coarse-8 空间：先映射再重算 ----
+    # ---- E7-E9 coarse-8 space: map first, then recompute ----
     lut = np.zeros(int(max(SEMANTICKITTI_TO_CL) ) + 1, np.int64)
     for k, v in SEMANTICKITTI_TO_CL.items():
         lut[int(k)] = int(v)
     gtc = lut[np.clip(gt, 0, len(lut) - 1)]
     prc = lut[np.clip(pr, 0, len(lut) - 1)]
-    # ignore 类：coarse 0 = 'Other'（由 unlabeled/outlier 映射而来）
+    # ignored class: coarse 0 = 'Other' (mapped from unlabeled/outlier)
     valid = gtc != 0
     E7 = float((prc[valid] == gtc[valid]).mean())
     iou_c = iou_from_pairs(gtc[valid], prc[valid], range(1, 8))

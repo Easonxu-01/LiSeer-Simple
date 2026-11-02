@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""A2 稠密化几何保真（→ Fig R2, D8）。
+"""A2 geometric fidelity of densification (-> Fig R2, D8).
 
-两项：
-  1. 逐类「真实点 → 稠密点」最近邻距离：稠密化有没有把点放到真实表面之外。
-     对每个真实稀疏点，找最近的稠密点，统计距离分布（逐类）。
-  2. surface-variation 的 diffusion-response profile：原始 vs 稠密对比。
-     surface variation = lambda_0 / (lambda_0+lambda_1+lambda_2)（局部 PCA 最小特征值占比，
-     平面≈0、边角≈1/3）；diffusion response 用与 CODE-4 同族的算子
-     D_alpha = I - alpha*L 作用在该标量场上，看 b 步后的能量保留 e_b。
-     若稠密化保真，两条 profile 应形状一致（稠密只是更密，不该改变表面的几何频谱）。
+Two measurements:
+  1. per-class nearest-neighbour distance from a real point to a dense point: whether densification places points off the real surface.
+     For each real sparse point the nearest dense point is found and the distance distribution is collected per class.
+  2. diffusion-response profile of the surface variation: original versus dense.
+     Surface variation = lambda_0 / (lambda_0+lambda_1+lambda_2), the share of the smallest eigenvalue of a local PCA
+     (about 0 on a plane, about 1/3 at an edge or corner). The diffusion response applies the operator of the CODE-4 family,
+     D_alpha = I - alpha*L, to that scalar field and reads the retained energy e_b after b steps.
+     If densification is faithful the two profiles should have the same shape: a denser cloud should not change the geometric spectrum of the surface.
 """
 import argparse, json, os
 import numpy as np
@@ -16,25 +16,25 @@ from scipy.spatial import cKDTree
 
 ALPHA = 0.25
 B = 8
-K = 16          # 局部 PCA / 图邻域的近邻数
+K = 16          # neighbours used for the local PCA and for the graph neighbourhood
 
 
 def surface_variation(pts, k=K):
-    """逐点 surface variation = lambda_min / sum(lambda)。"""
+    """Per-point surface variation = lambda_min / sum(lambda)."""
     tree = cKDTree(pts)
     _, idx = tree.query(pts, k=k)
     nb = pts[idx]                                   # [N,k,3]
     c = nb - nb.mean(1, keepdims=True)
     cov = np.einsum('nki,nkj->nij', c, c) / k
-    w = np.linalg.eigvalsh(cov)                     # 升序
+    w = np.linalg.eigvalsh(cov)                     # ascending
     s = w.sum(1)
     return np.where(s > 1e-12, w[:, 0] / np.maximum(s, 1e-12), 0.0), idx
 
 
 def diffusion_profile(x, idx, alpha=ALPHA, b=B):
-    """e_b = ||D^b x||^2 / ||x||^2，D = I - alpha*L，L 为 kNN 图拉普拉斯（行归一化）。
+    """e_b = ||D^b x||^2 / ||x||^2 with D = I - alpha*L, where L is the row-normalized kNN graph Laplacian.
 
-    与 CODE-4 同族：L = I - W（W 行归一化邻接），谱在 [0,2]，L*1=0。
+    Same family as CODE-4: L = I - W with W the row-normalized adjacency, spectrum in [0,2] and L*1 = 0.
     """
     x = x - x.mean()
     n0 = float((x * x).sum())
@@ -53,7 +53,7 @@ def main():
     ap.add_argument('--root', default='data/semantickitti/sequences')
     ap.add_argument('--seq', default='08')
     ap.add_argument('--frames', type=int, default=50)
-    ap.add_argument('--sub', type=int, default=20000, help='profile 计算的下采样点数')
+    ap.add_argument('--sub', type=int, default=20000, help='points subsampled for the profile')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--out', default='review_analysis/_source_data/A2_densification_geometry.json')
     a = ap.parse_args()
@@ -80,12 +80,12 @@ def main():
         m = lab > 0
         pts, lab = pts[m].astype(np.float64), lab[m]
 
-        # --- 1) 逐类 真实点 -> 稠密点 最近邻距离 ---
+        # --- 1) per-class nearest-neighbour distance, real point -> dense point ---
         d, _ = cKDTree(dpts).query(pts, k=1)
         for c in np.unique(lab):
             per_cls.setdefault(int(c), []).append(d[lab == c])
 
-        # --- 2) surface-variation 的 diffusion response ---
+        # --- 2) diffusion response of the surface variation ---
         for src, acc in ((pts, prof_s), (dpts, prof_d)):
             n = src.shape[0]
             sel = rng.choice(n, min(a.sub, n), replace=False)
@@ -93,7 +93,7 @@ def main():
             acc.append(diffusion_profile(sv, idx))
         nf += 1
         if (fi + 1) % 10 == 0:
-            print(f'  {fi+1}/{len(files)} 帧', flush=True)
+            print(f'  {fi+1}/{len(files)} frames', flush=True)
 
     stats = {}
     for c, arrs in sorted(per_cls.items()):
@@ -120,7 +120,7 @@ def main():
     json.dump(res, open(a.out, 'w'), indent=2, ensure_ascii=False)
     print(json.dumps({k: v for k, v in res.items()
                       if k != 'D8_nn_distance_per_class'}, indent=2, ensure_ascii=False))
-    print(f'\n写入 {a.out}')
+    print(f'\nwritten to {a.out}')
 
 
 if __name__ == '__main__':

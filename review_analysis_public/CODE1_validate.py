@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""CODE-1 物理扰动套件 · 接收方验证脚本（独立可跑）。
+"""CODE-1 physical perturbation suite: stand-alone validation script for the recipient.
 
-用法：
-    cd <repo 根目录>            # 有 projects/ 的那一级
-    python3 review_analysis/CODE1_validate.py --cfg <一份 LiSeer 配置>
-全部 OK 才算应用成功。任何一项 FAIL 都不要用这个 patch。
+Usage:
+    cd <repo root>              # the level that holds projects/
+    python3 review_analysis/CODE1_validate.py --cfg <a LiSeer config>
+The patch is correctly applied only if every check passes. Do not use it if any check fails.
 
 ────────────────────────────────────────────────────────────────────
-关于播种：即使 random / numpy.random / torch 三个都播种，**数据集的 __getitem__
-本身仍不完全确定性**（同一实例、同一种子重复取同一帧，帧 0-1
-可复现、帧 2+ 会漂移）。所以"关闭态逐位一致"这类校验若直接对比两次
-dataset 取样，会得到假 FAIL。
-本脚本的对策是 CHECK-2：不比对输出，而是直接比对 **RNG 状态**——
-enable=False 时不得消耗任何随机数。这是逐位一致的**充分结构性证据**，
-且完全不依赖数据集的可复现性，也不需要保留一份改动前的代码。
+On seeding: even with random, numpy.random and torch all seeded, the dataset's __getitem__
+is not fully deterministic (reading the same frame twice from the same instance with the same seed reproduces frames 0 and 1
+but drifts from frame 2 onwards). A bit-exact check of the disabled state would therefore report a false failure if it simply
+compared two passes over the dataset.
+CHECK-2 avoids this by comparing RNG state rather than output:
+with enable=False no random number may be drawn at all. That is sufficient structural evidence of bit-exactness,
+it does not depend on the dataset being reproducible, and it needs no copy of the code from before the change.
 ────────────────────────────────────────────────────────────────────
 """
 import argparse, importlib, random, sys, time, warnings
@@ -33,14 +33,14 @@ def report(name, passed, detail=''):
 
 
 def seed_all(s=0):
-    """三重播种：_sampling 内部同时用到 Python random / numpy / torch。"""
+    """Seed all three: _sampling draws from Python random, numpy and torch."""
     random.seed(s); np.random.seed(s)
     torch.manual_seed(s); torch.cuda.manual_seed_all(s)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--cfg', required=True, help='一份 Random=True 的 LiSeer 配置')
+    ap.add_argument('--cfg', required=True, help='a LiSeer config with Random=True')
     ap.add_argument('--frames', type=int, default=4)
     a = ap.parse_args()
 
@@ -51,22 +51,22 @@ def main():
     cfg = Config.fromfile(a.cfg)
     importlib.import_module(cfg.get('plugin_dir', '').rstrip('/').replace('/', '.'))
 
-    # ---------- CHECK 1：接口存在、默认值正确、未知字段被拒 ----------
+    # ---------- CHECK 1: the interface exists, defaults are right, unknown fields are rejected ----------
     m = build_model(cfg.model, train_cfg=cfg.get('train_cfg'),
                     test_cfg=cfg.get('test_cfg')).cuda().eval()
     has = hasattr(m, 'perturb_cfg')
     keys = set(m.perturb_cfg) if has else set()
     want = {'enable', 'angular_jitter_mrad', 'range_noise_cm',
             'dropout_p', 'dropout_exempt_minority'}
-    report('CHECK-1a  perturb_cfg 存在且字段齐全', has and keys == want,
+    report('CHECK-1a  perturb_cfg exists and holds every field', has and keys == want,
            f'keys={sorted(keys)}')
     try:
         c2 = Config.fromfile(a.cfg)
         c2.model['sampler_perturb'] = {'enable': True, 'typo_field': 1}
         build_model(c2.model, train_cfg=c2.get('train_cfg'), test_cfg=c2.get('test_cfg'))
-        report('CHECK-1b  未知字段被 assert 拒绝', False, '未报错（应报错）')
+        report('CHECK-1b  an unknown field is rejected by an assert', False, 'no error was raised, but one was expected')
     except Exception as e:
-        report('CHECK-1b  未知字段被 assert 拒绝', 'sampler_perturb' in str(e),
+        report('CHECK-1b  an unknown field is rejected by an assert', 'sampler_perturb' in str(e),
                str(e)[:60])
 
     ds = build_dataset(cfg.data.train)
@@ -89,7 +89,7 @@ def main():
         m.perturb_cfg.clear(); m.perturb_cfg.update(old)
         return out
 
-    # ---------- CHECK 2：关闭态不消耗任何随机数（逐位一致的结构性证据）----------
+    # ---------- CHECK 2: the disabled state draws no random numbers (structural evidence of bit-exactness) ----------
     m.perturb_cfg.update({'enable': False})
     g, gi, gv, lb = frames[0]
     seed_all(0)
@@ -106,11 +106,11 @@ def main():
     b_t = torch.cuda.get_rng_state()
     m.perturb_cfg.update({'enable': False})
     off_consumes_less = not torch.equal(a_t, b_t)
-    report('CHECK-2   关闭态 RNG 消耗 < 开启态（关闭时三项一次抽样都不发生）',
+    report('CHECK-2   the disabled state consumes less RNG than the enabled one (none of the three terms draws)',
            off_consumes_less,
-           '开关两态的 torch RNG 终态不同 -> 关闭分支确实被 if 完全跳过')
+           'the final torch RNG state differs between the two, so the disabled branch is skipped entirely by the if')
 
-    # ---------- CHECK 3：三项可独立关断 ----------
+    # ---------- CHECK 3: the three terms can be switched off independently ----------
     P = dict(angular_jitter_mrad=0.2, range_noise_cm=2.5, dropout_p=0.03,
              dropout_exempt_minority=False)
     only = lambda **k: {'enable': True,
@@ -123,22 +123,22 @@ def main():
     allp = run({'enable': True, **P})
     n0 = lambda o: int(o[0][0].shape[0])
     same0 = lambda o: torch.equal(o[0][0], base[0][0])
-    for nm, o, dropch in (('只角度', ang, False), ('只距离', rng, False),
-                          ('只丢点', drp, True), ('三项全开', allp, True)):
-        # 判据只看第 0 帧：角度/距离项不增删点，但会移动 RNG 流，
-        # 使后续帧的**已有**随机项取到不同值 —— 那是正常后果，不是缺陷。
+    for nm, o, dropch in (('angle only', ang, False), ('range only', rng, False),
+                          ('dropout only', drp, True), ('all three', allp, True)):
+        # the test reads frame 0 only: the angle and range terms add or remove no points but do advance the RNG stream,
+        # so the random terms already present in later frames draw different values. That is expected, not a defect.
         ok = ((n0(o) != n0(base)) == dropch) and (not same0(o))
-        report(f'CHECK-3   {nm}', ok, f'第0帧点数 {n0(o)} (基准 {n0(base)})')
+        report(f'CHECK-3   {nm}', ok, f'points in frame 0: {n0(o)} (baseline {n0(base)})')
 
-    # ---------- CHECK 4：数值正确性 ----------
+    # ---------- CHECK 4: numerical correctness ----------
     b0, a0 = base[0][0], ang[0][0]
     if b0.shape == a0.shape:
         d = (a0[:, 5:8] - b0[:, 5:8]).norm(dim=1)
         r = b0[:, 5:8].norm(dim=1)
         mm = r > 1.0
         mrad = float((d[mm] / r[mm]).mean()) * 1e3
-        report('CHECK-4a  角度抖动幅值 ~ 1.253*sigma', 0.20 <= mrad <= 0.31,
-               f'实测 {mrad:.4f} mrad (期望 ~0.251)')
+        report('CHECK-4a  angular jitter magnitude ~ 1.253*sigma', 0.20 <= mrad <= 0.31,
+               f'measured {mrad:.4f} mrad (expected ~0.251)')
     br, rr = base[0][0], rng[0][0]
     if br.shape == rr.shape:
         dd = (rr[:, 5:8] - br[:, 5:8]).norm(dim=1)
@@ -147,14 +147,14 @@ def main():
         near, far = dd[(rad > 5) & (rad < 20)], dd[rad > 40]
         flat = abs(float(near.mean()) - float(far.mean())) * 100 < 0.5 \
             if near.numel() and far.numel() else True
-        report('CHECK-4b  测距噪声 |delta| ~ 半正态均值 0.798*sigma',
-               1.7 <= cm <= 2.3, f'实测 {cm:.3f} cm (期望 ~1.995)')
-        report('CHECK-4c  测距噪声与距离无关', flat)
+        report('CHECK-4b  range noise |delta| ~ half-normal mean 0.798*sigma',
+               1.7 <= cm <= 2.3, f'measured {cm:.3f} cm (expected ~1.995)')
+        report('CHECK-4c  range noise is independent of range', flat)
     ratio = n0(drp) / n0(base)
-    report('CHECK-4d  丢点后点数比 ~ 0.97', 0.955 <= ratio <= 0.985,
-           f'实测 {ratio:.4f}')
+    report('CHECK-4d  point-count ratio after dropout ~ 0.97', 0.955 <= ratio <= 0.985,
+           f'measured {ratio:.4f}')
 
-    # ---------- CHECK 5：索引与坐标自洽 ----------
+    # ---------- CHECK 5: indices agree with coordinates ----------
     mb = m.min_bound.cpu().float(); ms = m.max_bound.cpu().float()
     itv = (ms - mb) / m.grid_size.cpu().float()
     pts, gind = allp[0][0], allp[0][1]
@@ -162,10 +162,10 @@ def main():
     pol = torch.stack([torch.sqrt(x * x + y * y), torch.atan2(y, x), z], 1)
     gi2 = torch.floor((torch.maximum(torch.minimum(pol, ms - 1e-3), mb) - mb) / itv)
     bad = int((gi2 != gind).any(1).sum())
-    report('CHECK-5   抖动后 grid_ind 与坐标自洽', bad == 0,
-           f'不符 {bad}/{gind.shape[0]}')
+    report('CHECK-5   grid_ind still agrees with the coordinates after jitter', bad == 0,
+           f'{bad}/{gind.shape[0]} disagree')
 
-    # ---------- CHECK 6：耗时 ----------
+    # ---------- CHECK 6: runtime ----------
     ts = {}
     for nm, pc in (('off', {'enable': False}), ('on', {'enable': True, **P})):
         run(pc); torch.cuda.synchronize(); t0 = time.time()
@@ -173,12 +173,12 @@ def main():
             run(pc)
         torch.cuda.synchronize(); ts[nm] = (time.time() - t0) / (3 * len(frames))
     inc = (ts['on'] / ts['off'] - 1) * 100
-    report('CHECK-6   开启后单帧耗时增幅 <= 5%', inc <= 5.0,
+    report('CHECK-6   per-frame runtime increases by no more than 5% when enabled', inc <= 5.0,
            f'{ts["off"]*1e3:.1f} -> {ts["on"]*1e3:.1f} ms (+{inc:.2f}%)')
 
     print()
     print('ALL CHECKS PASSED' if all(results) else
-          f'FAILED: {results.count(False)}/{len(results)} 项未通过')
+          f'FAILED: {results.count(False)}/{len(results)} checks did not pass')
     sys.exit(0 if all(results) else 1)
 
 

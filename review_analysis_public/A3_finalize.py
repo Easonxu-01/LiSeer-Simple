@@ -37,17 +37,17 @@ def main():
 
     L = []
     w = L.append
-    w('# A3 结果\n')
-    w('> 尺度：**逐帧配对**。分母是同一传感器两次真实扫描之间的 JS 分布的中位数，')
-    w('> 分子是模拟扫描与真实扫描之间的同一量。`overlap` = 模拟↔真实帧对中落在')
-    w('> 真实↔真实帧对 95% 范围内的比例。95% CI 为帧层面 bootstrap 500 次。\n')
-    w('> `cond` = 采样器条件到该数据集实测的传感器配置（保真层）。')
-    w('> `cur` = 训练课程的全范围随机抽取（覆盖层参照，不作为保真证据）。\n')
+    w('# A3 results\n')
+    w('> Scale: frame-paired. The denominator is the median JS divergence between two real scans of the same sensor,')
+    w('> the numerator the same quantity between a simulated and a real scan. `overlap` is the share of simulated-real frame pairs that fall')
+    w('> within the 95% range of the real-real pairs. The 95% CI comes from 500 bootstrap resamples at the frame level.\n')
+    w('> `cond` conditions the sampler on the sensor configuration measured for that dataset (the fidelity layer).')
+    w('> `cur` draws at random over the full training curriculum (a coverage reference, not fidelity evidence).\n')
 
-    for lvl, name in [('cond', '保真层 Level 1a：条件到实测传感器配置'),
-                      ('cur', '覆盖层参照：课程全范围随机')]:
+    for lvl, name in [('cond', 'Fidelity, level 1a: conditioned on the measured sensor configuration'),
+                      ('cur', 'Coverage reference: random over the full curriculum')]:
         w(f'\n## {name}\n')
-        w('| 统计量 | ' + ' | '.join(SHORT[d] for d in DS) + ' |')
+        w('| Statistic | ' + ' | '.join(SHORT[d] for d in DS) + ' |')
         w('|---|---|---|---|')
         for f in FAM:
             cells = []
@@ -61,10 +61,10 @@ def main():
                 cells.append(f'{mark}{rt:.2f}{mark} [{float(r["ratio_ci_lo"]):.2f}, '
                              f'{float(r["ratio_ci_hi"]):.2f}] · {float(r["overlap95"])*100:.0f}%')
             w(f'| {LABEL[f]} | ' + ' | '.join(cells) + ' |')
-        w('\n每格：`ratio [95% CI] · overlap`。粗体 = ratio < 1.5。\n')
+        w('\nEach cell reads `ratio [95% CI] - overlap`. Bold marks ratio < 1.5.\n')
 
-    w('\n## 辅指标：Wasserstein-1（米）\n')
-    w('| 统计量 | ' + ' | '.join(SHORT[d] for d in DS) + ' |')
+    w('\n## Secondary metric: Wasserstein-1 (metres)\n')
+    w('| Statistic | ' + ' | '.join(SHORT[d] for d in DS) + ' |')
     w('|---|---|---|---|')
     for f in ['f1', 'f2', 'f4']:
         cells = []
@@ -76,12 +76,12 @@ def main():
         w(f'| {LABEL[f]} | ' + ' | '.join(cells) + ' |')
 
     if cov:
-        w('\n## 覆盖层 Level 2：课程对真实扫描的支持度覆盖\n')
-        w('> 判据为 Kynkaanniemi et al. (NeurIPS 2019) 的 k-NN 支持度 recall（k=3）：')
-        w('> 真实扫描被覆盖 ⟺ 它落在某个模拟扫描以其自身第 k 近邻距离为半径的球内。')
-        w('> **必须对照控制基线读**：同一传感器的两半真实数据（real_A→real_B）在这个判据下')
-        w('> 只得约 0.85 而非 1.0（k=3 的有限样本半径），所以 0.85 才是天花板。\n')
-        w('| 统计量 | ' + ' | '.join(SHORT[d] for d in DS) + ' |')
+        w('\n## Coverage, level 2: support coverage of the real scans by the curriculum\n')
+        w('> The criterion is the k-NN support recall of Kynkaanniemi et al. (NeurIPS 2019) with k=3:')
+        w('> a real scan is covered if it falls inside the ball of some simulated scan whose radius is the k-th nearest-neighbour distance of that scan.')
+        w('> It must be read against the control baseline: two halves of the real data from the same sensor (real_A to real_B) reach only')
+        w('> about 0.85 rather than 1.0 under this criterion (a finite-sample radius at k=3), so 0.85 is the ceiling.\n')
+        w('| Statistic | ' + ' | '.join(SHORT[d] for d in DS) + ' |')
         w('|---|---|---|---|')
         for f in FAM:
             cells = []
@@ -93,24 +93,24 @@ def main():
                 rel = float(c.get('coverage_vs_control', 0))
                 mark = '**' if rel >= 0.9 else ''
                 cells.append(f'{mark}{float(c["coverage"])*100:.0f}%{mark} '
-                             f'(控制 {float(c["control_realA_realB"])*100:.0f}%, '
-                             f'相对 {rel:.2f})')
+                             f'(control {float(c["control_realA_realB"])*100:.0f}%, '
+                             f'relative {rel:.2f})')
             w(f'| {LABEL[f]} | ' + ' | '.join(cells) + ' |')
-        w('\n每格：`recall (控制基线, 相对值)`。粗体 = 相对控制 ≥ 0.90，即达到真实数据自身的覆盖水平。\n')
-        w('对照：`sim_cond` 的 recall 普遍**低于** `sim_cur`（例如 SK 的 F4 0.745 vs 0.910）。')
-        w('宽混合覆盖得更好、条件化保真得更好——两层结构在数据上自洽。\n')
+        w('\nEach cell reads `recall (control, relative)`. Bold marks a relative value of 0.90 or above, that is, the coverage the real data reaches itself.\n')
+        w('For contrast, the recall of `sim_cond` is generally below that of `sim_cur` (F4 on SemanticKITTI, 0.745 against 0.910).')
+        w('A broad mixture covers better and a conditioned sampler is more faithful, which is what the two-layer structure predicts.\n')
 
-    w('\n## 配置层面的覆盖\n')
-    w('| 参数 | ' + ' | '.join(SHORT[d] for d in DS) + ' | 课程范围 |')
+    w('\n## Coverage at the configuration level\n')
+    w('| Parameter | ' + ' | '.join(SHORT[d] for d in DS) + ' | Curriculum range |')
     w('|---|---|---|---|---|')
     c = nom['curriculum_TableB1']
-    w(f'| 线数 | ' + ' | '.join(str(nom[d]['n_beams']) for d in DS) + f' | {c["beams"]} |')
-    w(f'| 安装高度 (m) | ' + ' | '.join(f'{nom[d]["mount_height"]["height_m"]}' for d in DS)
+    w(f'| Beams | ' + ' | '.join(str(nom[d]['n_beams']) for d in DS) + f' | {c["beams"]} |')
+    w(f'| Mount height (m) | ' + ' | '.join(f'{nom[d]["mount_height"]["height_m"]}' for d in DS)
       + f' | {c["height_m"]} |')
-    w(f'| 水平射线数 | ' + ' | '.join(str(nom[d]['n_horiz']) for d in DS) + f' | {c["hres"]} |')
-    w(f'| 垂直下界角 (°) | ' + ' | '.join(f'{nom[d]["fov_lo_deg"]}' for d in DS)
+    w(f'| Horizontal rays | ' + ' | '.join(str(nom[d]['n_horiz']) for d in DS) + f' | {c["hres"]} |')
+    w(f'| Vertical FoV lower bound (deg) | ' + ' | '.join(f'{nom[d]["fov_lo_deg"]}' for d in DS)
       + f' | {c["v_lo_deg"]} |')
-    w(f'| 垂直上界角 (°) | ' + ' | '.join(f'{nom[d]["fov_hi_deg"]}' for d in DS)
+    w(f'| Vertical FoV upper bound (deg) | ' + ' | '.join(f'{nom[d]["fov_hi_deg"]}' for d in DS)
       + f' | {c["v_hi_deg"]} |')
 
     open('review_analysis/_source_data/A3_D18.md', 'w', encoding='utf-8').write('\n'.join(L) + '\n')

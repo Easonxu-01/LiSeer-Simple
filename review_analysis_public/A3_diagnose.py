@@ -52,9 +52,9 @@ def main():
     nom = json.load(open('review_analysis/_source_data/A3_nominal_configs.json'))
     L = []
     w = L.append
-    w('# A3 诊断：剩余差距来自哪些箱（Step 4）\n')
-    w('> JS 是逐箱求和，可以精确分解。下表给出贡献最大的箱及其物理位置。')
-    w('> 只对 `ratio_cond` 的 95% CI 下界 > 3 的族做分解。\n')
+    w('# A3 diagnosis: which bins the residual gap comes from (Step 4)\n')
+    w('> The JS divergence is a sum over bins and decomposes exactly. The table below gives the largest-contributing bins and their physical location.')
+    w('> Only families whose `ratio_cond` has a 95% CI lower bound above 3 are decomposed.\n')
 
     flagged = []
     for r in rows:
@@ -63,11 +63,11 @@ def main():
         if float(r['ratio_ci_lo']) > TRIGGER:
             flagged.append(r)
 
-    w(f'\n## 触发诊断的族：{len(flagged)} 个\n')
+    w(f'\n## Families that triggered the diagnosis: {len(flagged)}\n')
     if not flagged:
-        w('无。所有族的 `ratio_cond` 95% CI 下界都 ≤ 3。\n')
+        w('None. Every family has a `ratio_cond` 95% CI lower bound of 3 or below.\n')
 
-    w('| 数据集 | 族 | ratio_cond [95% CI] | overlap | 贡献前 5 的箱 | 占 JS 比例 |')
+    w('| Dataset | Family | ratio_cond [95% CI] | overlap | Top-5 contributing bins | Share of JS |')
     w('|---|---|---|---|---|---|')
     detail = []
     for r in flagged:
@@ -90,21 +90,21 @@ def main():
           f'| {float(r["overlap95"]):.3f} | {loc} | {frac:.1%} |')
         detail.append((ds, key, e, c_s, c_r, top))
 
-    w('\n## 逐族细节\n')
+    w('\n## Per-family detail\n')
     for ds, key, e, c_s, c_r, top in detail:
         n = nom[ds]
         w(f'\n### {ds} / {key}  ({UNITS[key]})\n')
-        w('| 箱 | 范围 | sim↔real 贡献 | real↔real 贡献 | 倍数 |')
+        w('| Bin | Range | sim-real contribution | real-real contribution | Ratio |')
         w('|---|---|---|---|---|')
         for b in sorted(top):
             ratio = c_s[b] / max(c_r[b], 1e-12)
             w(f'| {b} | [{e[b]:.4g}, {e[b+1]:.4g}) | {c_s[b]:.6f} | {c_r[b]:.6f} | {ratio:.1f}× |')
         if key == 'f2':
             sp = n['spacing_med_deg']
-            w(f'\n该数据集的实测线间距中位数 {sp}°，非均匀度 {n["nonuniformity"]}×，')
-            w(f'运动补偿漂移 {n["ego_motion_drift_deg"]}°。')
-            w('若贡献集中在小间距箱，机理指向**真实扫描的相邻线间距**与模拟采样的差异；')
-            w('若集中在大间距箱，指向点密度差。二者可由上表的箱位置区分。\n')
+            w(f'\nThe measured median beam spacing of this dataset is {sp} deg, its non-uniformity {n["nonuniformity"]}x,')
+            w(f'and its ego-motion drift {n["ego_motion_drift_deg"]} deg.')
+            w('A contribution concentrated in the small-spacing bins points to a difference between the beam spacing of the real scan and that of the simulated sampling;')
+            w('a contribution concentrated in the large-spacing bins points to a difference in point density. The bin positions above separate the two.\n')
     open('review_analysis/_source_data/A3_diagnostics.md', 'w', encoding='utf-8').write('\n'.join(L) + '\n')
     print('\n'.join(L[:40]))
     print(f'\nwrote review_analysis/_source_data/A3_diagnostics.md')

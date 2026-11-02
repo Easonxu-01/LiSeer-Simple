@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""A1 追加项：边界包含率（E1-E6）。
+"""A1 addendum: boundary containment (E1-E6).
 
-回答的问题不是"边界体素变多了吗"（那是致密化的必然结果），而是
-**稀疏标注认定的边界位置，在致密标注里是否仍然是边界** —— 即边界有没有被
-移动或加宽（bleeding），还是只是沿轮廓补得更完整。
+The question is not whether there are more boundary voxels (densification makes that inevitable) but
+whether a location that the sparse annotation calls a boundary is still a boundary in the dense annotation, that is, whether boundaries
+move or widen (bleeding), or are merely filled in more completely along the same contour.
 
-边界体素定义（稀疏侧与致密侧完全同一规则）：
-  · 体素级：先按 0.2m 体素对点做多数投票得到体素标签，再比较邻居体素标签
-    （不是点级"体素内含 >=2 种标签的点"）；
-  · 6-连通邻域；
-  · 邻居必须**已占据**（存在于该侧的体素集合内）才参与比较。
+Definition of a boundary voxel (identical rule on the sparse and the dense side):
+  - voxel level: points are first majority-voted into 0.2 m voxels, then neighbouring voxel labels are compared
+    (not the point-level test of a voxel holding points of two or more labels);
+  - 6-connected neighbourhood;
+  - a neighbour takes part in the comparison only if it is occupied on that side.
 
-⚠ 这条"邻居必须已占据"在两侧造成结构性不对称，见脚本输出的 asymmetry 段：
-  稀疏侧点少、体素稀疏，一个真实边界体素的邻居常常是空的，于是**不被判为边界**。
-  因此 B_sparse 系统性偏少，且偏向"两侧都有足够点"的强边界。
-  这会**高估** containment（因为留下的都是最容易在致密侧仍然成立的边界）。
-  脚本一并报出两侧的占据率与"因邻居为空而未能判定"的体素比例，供如实说明。
+That occupancy requirement makes the two sides structurally asymmetric; see the asymmetry block in the output:
+  the sparse side has fewer points, so the neighbours of a true boundary voxel are often empty and it is not counted as a boundary.
+  B_sparse is therefore systematically low and biased towards strong boundaries with enough points on both sides.
+  This overestimates containment, because the boundaries that survive are the ones most likely to hold on the dense side.
+  The script also reports the occupancy of each side and the share of voxels left undecided because a neighbour was empty.
 """
 import argparse, json, os
 from collections import Counter
@@ -31,7 +31,7 @@ def voxelize(p, v=VOXEL):
 
 
 def voxel_labels(pts, lab, v=VOXEL):
-    """体素多数投票（向量化；并列取标签值较小者）。"""
+    """Per-voxel majority vote (vectorized; ties broken by the smaller label value)."""
     vi = voxelize(pts, v)
     keys, inv = np.unique(vi, axis=0, return_inverse=True)
     pair = np.stack([inv, lab.astype(np.int64)], 1)
@@ -47,10 +47,10 @@ def voxel_labels(pts, lab, v=VOXEL):
 
 
 def boundary_set(keys, vlab):
-    """返回 (边界体素坐标 [B,3], 有空邻居的体素数, 体素总数)。
+    """Returns (boundary voxel coordinates [B,3], number of voxels with an empty neighbour, total number of voxels).
 
-    判定：6-邻域内存在**已占据**且标签不同的邻居。
-    同时统计"至少有一个邻居为空"的体素数 —— 这是两侧不对称的度量。
+    A voxel is a boundary voxel if its 6-neighbourhood holds an occupied neighbour with a different label.
+    The count of voxels with at least one empty neighbour is also returned, as a measure of the asymmetry between the two sides.
     """
     n = keys.shape[0]
     idx = {tuple(k): i for i, k in enumerate(keys)}
@@ -84,7 +84,7 @@ def main():
 
     inter_tot = bs_tot = bd_tot = 0
     per_frame = []
-    new_d = []                     # 新增边界体素到最近稀疏边界体素的距离(米)
+    new_d = []                     # distance in metres from each new boundary voxel to the nearest sparse one
     bs_counts, bd_counts = [], []
     sp_empty_nb = sp_vox = dn_empty_nb = dn_vox = 0
     nf = 0
@@ -118,12 +118,12 @@ def main():
         inter_tot += inter; bs_tot += Bs.shape[0]; bd_tot += Bd.shape[0]
         per_frame.append(inter / Bs.shape[0])
 
-        # E4：致密新增的边界体素 -> 最近的稀疏边界体素的距离
+        # E4: distance from a boundary voxel new on the dense side to the nearest sparse boundary voxel
         sets = set(map(tuple, Bs))
         new = np.array([k for k in map(tuple, Bd) if k not in sets], np.int64)
         if new.size:
             d, _ = cKDTree(Bs.astype(np.float64)).query(new.astype(np.float64), k=1)
-            new_d.append(d * VOXEL)          # 体素单位 -> 米
+            new_d.append(d * VOXEL)          # voxel units -> metres
         nf += 1
         if (fi + 1) % 25 == 0:
             print(f'  {fi+1}/{len(files)}  containment(pooled)={inter_tot/max(bs_tot,1):.4f}', flush=True)

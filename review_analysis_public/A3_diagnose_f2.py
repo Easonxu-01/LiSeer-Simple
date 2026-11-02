@@ -57,19 +57,19 @@ def nn_profile(P, origin, tree=None, cap=20000):
 def main():
     L = []
     w = L.append
-    w('# F2 机理：最近邻间距差距来自致密场景的分辨率下限\n')
-    w('> 逐箱分解把 ~73% 的 F2 散度放在 1–3 cm 的邻距箱。下面三条曲线解释为什么。\n')
-    w('\n## 已排除的解释（各自的反证）\n')
-    w('| 假说 | 检验 | 结果 |')
+    w('# F2 mechanism: the nearest-neighbour spacing gap comes from the resolution limit of the dense scenes\n')
+    w('> The per-bin decomposition places about 73% of the F2 divergence in the 1-3 cm spacing bins. The three curves below explain why.\n')
+    w('\n## Explanations ruled out, each with its counter-evidence\n')
+    w('| Hypothesis | Test | Result |')
     w('|---|---|---|')
-    w('| 点数不同 | sim/real 点数比 0.86 → 间距只应变 1.07× | 实测 1.8×，**排除** |')
-    w('| 接受带内仰角抖动 | 把每个模拟点投影到它所属射线上再算 NN | 5.64 → 5.74 cm，**未改善，排除** |')
-    w('| 致密场景整体太粗 | 全局 NN 中位数：致密 3.7 cm vs 真实 3.2 cm | 相当，**排除** |')
-    w('\n## 成立的解释：两种采样几何的分辨率随距离的走向相反\n')
-    w('真实旋转式 LiDAR 是**角度采样**，邻距随距离线性增长；')
-    w('致密化产生的是**近似均匀的空间分辨率**，各距离段几乎不变。')
-    w('两条曲线在约 8–10 m 处交叉：近场致密场景比真实扫描更粗，远场则细得多。')
-    w('模拟器只能挑选致密场景中已存在的点，因此在近场**物理上不可能**产生比致密场景自身间距更小的邻距。\n')
+    w('| Different point counts | a sim/real count ratio of 0.86 should change the spacing by only 1.07x | measured 1.8x, **ruled out** |')
+    w('| Elevation jitter inside the acceptance band | project every simulated point onto its own ray before computing NN | 5.64 -> 5.74 cm, **no improvement, ruled out** |')
+    w('| The dense scenes are coarse overall | global median NN: 3.7 cm dense against 3.2 cm real | comparable, **ruled out** |')
+    w('\n## The explanation that holds: the two sampling geometries vary with range in opposite directions\n')
+    w('A real spinning LiDAR samples in angle, so its neighbour spacing grows linearly with range;')
+    w('densification produces an approximately uniform spatial resolution that barely changes with range.')
+    w('The two curves cross at about 8-10 m: in the near field the dense scenes are coarser than the real scans, in the far field much finer.')
+    w('The simulator can only select points that already exist in the dense scene, so in the near field it cannot produce a spacing finer than that of the dense scene itself.\n')
 
     for ds in DS:
         A, B = select(ds)
@@ -87,27 +87,27 @@ def main():
                 acc[b][0].append(pr[b][1])
                 acc[b][1].append(pd[b][1])
                 acc[b][2].append(ps[b][1])
-        w(f'\n### {ds}   （{nom["n_beams"]} 线 × {NH} 射线，原点 {O}）\n')
-        w('| 距离段 (m) | 真实扫描 NN | 致密场景自身 NN | 模拟扫描 NN | 几何环内步长 | 致密/真实 |')
+        w(f'\n### {ds}   ({nom["n_beams"]} beams x {NH} rays, origin {O})\n')
+        w('| Range (m) | Real scan NN | Dense scene NN | Simulated scan NN | Within-ring geometric step | Dense/real |')
         w('|---|---|---|---|---|---|')
         for lo, hi in BANDS:
             r, d, s = (np.nanmean(acc[(lo, hi)][k]) for k in range(3))
             g = (lo + hi) / 2 * 2 * np.pi / NH * 100
             if not np.isfinite(r):
                 continue
-            mark = ' ⬅ 下限咬住' if d > r else ''
+            mark = ' <- limit binding' if d > r else ''
             w(f'| {lo}–{hi} | {r:.2f} cm | **{d:.2f} cm** | {s:.2f} cm | {g:.2f} cm | '
               f'{d/r:.2f}×{mark} |')
         cross = [f'{lo}–{hi}' for lo, hi in BANDS
                  if np.isfinite(np.nanmean(acc[(lo, hi)][0]))
                  and np.nanmean(acc[(lo, hi)][1]) > np.nanmean(acc[(lo, hi)][0])]
-        w(f'\n致密场景比真实扫描粗的距离段：**{", ".join(cross) if cross else "无"}** m。\n')
+        w(f'\nRanges where the dense scene is coarser than the real scan: **{", ".join(cross) if cross else "none"}** m.\n')
 
-    w('\n## 结论\n')
-    w('F2 的残余差距是**离线致密化的分辨率下限**造成的，不是采样器 Φ_samp 的性质。')
-    w('近场里没有任何采样器能从这些致密场景中取出比其自身间距更密的点。\n')
-    w('这一限制对训练是**同源且有界**的：模型训练时读的是同一批致密场景，')
-    w('因此它从未接触过近场 3 cm 以下的结构，模拟与训练在这一点上是一致的。\n')
+    w('\n## Conclusion\n')
+    w('The residual F2 gap is caused by the resolution limit of the offline densification, not by a property of the sampler Phi_samp.')
+    w('In the near field no sampler can draw points from these dense scenes more closely spaced than the scenes themselves.\n')
+    w('The limit is shared with training and bounded: the model is trained on the same dense scenes,')
+    w('so it has never been exposed to structure finer than 3 cm in the near field, and simulation and training agree on this point.\n')
     open('review_analysis/_source_data/A3_f2_mechanism.md', 'w', encoding='utf-8').write('\n'.join(L) + '\n')
     print('\n'.join(L))
 

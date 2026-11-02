@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""A1 补充 v2：边界一致性的修正测法（M1-M5）。
+"""A1 addendum v2: corrected measurements of boundary agreement (M1-M5).
 
-背景：A1b 的 E1_containment 受三条机制影响
-（稀疏体素标签不稳、占据邻居不对称、体素级精确匹配过严），这里给出修正后的测法。
-本脚本的四个指标在**看到任何结果之前**定死，无论高低照实回报。
+E1_containment in A1b is affected by three mechanisms
+(unstable sparse voxel labels, asymmetric neighbour occupancy, and an over-strict exact voxel match); corrected measurements follow.
+The four metrics of this script were fixed before any result was seen and are reported as measured, high or low.
 
-M4 最重要：有真值、不依赖体素化、不依赖任何边界集合定义。
+M4 is the most informative: it has ground truth and depends neither on voxelization nor on any definition of a boundary set.
 """
 import argparse, json, os, sys
 import numpy as np
@@ -26,10 +26,10 @@ def voxelize(p, v=VOXEL):
 
 
 def dist_to_nearest_other_class(pts, lab):
-    """每点到最近的**异类**原始标注点的欧氏距离。
+    """Euclidean distance from each point to the nearest originally annotated point of a different class.
 
-    只用原始稀疏标注（那是真值），不涉及致密云。逐类建树：对类 c 的点，
-    查询"所有非 c 点"构成的树。
+    Uses the original sparse annotation only, which is the ground truth; the dense cloud plays no part. One tree per class: for points of
+    class c, query the tree built from all points not in c.
     """
     d = np.full(pts.shape[0], np.inf)
     classes = np.unique(lab)
@@ -46,7 +46,7 @@ def dist_to_nearest_other_class(pts, lab):
 
 
 def boundary_mask_pointwise(pts, lab, r):
-    """点级边界：半径 r 内存在异类点。两侧用同一函数 -> 完全对称。"""
+    """Point-level boundary: a point of another class within radius r. The same function is used on both sides, so the test is symmetric."""
     tree = cKDTree(pts)
     pairs = tree.query_ball_point(pts, r)
     out = np.zeros(pts.shape[0], bool)
@@ -60,7 +60,7 @@ def boundary_mask_pointwise(pts, lab, r):
 
 
 def boundary_voxels_on(keys, vlab, restrict=None):
-    """体素级边界（6-连通，邻居须已占据）。restrict 给定时只在该集合内判定。"""
+    """Voxel-level boundary (6-connected, neighbours must be occupied). With restrict given, the test runs inside that set only."""
     idx = {tuple(k): i for i, k in enumerate(keys)}
     allow = None if restrict is None else restrict
     out = []
@@ -97,9 +97,9 @@ def main():
     dldir = os.path.join(a.root, a.seq, 'dense_labels')
     files = sorted(f for f in os.listdir(vdir) if f.endswith('.bin'))[:a.frames]
 
-    # M4 累加器
+    # M4 accumulators
     m4 = {n: [0, 0] for _, _, n in BANDS}          # [correct, total]
-    # M3 累加器
+    # M3 accumulators
     m3 = {r: [0, 0, 0] for r in RADII}             # [inter, n_sparse, n_dense]
     # M2 / M1 / M5
     m2_i = m2_s = m2_v = 0
@@ -120,14 +120,14 @@ def main():
         if pts.shape[0] < 100:
             continue
 
-        # ---------- M4：留出实验 + 到最近异类真值点的距离分层 ----------
+        # ---------- M4: hold-out experiment, stratified by distance to the nearest ground-truth point of another class ----------
         idx = rng.permutation(pts.shape[0])
         nho = int(round(a.holdout * pts.shape[0]))
         ho, keep = idx[:nho], idx[nho:]
         vk, vlb = build_voxel_labels(pts[keep], lab[keep])
         pred, _ = propagate(vk, vlb, pts[ho])
         gt = lab[ho]
-        dist_all = dist_to_nearest_other_class(pts, lab)     # 全帧真值距离
+        dist_all = dist_to_nearest_other_class(pts, lab)     # ground-truth distances over the whole frame
         dho = dist_all[ho]
         ok = (pred == gt)
         for lo, hi, name in BANDS:
@@ -149,13 +149,13 @@ def main():
             nf += 1
             continue
 
-        # ---------- M3：点级、无体素化、两侧同函数 ----------
-        # 真实点在致密云中的标签：取最近致密点的标签（真实点是致密云的子集，
-        # 最近邻距离应≈0；这样两侧比较的是同一批物理点）
+        # ---------- M3: point level, no voxelization, same function on both sides ----------
+        # label of a real point inside the dense cloud: the label of the nearest dense point. Real points are a subset of the dense
+        # cloud, so that distance should be about zero and both sides compare the same physical points.
         _, nn = cKDTree(dpts).query(pts, k=1)
         for r in RADII:
             bs = boundary_mask_pointwise(pts, lab, r)
-            # 致密侧：以真实点为中心，在致密云里找异类邻居
+            # dense side: centred on the real point, look for a neighbour of another class in the dense cloud
             tree_d = cKDTree(dpts)
             nbs = tree_d.query_ball_point(pts, r)
             lab_d_self = dlab[nn]
@@ -170,25 +170,25 @@ def main():
             m3[r][1] += int(bs.sum())
             m3[r][2] += int(bd.sum())
 
-        # ---------- 体素侧：M1 / M2 / M5 ----------
+        # ---------- voxel side: M1 / M2 / M5 ----------
         ks, ls = build_voxel_labels(pts, lab)
         kd, ld = build_voxel_labels(dpts, dlab)
         Bs = boundary_voxels_on(ks, ls)
         Bd = boundary_voxels_on(kd, ld)
         sp_vox_tot += ks.shape[0]
         if Bs and Bd:
-            # M1：稀疏边界体素 -> 最近致密边界体素的距离（米）
+            # M1: distance in metres from a sparse boundary voxel to the nearest dense boundary voxel
             arr_d = np.array(sorted(Bd), np.float64)
             arr_s = np.array(sorted(Bs), np.float64)
             dd, _ = cKDTree(arr_d).query(arr_s, k=1)
             m1_d.append(dd * VOXEL)
-            # M5：丢失 vs 保留的边界体素，每体素点数
+            # M5: points per voxel, for boundary voxels lost versus retained
             vi = voxelize(pts)
             uk, cnt = np.unique(vi, axis=0, return_counts=True)
             pc = {tuple(k): int(c) for k, c in zip(uk, cnt)}
             for k in Bs:
                 (kept_pc if k in Bd else lost_pc).append(pc.get(k, 0))
-        # M2：共同支撑集（两侧都占据的体素）上重算
+        # M2: recomputed on the common support, the voxels occupied on both sides
         set_s = set(map(tuple, ks))
         set_d = set(map(tuple, kd))
         both = set_s & set_d
